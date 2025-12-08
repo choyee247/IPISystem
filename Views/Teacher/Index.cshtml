@@ -1,0 +1,37 @@
+﻿@model IEnumerable<ProjectManagementSystem.DBModels.Teacher>
+@{
+    Layout = "_TeacherLayout";
+}
+
+<h2 class="mb-3">Teacher Management</h2>
+
+<a class="btn btn-primary mb-3" asp-action="Create">Add New Teacher</a>
+
+<table class="table table-bordered table-striped">
+    <thead>
+        <tr>
+            <th>Full Name</th>
+            <th>Email</th>
+            <th>Role</th>
+            <th>Created Date</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        @foreach (var t in Model)
+        {
+            <tr>
+                <td>@t.FullName</td>
+                <td>@t.Email</td>
+                <td>@t.Role</td>
+                <td>@t.CreatedDate?.ToString("yyyy-MM-dd")</td>
+
+                <td>
+                    <a class="btn btn-sm btn-warning" asp-action="Edit" asp-route-id="@t.Id">Edit</a>
+                    <a class="btn btn-sm btn-danger" asp-action="Delete" asp-route-id="@t.Id">Delete</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
