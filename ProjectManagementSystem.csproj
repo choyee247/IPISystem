@@ -7,6 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
     <PackageReference Include="MailKit" Version="4.13.0" />
     <Content Remove="wwwroot\js\approve.js" />
     <Content Remove="wwwroot\Reports\Report1.rdlc" />

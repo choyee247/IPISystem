@@ -1,4 +1,5 @@
 ﻿// Controllers/TeacherController.cs
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -20,6 +21,157 @@ namespace ProjectManagementSystem.Controllers
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
+        //[Authorize(Roles = "Admin,Teacher")]
+        //public async Task<IActionResult> Dashboard()
+        //{
+        //    try
+        //    {
+        //        var date = DateTime.Now.Date;
+        //        var submissionStats = await GetSubmissionStatsAsync(date);
+
+        //        var model = new DBModels.TeacherDashboardViewModel
+        //        {
+        //            PendingProjectsCount = await _context.Projects
+        //                .Where(p => p.Status == "Pending" && (p.IsDeleted == null || !p.IsDeleted.Value))
+        //                .CountAsync(),
+
+        //            Announcements = await GetRecentAnnouncementsAsync(),
+
+        //            RecentSubmitters = await GetRecentSubmittersAsync(),
+
+        //            TotalProjects = await _context.Projects
+        //                .Where(p => p.IsDeleted == null || !p.IsDeleted.Value)
+        //                .CountAsync(),
+
+        //            SubmissionStats = submissionStats
+        //        };
+
+        //        return View(model);
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        _logger.LogError(ex, "Error loading teacher dashboard");
+        //        TempData["ErrorMessage"] = "An error occurred while loading the dashboard.";
+        //        return RedirectToAction("Error", "Home");
+        //    }
+        //}
+        //public async Task<IActionResult> Dashboard()
+        //{
+        //    try
+        //    {
+        //        var date = DateTime.Now.Date;
+        //        var submissionStats = await GetSubmissionStatsAsync(date);
+
+        //        var role = User.IsInRole("Admin") ? "Admin" : "Teacher";
+
+        //        var model = new DBModels.TeacherDashboardViewModel
+        //        {
+        //            PendingProjectsCount = await _context.Projects
+        //                .Where(p => p.Status == "Pending" && (p.IsDeleted == null || !p.IsDeleted.Value))
+        //                .CountAsync(),
+
+        //            Announcements = await GetRecentAnnouncementsAsync(),
+
+        //            RecentSubmitters = await GetRecentSubmittersAsync(),
+
+        //            TotalProjects = await _context.Projects
+        //                .Where(p => p.IsDeleted == null || !p.IsDeleted.Value)
+        //                .CountAsync(),
+
+        //            SubmissionStats = submissionStats
+        //        };
+
+        //        // Pass role and full name to view
+        //        ViewBag.Role = role;
+        //        ViewBag.FullName = User.Identity.Name;
+
+        //        return View(model);
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        _logger.LogError(ex, "Error loading teacher dashboard");
+        //        TempData["ErrorMessage"] = "An error occurred while loading the dashboard.";
+        //        return RedirectToAction("Error", "Home");
+        //    }
+        //}
+
+        // ---------------------- INDEX ----------------------
+        public async Task<IActionResult> Index()
+        {
+            var teachers = await _context.Teachers.ToListAsync();
+            return View(teachers);
+        }
+
+        // ---------------------- CREATE ----------------------
+        [HttpGet]
+        public IActionResult Create()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Create(Teacher model)
+        {
+            if (!ModelState.IsValid)
+                return View(model);
+
+            model.CreatedDate = DateTime.Now;
+            _context.Teachers.Add(model);
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction("Index");
+        }
+
+        // ---------------------- EDIT ----------------------
+        [HttpGet]
+        public async Task<IActionResult> Edit(int id)
+        {
+            var teacher = await _context.Teachers.FindAsync(id);
+            if (teacher == null) return NotFound();
+
+            return View(teacher);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Edit(int id, Teacher model)
+        {
+            if (!ModelState.IsValid)
+                return View(model);
+
+            var teacher = await _context.Teachers.FindAsync(id);
+            if (teacher == null) return NotFound();
+
+            teacher.FullName = model.FullName;
+            teacher.Email = model.Email;
+            teacher.PasswordHash = model.PasswordHash;
+            teacher.Role = model.Role;
+
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction("Index");
+        }
+
+        // ---------------------- DELETE ----------------------
+        [HttpGet]
+        public async Task<IActionResult> Delete(int id)
+        {
+            var teacher = await _context.Teachers.FindAsync(id);
+            if (teacher == null) return NotFound();
+
+            return View(teacher);
+        }
+
+        [HttpPost, ActionName("Delete")]
+        public async Task<IActionResult> DeleteConfirmed(int id)
+        {
+            var teacher = await _context.Teachers.FindAsync(id);
+            if (teacher == null) return NotFound();
+
+            _context.Teachers.Remove(teacher);
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction("Index");
+        }
         public async Task<IActionResult> Dashboard()
         {
             try
@@ -44,6 +196,10 @@ namespace ProjectManagementSystem.Controllers
                     SubmissionStats = submissionStats
                 };
 
+                // Teacher layout (default)
+                ViewBag.Layout = "_TeacherLayout";
+                ViewBag.FullName = User.Identity.Name;
+
                 return View(model);
             }
             catch (Exception ex)
@@ -54,6 +210,9 @@ namespace ProjectManagementSystem.Controllers
             }
         }
 
+        
+
+        [Authorize(Roles = "Admin,Teacher")]
         private async Task<List<ViewModels.SubmissionStat>> GetSubmissionStatsAsync(DateTime currentDate)
         {
             try
@@ -96,13 +255,13 @@ namespace ProjectManagementSystem.Controllers
                     .ToList();
             }
         }
-
+        [Authorize(Roles = "Admin,Teacher")]
         private async Task<List<DBModels.Announcement>> GetRecentAnnouncementsAsync()
         {
             try
             {
                 return await _context.Announcements
-                    .Where(a => a.IsActive == true ) // Only get manually activated announcements
+                    .Where(a => a.IsActive == true) // Only get manually activated announcements
                     .OrderByDescending(a => a.CreatedDate)
                     .Take(1) // Only get the most recent active announcement
                     .ToListAsync();
@@ -113,7 +272,7 @@ namespace ProjectManagementSystem.Controllers
                 return new List<DBModels.Announcement>();
             }
         }
-
+        [Authorize(Roles = "Admin,Teacher")]
         private async Task<List<StudentSubmission>> GetRecentSubmittersAsync()
         {
             try
@@ -139,12 +298,12 @@ namespace ProjectManagementSystem.Controllers
                 return new List<StudentSubmission>();
             }
         }
-
+        [Authorize(Roles = "Admin,Teacher")]
         public async Task<IActionResult> AllProjects()
         {
             return RedirectToAction("Index", "ProjectApproval", new { statusFilter = "all" });
         }
-
+        [Authorize(Roles = "Admin,Teacher")]
         public async Task<IActionResult> PendingProjects()
         {
             return RedirectToAction("Index", "ProjectApproval", new { statusFilter = "Pending" });
@@ -163,6 +322,7 @@ namespace ProjectManagementSystem.Controllers
                 RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier
             });
         }
+        [Authorize(Roles = "Admin,Teacher")]
         public async Task<IActionResult> ProjectsByDate(string date)
         {
             try
@@ -184,7 +344,7 @@ namespace ProjectManagementSystem.Controllers
                     .OrderByDescending(p => p.ProjectSubmittedDate)
                     .ToListAsync();
 
-                
+
                 return View("~/Views/ProjectApproval/Index.cshtml", new ProjectApprovalViewModel
                 {
                     Projects = Projects,

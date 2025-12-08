@@ -1,11 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace ProjectManagementSystem.DBModels;
 
-public partial class PMSDbContext : IdentityDbContext<ApplicationUser>
+public partial class PMSDbContext : DbContext
 {
     public PMSDbContext()
     {
@@ -68,14 +67,14 @@ public partial class PMSDbContext : IdentityDbContext<ApplicationUser>
 
     public virtual DbSet<StudentDepartment> StudentDepartments { get; set; }
 
+    public virtual DbSet<Teacher> Teachers { get; set; }
+
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-//#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
+#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
         => optionsBuilder.UseSqlServer("Server=203.81.89.218; Database=InternPMS; User Id=internadmin; Password=intern@dmin123;Trust Server Certificate=true");
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        base.OnModelCreating(modelBuilder);
-
         modelBuilder.Entity<AcademicYear>(entity =>
         {
             entity.HasKey(e => e.AcademicYearPkId);
@@ -406,6 +405,23 @@ public partial class PMSDbContext : IdentityDbContext<ApplicationUser>
 
             entity.Property(e => e.DepartmentPkId).HasColumnName("Department_pkID");
             entity.Property(e => e.DepartmentName).HasMaxLength(100);
+        });
+
+        modelBuilder.Entity<Teacher>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK__Teachers__3214EC079B30E63A");
+
+            entity.HasIndex(e => e.Email, "UQ__Teachers__A9D10534ECD3FED1").IsUnique();
+
+            entity.Property(e => e.CreatedDate)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime");
+            entity.Property(e => e.Email).HasMaxLength(100);
+            entity.Property(e => e.FullName).HasMaxLength(100);
+            entity.Property(e => e.PasswordHash).HasMaxLength(200);
+            entity.Property(e => e.Role)
+                .HasMaxLength(20)
+                .HasDefaultValue("Teacher");
         });
 
         OnModelCreatingPartial(modelBuilder);

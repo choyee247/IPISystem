@@ -1,0 +1,173 @@
+﻿@* @{
+    Layout = null;
+    var fullName = ViewBag.FullName ?? "Admin";
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Internship Project Information System</title>
+
+    <link href="~/Resources/boxicons-master/css/boxicons.min.css" rel="stylesheet" />
+    <link href="~/Resources/fontawesome-free-6.7.2-web/css/all.min.css" rel="stylesheet" />
+    <link href="~/Resources/bootstrap538/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="~/Resources/icons-main/font/bootstrap-icons.css" rel="stylesheet" />
+    <link rel="stylesheet" href="~/css/site.css" />
+    <link rel="stylesheet" href="~/css/approve.css" />
+    <link rel="stylesheet" href="~/Resources/sweetalert/sweetalert2.min.css" />
+    <script src="~/Resources/sweetalert/sweetalert2.all.min.js"></script>
+
+    @RenderSection("Styles", required: false)
+</head>
+<body>
+    <div class="app">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="brand">
+                <img src="~/images/logo.png" alt="Logo" class="brand-logo" />
+                <span class="brand-name">Admin Panel</span>
+            </div>
+
+            <ul class="menu">
+                <li class="menu-item @(ViewContext.RouteData.Values["Action"]?.ToString() == "Dashboard" ? "active" : "")">
+                    <a asp-controller="Teacher" asp-action="Dashboard">
+                        <i class="bx bx-grid-alt"></i>
+                        <span class="menu-text">Dashboard</span>
+                    </a>
+                </li>
+
+                <!-- Management -->
+                <li class="menu-item has-submenu" id="managementMenu">
+                    <div class="submenu-header">
+                        <i class="bx bx-briefcase"></i>
+                        <span class="menu-text">Management</span>
+                        <i class="bx bx-chevron-right submenu-toggle"></i>
+                    </div>
+                    <ul class="submenu">
+                        <li class="submenu-item @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Teacher" ? "active" : "")">
+                            <a asp-controller="Teacher" asp-action="Index">Teacher Management</a>
+                        </li>
+                        <li class="submenu-item @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Admin" && ViewContext.RouteData.Values["Action"]?.ToString() == "AddAdmin" ? "active" : "")">
+                            <a asp-controller="Admin" asp-action="AddAdmin">Add Admin</a>
+                        </li>
+                        <li class="submenu-item @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Student" ? "active" : "")">
+                            <a asp-controller="Student" asp-action="Index">Student Management</a>
+                        </li>
+                        <li class="submenu-item @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Company" ? "active" : "")">
+                            <a asp-controller="Company" asp-action="Index">Company</a>
+                        </li>
+                        <li class="submenu-item @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Email" ? "active" : "")">
+                            <a asp-controller="Email" asp-action="Index">Email Management</a>
+                        </li>
+                    </ul>
+                </li>
+
+                <!-- Announcements -->
+                <li class="menu-item has-submenu" id="announcementMenu">
+                    <div class="submenu-header">
+                        <i class="bx bx-megaphone"></i>
+                        <span class="menu-text">Announcements</span>
+                        <i class="bx bx-chevron-right submenu-toggle"></i>
+                    </div>
+                    <ul class="submenu">
+                        <li class="submenu-item">
+                            <a asp-controller="Announcement" asp-action="Index">All Announcements</a>
+                        </li>
+                        <li class="submenu-item">
+                            <a asp-controller="Announcement" asp-action="Create">Create Announcement</a>
+                        </li>
+                    </ul>
+                </li>
+
+                <!-- Project Approval -->
+                <li class="menu-item">
+                    <a asp-controller="ProjectApproval" asp-action="Index">
+                        <i class="bx bx-folder-open"></i>
+                        <span class="menu-text">Project Approval</span>
+                    </a>
+                </li>
+
+                <!-- Profile -->
+                <li class="menu-item">
+                    <a asp-controller="Admin" asp-action="MyProfile">
+                        <i class="bx bx-user"></i>
+                        <span class="menu-text">My Profile</span>
+                    </a>
+                </li>
+
+                <!-- Logout -->
+                <li class="menu-item">
+                    <a href="#" onclick="return confirmLogout();">
+                        <i class="bx bx-log-out"></i>
+                        <span class="menu-text">Logout</span>
+                    </a>
+                    <form id="logoutForm" asp-controller="Admin" asp-action="Logout" method="post" style="display: none;"></form>
+                </li>
+            </ul>
+
+            <div class="toggle-collapse" id="collapseBtn">
+                <i class="bx bx-chevrons-left"></i>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <div class="main">
+            <header class="navbar">
+                <div class="nav-left">
+                    <i class="bx bx-menu toggle-btn" id="menuBtn"></i>
+                    <div class="date-time" id="dateTimeDisplay"></div>
+                </div>
+
+                <div class="nav-icons-container">
+                    <div class="profile-container">
+                        <span class="avatar">@fullName.Substring(0, 1)</span>
+                        <span class="profile-name">@fullName</span>
+                    </div>
+                </div>
+            </header>
+
+            <main class="content">
+                @RenderBody()
+            </main>
+        </div>
+    </div>
+
+    <script src="~/Resources/Jquery/Jquery.js"></script>
+    <script src="~/Resources/bootstrap538/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function confirmLogout() {
+            if(confirm("Do you really want to log out?")) {
+                document.getElementById('logoutForm').submit();
+            }
+            return false;
+        }
+
+        // Sidebar toggle
+        $(document).ready(function(){
+            $("#collapseBtn, #menuBtn").click(() => {
+                $("#sidebar").toggleClass("collapsed");
+            });
+
+            $(".submenu-header").click(function () {
+                const parentItem = $(this).parent();
+                $(".has-submenu.open").not(parentItem).removeClass("open");
+                parentItem.toggleClass("open");
+            });
+
+            // Date and time
+            function updateTime() {
+                const now = new Date();
+                const options = { weekday:"short", year:"numeric", month:"short", day:"numeric", hour:"2-digit", minute:"2-digit" };
+                document.getElementById('dateTimeDisplay').textContent = now.toLocaleString("en-US", options);
+            }
+            updateTime();
+            setInterval(updateTime, 1000);
+        });
+    </script>
+
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>
+ *@

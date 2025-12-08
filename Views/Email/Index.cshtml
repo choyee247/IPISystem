@@ -1,6 +1,7 @@
 ﻿@model IEnumerable<ProjectManagementSystem.DBModels.Email>
 @{
     ViewData["Title"] = "Email Management";
+    var role = ViewBag.Role?.ToString() ?? "Teacher";
     Layout = "~/Views/Shared/_TeacherLayout.cshtml";
     int rowNumber = ViewBag.StartRowNumber != null ? (int)ViewBag.StartRowNumber : 1;   
 

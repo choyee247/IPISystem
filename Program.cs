@@ -53,12 +53,12 @@ builder.Services.Configure<IdentityOptions>(options =>
 
 var app = builder.Build();
 // SEED DATA
-using (var scope = app.Services.CreateScope())
-{
-    var services = scope.ServiceProvider;
-    var context = services.GetRequiredService<ProjectManagementSystem.DBModels.PMSDbContext>();
-    DbInitializer.SeedAcademicYears(context);
-}
+//using (var scope = app.Services.CreateScope())
+//{
+//    var services = scope.ServiceProvider;
+//    var context = services.GetRequiredService<ProjectManagementSystem.DBModels.PMSDbContext>();
+//    DbInitializer.SeedAcademicYears(context);
+//}
 // Configure the HTTP request pipeline
 if (!app.Environment.IsDevelopment())
 {
@@ -79,11 +79,11 @@ app.UseExceptionHandler("/Home/Error");
 app.UseStatusCodePagesWithReExecute("/Home/Error/{0}");
 
 // Database Seeding
-using (var scope = app.Services.CreateScope())
-{
-    var services = scope.ServiceProvider;
-    await IdentitySeeder.SeedRolesAndAdminsAsync(services);
-}
+//using (var scope = app.Services.CreateScope())
+//{
+//    var services = scope.ServiceProvider;
+//    await IdentitySeeder.SeedRolesAndAdminsAsync(services);
+//}
 
 app.MapControllerRoute(
     name: "default",
