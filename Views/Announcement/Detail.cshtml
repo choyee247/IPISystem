@@ -4,6 +4,13 @@
     ViewData["Title"] = "Announcement Detail";
     Layout = "~/Views/Shared/_TeacherLayout.cshtml";
 }
+<style>
+    body {
+        background: linear-gradient(135deg, #e4eefd, #ffffff);
+        min-height: 100vh;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+</style>
 
 <div class="container my-5" style="max-width: 800px;">
     <div class="card shadow-lg border-0 rounded-4">
@@ -19,12 +26,22 @@
                 </small>
                 @if (Model.StartDate != null && Model.ExpiryDate != null)
                 {
-                    <div><small><i class="bi bi-clock me-1"></i>Active: @Model.StartDate?.ToString("dd MMM yyyy") → @Model.ExpiryDate?.ToString("dd MMM yyyy")</small></div>
+                    <div>
+                        <small>
+                            <i class="bi bi-clock me-1"></i>
+                            Active: @Model.StartDate?.ToString("dd MMM yyyy") → @Model.ExpiryDate?.ToString("dd MMM yyyy")
+                        </small>
+                    </div>
                 }
             </div>
 
-            @*             <p class="fs-5 text-dark">@Model.Content</p>
- *@
+            @if (!string.IsNullOrEmpty(Model.Message)) 
+            {
+                <p class="fs-5 text-dark" style="white-space: pre-line;">
+                    @Model.Message
+                </p>
+            }
+
             @if (!string.IsNullOrEmpty(Model.FilePath))
             {
                 <div class="mt-3">
@@ -34,7 +51,7 @@
                 </div>
             }
 
-            @if (Model.BlocksSubmissions == true )
+            @if (Model.BlocksSubmissions==true)
             {
                 <div class="alert alert-danger mt-4 mb-0">
                     <i class="bi bi-exclamation-triangle me-2"></i>
@@ -42,6 +59,7 @@
                 </div>
             }
         </div>
+
 
         <div class="card-footer text-end bg-white">
             <a asp-action="Index" class="btn btn-secondary">

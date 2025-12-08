@@ -8,6 +8,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using X.PagedList;
 
 namespace ProjectManagementSystem.Controllers
 {
@@ -25,11 +26,15 @@ namespace ProjectManagementSystem.Controllers
 
         // GET: /Announcement
         [AllowAnonymous]
-        public IActionResult Index()
+        public IActionResult Index(int? page)
         {
+            int pageSize = 7;
+            int pageNumber = page ?? 1;
+
             var announcements = _context.Announcements
                 .OrderByDescending(a => a.CreatedDate)
-                .ToList();
+                .ToPagedList(pageNumber, pageSize);
+
             return View(announcements);
         }
 
@@ -38,6 +43,7 @@ namespace ProjectManagementSystem.Controllers
         [HttpGet]
         public IActionResult Create()
         {
+            var model = new AnnouncementViewModel();
             return View();
         }
 
@@ -161,6 +167,7 @@ namespace ProjectManagementSystem.Controllers
                     StartDate = model.StartDate,
                     ExpiryDate = model.ExpiryDate,
                     BlocksSubmissions = model.BlocksSubmissions,
+                    IsActive = model.IsActive,
                     FilePath = filePath,
                     CreatedDate = DateTime.Now
                 };
@@ -218,6 +225,8 @@ namespace ProjectManagementSystem.Controllers
             {
                 AnnouncementId = announcement.AnnouncementId,
                 Title = announcement.Title,
+                BlocksSubmissions = (bool)announcement.BlocksSubmissions,
+                IsActive = (bool)announcement.IsActive,
                 Message = announcement.Message,
                 FilePath = announcement.FilePath
             };
@@ -269,6 +278,8 @@ namespace ProjectManagementSystem.Controllers
                 // Update fields
                 announcement.Title = model.Title;
                 announcement.Message = model.Message;
+                announcement.BlocksSubmissions = model.BlocksSubmissions; 
+                announcement.IsActive = model.IsActive;
 
                 _context.Update(announcement);
                 await _context.SaveChangesAsync();
@@ -414,17 +425,17 @@ namespace ProjectManagementSystem.Controllers
         public IActionResult StudentView()
         {
             var activeAnnouncements = _context.Announcements
-                .Where(a => a.IsActive == true) // ViewModel ရဲ့ IsActive logic နဲ့ ကိုက်အောင်
-                .OrderByDescending(a => a.StartDate)
+                .Where(a => a.IsActive == true) 
+                .OrderByDescending(a => a.CreatedDate)
                 .Select(a => new AnnouncementViewModel
                 {
                     AnnouncementId = a.AnnouncementId,
                     Title = a.Title,
-                    Message = a.Message,           // DB field mapping
+                    Message = a.Message,           
                     CreatedDate = a.CreatedDate,
                     StartDate = a.StartDate,
                     ExpiryDate = a.ExpiryDate,
-                    BlocksSubmissions = a.BlocksSubmissions,
+                    BlocksSubmissions = (bool)a.BlocksSubmissions,
                     FilePath = a.FilePath,
                     AdminActivityLogId = a.AdminActivityLogId
                 })

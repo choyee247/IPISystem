@@ -11,14 +11,15 @@ namespace ProjectManagementSystem.DBModels
         public DateTime? CreatedDate { get; set; }  
         public DateTime? StartDate { get; set; }       
         public DateTime? ExpiryDate { get; set; }        
-        public bool? BlocksSubmissions { get; set; }   
+        public bool BlocksSubmissions { get; set; }
 
+        public bool IsActive { get; set; } = false;
         public string? FilePath { get; set; }
         public int? AdminActivityLogId { get; set; }
 
-        // Computed property
-        public bool IsActive => (StartDate ?? DateTime.Now) <= DateTime.Now &&
-                                (ExpiryDate == null || ExpiryDate >= DateTime.Now);
+        public bool IsCurrentlyActive =>
+           (StartDate ?? DateTime.Now) <= DateTime.Now &&
+           (ExpiryDate == null || ExpiryDate >= DateTime.Now);
 
         public IFormFile Attachment { get; set; }
     }

@@ -1,5 +1,6 @@
-﻿@using ProjectManagementSystem.DBModels
-@model Announcement
+﻿@* @using ProjectManagementSystem.DBModels
+@model Announcement *@
+@model ProjectManagementSystem.DBModels.AnnouncementViewModel
 
 @{
     ViewData["Title"] = "Create Announcement";
@@ -24,18 +25,58 @@
             </div>
 
             <div class="row">
-                <div class="col-md-4 mb-3">
+                <div class="col-md-6 mb-3">
                     <label asp-for="StartDate" class="form-label"></label>
                     <input asp-for="StartDate" type="date" class="form-control input-field" />
                 </div>
-                <div class="col-md-4 mb-3">
+                <div class="col-md-6 mb-3">
                     <label asp-for="ExpiryDate" class="form-label"></label>
                     <input asp-for="ExpiryDate" type="date" class="form-control input-field" />
                 </div>
-                <div class="col-md-4 mb-3 form-check mt-4">
+                @* <div class="col-md-4 mb-3 form-check mt-4">
                     <input asp-for="BlocksSubmissions" class="form-check-input checkbox-input" />
                     <label asp-for="BlocksSubmissions" class="form-check-label checkbox-label"></label>
+                </div> *@
+            </div>
+            <div class="row">
+             @*    <div class="col-md-6 mb-3 form-check mt-4">
+                    <input asp-for="BlocksSubmissions" class="form-check-input" />
+                    <label class="form-check-label">
+                        Block Project Submissions
+                    </label>
                 </div>
+ *@            @*  <div class="col-md-6 mb-3 form-check mt-4">
+                    <input type="hidden" asp-for="BlocksSubmissions" value="false" />
+                    <input asp-for="BlocksSubmissions" class="form-check-input" />
+                    <label class="form-check-label">
+                        Block Project Submissions
+                    </label>
+                </div> *@
+                <div class="col-md-6 mb-3 form-check mt-4">
+                    <input asp-for="BlocksSubmissions" type="checkbox" class="form-check-input" />
+                    <label asp-for="BlocksSubmissions" class="form-check-label">
+                        Block Project Submissions
+                    </label>
+                </div>
+               @*  <div class="col-md-6 mb-3 form-check mt-4">
+                    <input type="hidden" name="IsActive" value="false" />
+                    <input asp-for="IsActive" type="checkbox" class="form-check-input" />
+                    <label asp-for="IsActive" class="form-check-label">
+                        Active Announcement
+                    </label>
+                </div> *@
+                <div class="col-md-6 mb-3 form-check mt-4">
+                    <input asp-for="IsActive" type="checkbox" class="form-check-input" />
+                    <label asp-for="IsActive" class="form-check-label">Active Announcement</label>
+                </div>
+            
+               @*  <div class="col-md-6 mb-3 form-check mt-4">
+                    <input asp-for="IsActive" type="checkbox" class="form-check-input" />
+                    <label asp-for="IsActive" class="form-check-label">
+                        Active Announcement
+                    </label>
+                </div> *@
+
             </div>
 
             <div class="mb-3">
@@ -55,7 +96,8 @@
 @section Styles {
     <style>
         body {
-            background: linear-gradient(135deg, #e4eefd, #f9f9ff);
+            background: linear-gradient(135deg, #e4eefd, #ffffff);
+            min-height: 100vh;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 

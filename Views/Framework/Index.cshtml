@@ -6,7 +6,9 @@
     int count = (Model.PageNumber - 1) * Model.PageSize + 1;
     var total = Model.TotalItemCount;
 }
-
+<div>
+    <partial name="_ProgressBarPartial" />
+</div>
 <div class="container my-4" style="max-width: 1100px;">
     <h3 class="mb-4" style="color: #8c5dd1;">Framework List</h3>
 

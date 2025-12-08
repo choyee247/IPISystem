@@ -149,11 +149,13 @@ namespace ProjectManagementSystem.Controllers
         public async Task<IActionResult> Upload(int id)
         {
             // Check if submissions are blocked
-            var activeBlock = _context.Announcements.Any(a => a.BlocksSubmissions==false && a.IsActive == false);
+            var activeBlock = _context.Announcements
+            .Any(a => a.BlocksSubmissions == true && a.IsActive == true);
+
             if (activeBlock)
             {
-                TempData["Error"] = "Project submissions are temporarily blocked by the teacher.";
-                return RedirectToAction("StudentView", "Announcement");
+                TempData["Error"] = "🚫 Project submissions are temporarily blocked by the teacher.";
+                return RedirectToAction("Dashboard", "Student"); 
             }
 
             var rollNumber = HttpContext.Session.GetString("RollNumber");
@@ -250,12 +252,12 @@ namespace ProjectManagementSystem.Controllers
         public async Task<IActionResult> Upload(DBModels.Project project)
         {
             // Check if submissions are blocked
-            var activeBlock = _context.Announcements.Any(a => a.BlocksSubmissions == false && a.IsActive == false);
-            if (activeBlock)
-            {
-                TempData["Error"] = "Project submissions are temporarily blocked by the teacher.";
-                return RedirectToAction("StudentView", "Announcement");
-            }
+            //var activeBlock = _context.Announcements.Any(a => a.BlocksSubmissions == false && a.IsActive == false);
+            //if (activeBlock)
+            //{
+            //    TempData["Error"] = "Project submissions are temporarily blocked by the teacher.";
+            //    return RedirectToAction("StudentView", "Announcement");
+            //}
 
             var existingProject = await _context.Projects
                 .Include(p => p.LanguagePk)

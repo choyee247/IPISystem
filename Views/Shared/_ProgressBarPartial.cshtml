@@ -290,5 +290,23 @@
             </a>
             <div class="step-label">Submission</div>
         </div>
+
+        <!-- Step 7: Logout -->
+        <div class="step-item @(ViewBag.CurrentStep >= 7 ? "completed" : "") @(ViewBag.CurrentStep == 7 ? "active" : "")">
+            <a href="@Url.Action("Logout", "StudentLogin")">
+                <div class="step-indicator">
+                    @if (ViewBag.CurrentStep > 7)
+                    {
+                        <i class="fas fa-check step-icon"></i>
+                    }
+                    else
+                    {
+                        <i class="fas fa-sign-out-alt step-icon"></i>
+                    }
+                    <span class="step-tooltip">Logout</span>
+                </div>
+            </a>
+            <div class="step-label">Logout</div>
+        </div>
     </div>
 </div>
