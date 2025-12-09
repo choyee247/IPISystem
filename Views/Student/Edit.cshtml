@@ -328,6 +328,25 @@
                             <div class="col-md-3">
                                 <div class="form-group">
                                     <label class="form-label">State Number</label>
+
+                                    <select id="stateNumber" class="form-select">
+                                        <option value="">-- Select State --</option>
+
+                                        @foreach (var code in Model.RegionCodeMList
+                                        .OrderBy(c => MyanmarDigitsToInt(c)))
+                                        {
+                                            <option value="@code"
+                                                    selected="@(Model.Student.NrcPk?.RegionCodeM.StartsWith(code) == true)">
+                                                @code
+                                            </option>
+                                        }
+                                    </select>
+                                </div>
+                            </div>
+
+                          @*   <div class="col-md-3">
+                                <div class="form-group">
+                                    <label class="form-label">State Number</label>
                                     <select asp-for="Student.NrcPkId" class="form-select" id="township" data-state-selector
                                             data-township-url="@Url.Action("GetTownshipsByRegion", "Student")">
                                         <option value="">-- Select Township --</option>
@@ -338,8 +357,8 @@
                                     </select>
                                     <span asp-validation-for="Student.NrcPkId" class="text-danger"></span>
                                 </div>
-                            </div>
-
+                            </div> *@
+@* 
                             <div class="col-md-3">
                                 <div class="form-group">
                                     <label class="form-label">Township</label>
@@ -350,6 +369,29 @@
                                             <option value="@t.NrcPkId">@t.TownshipCodeM</option>
                                         }
                                     </select>
+                                    <span asp-validation-for="Student.NrcPkId" class="text-danger"></span>
+                                </div>
+                            </div> *@
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label class="form-label">Township</label>
+
+                                    <select asp-for="Student.NrcPkId"
+                                            id="township"
+                                            class="form-select">
+
+                                        <option value="">-- Select Township --</option>
+
+                                        @foreach (var t in Model.TownshipList)
+                                        {
+                                            <option value="@t.NrcPkId"
+                                                    data-region="@t.RegionCodeM.Split('/')[0]"
+                                                    selected="@(Model.Student.NrcPkId == t.NrcPkId)">
+                                                @t.TownshipCodeM
+                                            </option>
+                                        }
+                                    </select>
+
                                     <span asp-validation-for="Student.NrcPkId" class="text-danger"></span>
                                 </div>
                             </div>
@@ -398,6 +440,37 @@
     <partial name="_ValidationScriptsPartial" />
 
     <script>
+
+             $(document).ready(function () {
+
+            function filterTownships(regionCode) {
+                $("#township option").each(function () {
+                    var optionRegion = $(this).data("region");
+
+                    if (!optionRegion || optionRegion == regionCode) {
+                        $(this).show();
+                    } else {
+                        $(this).hide();
+                    }
+                });
+            }
+
+            // State Change
+            $("#stateNumber").on("change", function () {
+                var selectedRegion = $(this).val();
+
+                $("#township").val(""); // reset
+                filterTownships(selectedRegion);
+            });
+
+            // ✅ Auto filter on Edit load
+            var initialRegion = $("#stateNumber").val();
+            if (initialRegion) {
+                filterTownships(initialRegion);
+            }
+        });
+
+
         //         $(document).ready(function() {
         //     $('#ProfilePhoto').change(function(event) {
         //         var input = event.target;

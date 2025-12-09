@@ -302,140 +302,21 @@ namespace ProjectManagementSystem.Controllers
             {
                 Student = student,
                 NRCTypeList = _context.Nrctypes.ToList(),
-                RegionCodeMList = _context.Nrctownships.Select(t => t.RegionCodeM).Distinct().ToList(),
+                //RegionCodeMList = _context.Nrctownships.Select(t => t.RegionCodeM).Distinct().ToList(),
+                RegionCodeMList = _context.Nrctownships
+                .Select(t => t.RegionCodeM.Trim())
+                .Distinct()
+                .OrderBy(x => x)
+                .ToList(),
                 TownshipList = _context.Nrctownships.ToList(),
                 DepartmentList = _context.StudentDepartments.OrderBy(d => d.DepartmentName).ToList(),
                 AcademicYearList = _context.AcademicYears.OrderByDescending(a => a.YearRange).ToList(),
-                ProjectMembers = _context.ProjectMembers.Where(pm => !pm.IsDeleted == false).ToList()
+                ProjectMembers = _context.ProjectMembers.Where(pm => pm.IsDeleted == false).ToList()
             };
 
             return View(viewModel);
         }
-        //[HttpPost]
-        //[ValidateAntiForgeryToken]
-        //public async Task<IActionResult> Edit(int id, NRCFormViewModel model)
-        //{
-        //    if (id != model.Student.Student_pkId)
-        //    {
-        //        return NotFound();
-        //    }
-
-        //    if (ModelState.IsValid)
-        //    {
-        //        // Reload lists before returning view
-        //        model.NRCTypeList = _context.NRCTypes.ToList();
-        //        model.RegionCodeMList = _context.NRCTownships.Select(t => t.RegionCode_M).Distinct().ToList();
-        //        model.TownshipList = _context.NRCTownships.ToList();
-        //        model.DepartmentList = _context.StudentDepartments.OrderBy(d => d.DepartmentName).ToList();
-        //        model.AcademicYearList = _context.AcademicYears.OrderByDescending(a => a.YearRange).ToList();
-        //        return View(model);
-        //    }
-
-        //    try
-        //    {
-        //        var studentInDb = await _context.Students.FindAsync(id);
-        //        if (studentInDb == null)
-        //        {
-        //            return NotFound();
-        //        }
-
-        //        // Update fields
-        //        //studentInDb.StudentName = model.Student.StudentName;
-        //        //studentInDb.RollNumber = model.Student.RollNumber;
-        //        studentInDb.Email = model.Student.Email;
-        //        studentInDb.PhoneNumber = model.Student.PhoneNumber;
-        //        studentInDb.Department_pkID = model.Student.Department_pkID;
-        //        //studentInDb.AcademicYear_pkId = model.Student.AcademicYear_pkId;
-        //        studentInDb.NRCType_pkId = model.Student.NRCType_pkId;
-        //        studentInDb.NRC_pkId = model.Student.NRC_pkId;
-        //        studentInDb.NRCNumber = model.Student.NRCNumber;
-        //        studentInDb.CreatedBy = model.Student.CreatedBy;
-
-        //        await _context.SaveChangesAsync();
-
-        //        HttpContext.Session.SetString("SuccessMessage", "Student updated successfully!"); 
-        //        return RedirectToAction("Dashboard");
-        //    }
-        //    catch (DbUpdateConcurrencyException)
-        //    {
-        //        return BadRequest("Unable to update student.");
-        //    }
-        //}
-        //[HttpPost]
-        //[ValidateAntiForgeryToken]
-        //public async Task<IActionResult> Edit(int id, NRCFormViewModel model)
-        //{
-        //    if (id != model.Student.Student_pkId)
-        //    {
-        //        return NotFound();
-        //    }
-
-        //    // Reload lists before returning view if ModelState is invalid
-        //    model.NRCTypeList = _context.NRCTypes.ToList();
-        //    model.RegionCodeMList = _context.NRCTownships.Select(t => t.RegionCode_M).Distinct().ToList();
-        //    model.TownshipList = _context.NRCTownships.ToList();
-        //    model.DepartmentList = _context.StudentDepartments.OrderBy(d => d.DepartmentName).ToList();
-        //    model.AcademicYearList = _context.AcademicYears.OrderByDescending(a => a.YearRange).ToList();
-
-        //    if (ModelState.IsValid)
-        //    {
-        //        return View(model);
-        //    }
-
-        //    try
-        //    {
-        //        var studentInDb = await _context.Students.FindAsync(id);
-        //        if (studentInDb == null)
-        //        {
-        //            return NotFound();
-        //        }
-
-        //        // Update fields
-        //        //studentInDb.StudentName = model.Student.StudentName;
-        //        //studentInDb.RollNumber = model.Student.RollNumber;
-        //        studentInDb.Email = model.Student.Email;
-        //        studentInDb.PhoneNumber = model.Student.PhoneNumber;
-        //        studentInDb.Department_pkID = model.Student.Department_pkID;
-        //        //studentInDb.AcademicYear_pkId = model.Student.AcademicYear_pkId;
-        //        studentInDb.NRCType_pkId = model.Student.NRCType_pkId;
-        //        studentInDb.NRC_pkId = model.Student.NRC_pkId;
-        //        studentInDb.NRCNumber = model.Student.NRCNumber;
-        //        studentInDb.CreatedBy = model.Student.CreatedBy;
-
-        //        // ---------------------------
-        //        // Profile Photo Upload Start
-        //        // ---------------------------
-        //        if (model.ProfilePhoto != null && model.ProfilePhoto.Length > 0)
-        //        {
-        //            var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/uploads/students");
-        //            if (!Directory.Exists(uploadsFolder))
-        //                Directory.CreateDirectory(uploadsFolder);
-
-        //            var fileName = Guid.NewGuid().ToString() + Path.GetExtension(model.ProfilePhoto.FileName);
-        //            var filePath = Path.Combine(uploadsFolder, fileName);
-
-        //            using (var stream = new FileStream(filePath, FileMode.Create))
-        //            {
-        //                await model.ProfilePhoto.CopyToAsync(stream);
-        //            }
-
-        //            // Save relative path to DB
-        //            studentInDb.ProfilePhotoUrl = "/uploads/students/" + fileName;
-        //        }
-        //        // ---------------------------
-        //        // Profile Photo Upload End
-        //        // ---------------------------
-
-        //        await _context.SaveChangesAsync();
-
-        //        HttpContext.Session.SetString("SuccessMessage", "Student updated successfully!");
-        //        return RedirectToAction("Dashboard");
-        //    }
-        //    catch (DbUpdateConcurrencyException)
-        //    {
-        //        return BadRequest("Unable to update student.");
-        //    }
-        //}
+  
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, NRCFormViewModel model)
@@ -445,7 +326,12 @@ namespace ProjectManagementSystem.Controllers
 
             // Reload dropdown lists regardless of ModelState
             model.NRCTypeList = _context.Nrctypes.ToList();
-            model.RegionCodeMList = _context.Nrctownships.Select(t => t.RegionCodeM).Distinct().ToList();
+            //model.RegionCodeMList = _context.Nrctownships.Select(t => t.RegionCodeM).Distinct().ToList();
+            model.RegionCodeMList = _context.Nrctownships
+            .Select(t => t.RegionCodeM.Trim())
+            .Distinct()
+            .OrderBy(x => x)
+            .ToList();
             model.TownshipList = _context.Nrctownships.ToList();
             model.DepartmentList = _context.StudentDepartments.OrderBy(d => d.DepartmentName).ToList();
             model.AcademicYearList = _context.AcademicYears.OrderByDescending(a => a.YearRange).ToList();
@@ -586,8 +472,13 @@ namespace ProjectManagementSystem.Controllers
                     }
                 }
 
-                // 6. Calculate Submission Status
-                var submissionStatus = new ProjectSubmissionStatus
+            var isSubmissionBlocked = await _context.Announcements
+                .AnyAsync(a => a.IsActive == true && a.BlocksSubmissions == true);
+
+            ViewBag.IsSubmissionBlocked = isSubmissionBlocked;
+
+            // 6. Calculate Submission Status
+            var submissionStatus = new ProjectSubmissionStatus
                 {
                     TotalProjects = projects.Count,
                     DraftProjects = projects.Count(p => p.Status == "Draft"),
@@ -652,7 +543,14 @@ namespace ProjectManagementSystem.Controllers
                     }
                 }
 
-                var dashboardViewModel = new StudentDashboardViewModel
+            var activeAnnouncements = await _context.Announcements
+            .Where(a => a.IsActive == true)
+            .OrderByDescending(a => a.CreatedDate)
+            .ToListAsync();
+
+            ViewBag.ActiveAnnouncements = activeAnnouncements;
+
+            var dashboardViewModel = new StudentDashboardViewModel
                 {
                     Student = student,
                     Projects = projects,
