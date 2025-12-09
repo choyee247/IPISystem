@@ -1,33 +1,25 @@
 ﻿@using ProjectManagementSystem.DBModels
 @model MyProfileViewModel
+
 @{
     ViewData["Title"] = "My Profile";
-    var role = ViewBag.Role?.ToString() ?? "Teacher";
-    Layout = "~/Views/Shared/_TeacherLayout.cshtml";
+    Layout = "~/Views/Shared/_TeacherLayout.cshtml";   // ✅ One layout for both roles
+    var role = ViewBag.Role?.ToString() ?? "Teacher";  // ✅ Role only for display
 }
-@* @{
-    var role = ViewBag.Role?.ToString() ?? "Teacher";
-    Layout = role == "Admin"
-        ? "~/Views/Shared/_AdminLayout.cshtml"
-        : "~/Views/Shared/_TeacherLayout.cshtml";
-} *@
 
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+<link rel="stylesheet" href="~/Resources/fontawesome-free-6.7.2-web/css/all.min.css">
 
 <style>
-    /* ——— GLOBAL ——— */
     body {
         background: #f2f5f9;
     }
 
-    /* ——— PROFILE WRAPPER ——— */
     .profile-wrapper {
         max-width: 950px;
         margin: auto;
         margin-top: 40px;
     }
 
-    /* ——— HEADER ——— */
     .profile-header {
         background: linear-gradient(135deg, #8c5dd1, #8c5dd1);
         padding: 50px 30px;
@@ -65,7 +57,6 @@
         box-shadow: 0 5px 15px rgba(255,255,255,0.3);
     }
 
-    /* ——— CARD STYLING ——— */
     .profile-card {
         background: rgba(255, 255, 255, 0.9);
         backdrop-filter: blur(12px);
@@ -99,7 +90,6 @@
         border: none;
     }
 
-    /* ——— BUTTONS ——— */
     .btn-modern {
         border-radius: 10px;
         padding: 10px 20px;
@@ -136,11 +126,15 @@
     <!-- HEADER -->
     <div class="profile-header">
         <div class="profile-avatar">
-            @Model.FullName?[0]
+            @(Model.FullName != null && Model.FullName.Length > 0
+                ? Model.FullName.Substring(0, 1)
+                : "?")
         </div>
         <h2 class="mt-3 fw-bold">@Model.FullName</h2>
         <p class="mb-1">@Model.Email</p>
-        <span class="badge bg-light text-dark px-3 py-2 mt-2" style="font-size: 0.9rem;">Teacher Account</span>
+        <span class="badge bg-light text-dark px-3 py-2 mt-2" style="font-size: 0.9rem;">
+            @role Account
+        </span>
     </div>
 
     <!-- CONTENT CARD -->
@@ -156,6 +150,7 @@
         }
 
         <form method="post" asp-action="MyProfile">
+            @Html.AntiForgeryToken()
 
             <!-- PERSONAL INFO -->
             <h5 class="section-title">Personal Information</h5>
@@ -168,6 +163,7 @@
                             <i class="fa fa-user-pen"></i>
                         </span>
                     </div>
+                    <span asp-validation-for="FullName" class="text-danger"></span>
                 </div>
 
                 <div class="col-md-6">
@@ -204,9 +200,7 @@
                         <i class="fa fa-save"></i> Save Changes
                     </button>
 
-                    <a asp-action="MyProfile" class="btn btn-modern btn-cancel">
-                        Cancel
-                    </a>
+                    <a asp-action="MyProfile" class="btn btn-modern btn-cancel">Cancel</a>
                 }
                 else
                 {

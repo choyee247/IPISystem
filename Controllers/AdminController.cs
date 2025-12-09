@@ -270,6 +270,7 @@
 
 
 //    }
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -343,14 +344,14 @@ namespace ProjectManagementSystem.Controllers
         }
 
         [HttpPost]
-        public IActionResult Login(LoginModel model)
+        public async Task<IActionResult> Login(LoginModel model)
         {
             if (!ModelState.IsValid)
                 return View(model);
 
-            // Find user from Teacher table
-            var user = _context.Teachers
-                .FirstOrDefault(x => x.Email == model.Email && x.PasswordHash == model.Password);
+            // ✅ Find user in Teacher table using async
+            var user = await _context.Teachers
+                .FirstOrDefaultAsync(x => x.Email == model.Email && x.PasswordHash == model.Password);
 
             if (user == null)
             {
@@ -358,14 +359,14 @@ namespace ProjectManagementSystem.Controllers
                 return View(model);
             }
 
-            // Save to Session
+            // ✅ Save necessary session values
             HttpContext.Session.SetString("UserId", user.Id.ToString());
             HttpContext.Session.SetString("UserName", user.FullName);
             HttpContext.Session.SetString("UserEmail", user.Email);
-            HttpContext.Session.SetString("UserRole", user.Role);  // Admin or Teacher
+            HttpContext.Session.SetString("UserRole", user.Role); // "Admin" or "Teacher"
 
-            // Redirect based on role
-            if (user.Role == "Admin")
+            // ✅ Redirect based on role
+            if (user.Role.Equals("Admin", StringComparison.OrdinalIgnoreCase))
             {
                 return RedirectToAction("Dashboard", "Admin");
             }
@@ -374,6 +375,7 @@ namespace ProjectManagementSystem.Controllers
                 return RedirectToAction("Dashboard", "Teacher");
             }
         }
+
         [HttpPost]
         public IActionResult Logout()
         {
@@ -436,15 +438,81 @@ namespace ProjectManagementSystem.Controllers
         // ===============================
         // PROFILE
         // ===============================
-        [HttpGet("Admin/MyProfile")]
-        [Authorize(Roles = "Admin,Teacher")]
+        //[HttpGet]
+        //[Authorize(Roles = "Admin,Teacher")]
+        //public async Task<IActionResult> MyProfile(bool isEditMode = false)
+        //{
+        //    // Get logged-in user ID from claims
+        //    var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+        //    if (userIdClaim == null)
+        //        return RedirectToAction("Login");
+
+        //    int userId = int.Parse(userIdClaim.Value);
+        //    var user = await _context.Teachers.FindAsync(userId);
+
+        //    if (user == null)
+        //        return RedirectToAction("Login");
+
+        //    var model = new MyProfileViewModel
+        //    {
+        //        FullName = user.FullName,
+        //        Email = user.Email,
+        //        IsEditMode = isEditMode
+        //    };
+
+        //    // Pass role to view dynamically
+        //    ViewBag.Role = user.Role; // Admin or Teacher
+
+        //    return View(model);
+        //}
+
+        //[HttpPost]
+        //[Authorize(Roles = "Admin,Teacher")]
+        //[ValidateAntiForgeryToken]
+        //public async Task<IActionResult> MyProfile(MyProfileViewModel model)
+        //{
+        //    var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+        //    if (userIdClaim == null)
+        //        return RedirectToAction("Login");
+
+        //    int userId = int.Parse(userIdClaim.Value);
+        //    var user = await _context.Teachers.FindAsync(userId);
+
+        //    if (user == null)
+        //        return RedirectToAction("Login");
+
+        //    if (!ModelState.IsValid)
+        //    {
+        //        model.IsEditMode = true;
+        //        ViewBag.Role = user.Role;
+        //        return View(model);
+        //    }
+
+        //    // Update profile
+        //    user.FullName = model.FullName;
+        //    await _context.SaveChangesAsync();
+
+        //    TempData["SuccessMessage"] = "Profile updated successfully";
+
+        //    return RedirectToAction("MyProfile");
+        //}
+        [HttpGet]
         public async Task<IActionResult> MyProfile(bool isEditMode = false)
         {
-            var userId = HttpContext.Session.GetInt32("UserId");
+            // ✅ Get session values
+            var userIdStr = HttpContext.Session.GetString("UserId");
+            var userRole = HttpContext.Session.GetString("UserRole");
+
+            if (string.IsNullOrEmpty(userIdStr) || string.IsNullOrEmpty(userRole))
+                return RedirectToAction("Login", "Admin"); // redirect to login if session missing
+
+            if (!int.TryParse(userIdStr, out int userId))
+                return RedirectToAction("Login", "Admin");
+
             var user = await _context.Teachers.FindAsync(userId);
 
             if (user == null)
-                return RedirectToAction("Login");
+                return RedirectToAction("Login", "Admin");
 
             var model = new MyProfileViewModel
             {
@@ -453,33 +521,53 @@ namespace ProjectManagementSystem.Controllers
                 IsEditMode = isEditMode
             };
 
+            ViewBag.Role = userRole; // Pass role to view
+
             return View(model);
         }
 
-        [HttpPost("Admin/MyProfile")]
-        [Authorize(Roles = "Admin,Teacher")]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> MyProfile(MyProfileViewModel model)
         {
-            var userId = HttpContext.Session.GetInt32("UserId");
+            var userIdStr = HttpContext.Session.GetString("UserId");
+            var userRole = HttpContext.Session.GetString("UserRole");
+
+            if (string.IsNullOrEmpty(userIdStr) || string.IsNullOrEmpty(userRole))
+                return RedirectToAction("Login", "Admin");
+
+            if (!int.TryParse(userIdStr, out int userId))
+                return RedirectToAction("Login", "Admin");
+
             var user = await _context.Teachers.FindAsync(userId);
 
             if (user == null)
-                return RedirectToAction("Login");
+                return RedirectToAction("Login", "Admin");
 
             if (!ModelState.IsValid)
             {
                 model.IsEditMode = true;
+                ViewBag.Role = userRole;
                 return View(model);
             }
 
+            // ✅ Update profile
             user.FullName = model.FullName;
             await _context.SaveChangesAsync();
 
+            // ✅ Keep session name in sync
             HttpContext.Session.SetString("UserName", model.FullName);
 
             TempData["SuccessMessage"] = "Profile updated successfully";
+
             return RedirectToAction(nameof(MyProfile));
         }
+
+
+
+
+
+
 
         [HttpPost]
         public IActionResult ToggleEditMode()
