@@ -337,6 +337,52 @@ namespace ProjectManagementSystem.Controllers
         // ===============================
         // LOGIN (Teacher Table)
         // ===============================
+        //[HttpGet]
+        //public IActionResult Login()
+        //{
+        //    return View();
+        //}
+
+        //[HttpPost]
+        //public async Task<IActionResult> Login(LoginModel model)
+        //{
+        //    if (!ModelState.IsValid)
+        //        return View(model);
+
+        //    // ✅ Find user in Teacher table using async
+        //    var user = await _context.Teachers
+        //        .FirstOrDefaultAsync(x => x.Email == model.Email && x.PasswordHash == model.Password);
+
+        //    if (user == null)
+        //    {
+        //        ModelState.AddModelError("", "Invalid email or password");
+        //        return View(model);
+        //    }
+
+        //    // ✅ Save necessary session values
+        //    HttpContext.Session.SetString("UserId", user.Id.ToString());
+        //    HttpContext.Session.SetString("UserName", user.FullName);
+        //    HttpContext.Session.SetString("UserEmail", user.Email);
+        //    HttpContext.Session.SetString("UserRole", user.Role); // "Admin" or "Teacher"
+
+        //    // ✅ Redirect based on role
+        //    if (user.Role.Equals("Admin", StringComparison.OrdinalIgnoreCase))
+        //    {
+        //        return RedirectToAction("Dashboard", "Admin");
+        //    }
+        //    else // Teacher
+        //    {
+        //        return RedirectToAction("Dashboard", "Teacher");
+        //    }
+        //}
+
+        //[HttpPost]
+        //public IActionResult Logout()
+        //{
+        //    HttpContext.Session.Clear();
+        //    return RedirectToAction("Login");
+        //}
+
         [HttpGet]
         public IActionResult Login()
         {
@@ -344,14 +390,13 @@ namespace ProjectManagementSystem.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Login(LoginModel model)
+        public IActionResult Login(LoginModel model)
         {
             if (!ModelState.IsValid)
                 return View(model);
 
-            // ✅ Find user in Teacher table using async
-            var user = await _context.Teachers
-                .FirstOrDefaultAsync(x => x.Email == model.Email && x.PasswordHash == model.Password);
+            var user = _context.Teachers
+                .FirstOrDefault(x => x.Email == model.Email && x.PasswordHash == model.Password);
 
             if (user == null)
             {
@@ -359,21 +404,16 @@ namespace ProjectManagementSystem.Controllers
                 return View(model);
             }
 
-            // ✅ Save necessary session values
+            // Save to Session
             HttpContext.Session.SetString("UserId", user.Id.ToString());
             HttpContext.Session.SetString("UserName", user.FullName);
             HttpContext.Session.SetString("UserEmail", user.Email);
-            HttpContext.Session.SetString("UserRole", user.Role); // "Admin" or "Teacher"
+            HttpContext.Session.SetString("UserRole", user.Role); // Admin or Teacher
 
-            // ✅ Redirect based on role
-            if (user.Role.Equals("Admin", StringComparison.OrdinalIgnoreCase))
-            {
-                return RedirectToAction("Dashboard", "Admin");
-            }
-            else // Teacher
-            {
-                return RedirectToAction("Dashboard", "Teacher");
-            }
+            // Redirect based on role
+            return user.Role == "Admin"
+                ? RedirectToAction("Dashboard", "Admin")
+                : RedirectToAction("Dashboard", "Teacher");
         }
 
         [HttpPost]
@@ -382,8 +422,6 @@ namespace ProjectManagementSystem.Controllers
             HttpContext.Session.Clear();
             return RedirectToAction("Login");
         }
-
-
         // ===============================
         // ADMIN ONLY PAGES
         // ===============================
@@ -435,71 +473,11 @@ namespace ProjectManagementSystem.Controllers
             return RedirectToAction("ChangePassword");
         }
 
-        // ===============================
-        // PROFILE
-        // ===============================
-        //[HttpGet]
-        //[Authorize(Roles = "Admin,Teacher")]
-        //public async Task<IActionResult> MyProfile(bool isEditMode = false)
-        //{
-        //    // Get logged-in user ID from claims
-        //    var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-        //    if (userIdClaim == null)
-        //        return RedirectToAction("Login");
 
-        //    int userId = int.Parse(userIdClaim.Value);
-        //    var user = await _context.Teachers.FindAsync(userId);
-
-        //    if (user == null)
-        //        return RedirectToAction("Login");
-
-        //    var model = new MyProfileViewModel
-        //    {
-        //        FullName = user.FullName,
-        //        Email = user.Email,
-        //        IsEditMode = isEditMode
-        //    };
-
-        //    // Pass role to view dynamically
-        //    ViewBag.Role = user.Role; // Admin or Teacher
-
-        //    return View(model);
-        //}
-
-        //[HttpPost]
-        //[Authorize(Roles = "Admin,Teacher")]
-        //[ValidateAntiForgeryToken]
-        //public async Task<IActionResult> MyProfile(MyProfileViewModel model)
-        //{
-        //    var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-        //    if (userIdClaim == null)
-        //        return RedirectToAction("Login");
-
-        //    int userId = int.Parse(userIdClaim.Value);
-        //    var user = await _context.Teachers.FindAsync(userId);
-
-        //    if (user == null)
-        //        return RedirectToAction("Login");
-
-        //    if (!ModelState.IsValid)
-        //    {
-        //        model.IsEditMode = true;
-        //        ViewBag.Role = user.Role;
-        //        return View(model);
-        //    }
-
-        //    // Update profile
-        //    user.FullName = model.FullName;
-        //    await _context.SaveChangesAsync();
-
-        //    TempData["SuccessMessage"] = "Profile updated successfully";
-
-        //    return RedirectToAction("MyProfile");
-        //}
         [HttpGet]
         public async Task<IActionResult> MyProfile(bool isEditMode = false)
         {
-            // ✅ Get session values
+            // Get session values
             var userIdStr = HttpContext.Session.GetString("UserId");
             var userRole = HttpContext.Session.GetString("UserRole");
 
@@ -540,7 +518,6 @@ namespace ProjectManagementSystem.Controllers
                 return RedirectToAction("Login", "Admin");
 
             var user = await _context.Teachers.FindAsync(userId);
-
             if (user == null)
                 return RedirectToAction("Login", "Admin");
 
@@ -551,20 +528,29 @@ namespace ProjectManagementSystem.Controllers
                 return View(model);
             }
 
-            // ✅ Update profile
+            // Update FullName
             user.FullName = model.FullName;
-            await _context.SaveChangesAsync();
-
-            // ✅ Keep session name in sync
             HttpContext.Session.SetString("UserName", model.FullName);
 
+            // Password change
+            if (!string.IsNullOrEmpty(model.OldPassword) || !string.IsNullOrEmpty(model.NewPassword))
+            {
+                if (model.OldPassword != user.PasswordHash)
+                {
+                    ModelState.AddModelError("OldPassword", "Old password is incorrect.");
+                    model.IsEditMode = true;
+                    ViewBag.Role = userRole;
+                    return View(model);
+                }
+
+                user.PasswordHash = model.NewPassword;
+            }
+
+            await _context.SaveChangesAsync();
             TempData["SuccessMessage"] = "Profile updated successfully";
 
             return RedirectToAction(nameof(MyProfile));
         }
-
-
-
 
 
 
