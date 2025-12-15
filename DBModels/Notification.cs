@@ -25,7 +25,15 @@ public partial class Notification
 
     public DateTime? CreatedAt { get; set; }
 
+    public int? AnnouncementId { get; set; }
+
+    public int? TeacherId { get; set; }
+
+    public virtual Announcement? Announcement { get; set; }
+
     public virtual Project? ProjectPk { get; set; }
+
+    public virtual Teacher? Teacher { get; set; }
 
     public virtual Student User { get; set; } = null!;
 }

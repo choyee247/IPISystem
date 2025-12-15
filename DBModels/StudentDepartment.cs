@@ -10,4 +10,6 @@ public partial class StudentDepartment
     public string? DepartmentName { get; set; }
 
     public virtual ICollection<Student> Students { get; set; } = new List<Student>();
+
+    public virtual ICollection<Teacher> Teachers { get; set; } = new List<Teacher>();
 }

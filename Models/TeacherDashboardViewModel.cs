@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using ProjectManagementSystem.DBModels;
 
-namespace ProjectManagementSystem.ViewModels
+namespace ProjectManagementSystem.DBModels
 {
     public class TeacherDashboardViewModel
     {

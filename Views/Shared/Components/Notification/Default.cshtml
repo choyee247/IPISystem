@@ -22,17 +22,20 @@
 
                         <div class="small text-muted">
                             <i class="far fa-clock me-1"></i>
-                        @notification.CreatedAt.ToString("MMM dd, yyyy • hh:mm tt")
+                            @notification.CreatedAt.ToString("MMM dd, yyyy • hh:mm tt")
                         </div>
                     </div>
-
-                  @*   <div class="notification-time small text-muted">
-                        <i class="far fa-clock me-1"></i>
-                        @notification.CreatedAt.ToString("MMM dd, yyyy • hh:mm tt")
-                    </div> *@
                 </div>
             </a>
         }
+
+        <div class="view-all mt-3 text-center">
+            <a asp-controller="Notifications"
+               asp-action="IndexTeacher"
+               class="btn btn-sm view-all-btn">
+                View All
+            </a>
+        </div>
     }
     else
     {
@@ -41,14 +44,38 @@
             <p class="text-muted mt-2 mb-0">No new notifications</p>
         </div>
     }
-
 </div>
+@* <audio id="notificationSound"
+       src="~/sounds/mixkit-software-interface-back-2575.mp3"
+       preload="auto"></audio>
+ *@
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+
+        let hasUnread = document.querySelectorAll(".notification-item.unread").length;
+
+        if (hasUnread > 0) {
+            let sound = document.getElementById("notificationSound");
+
+            sound.play().catch(err => {
+                console.log("Autoplay blocked by browser. Waiting for user interaction...");
+            });
+
+            // One-time unlock when user clicks anywhere
+            window.addEventListener("click", () => {
+                sound.play();
+            }, { once: true });
+        }
+    });
+</script>
+
 
 <style>
     .notification-wrapper {
-        width: 380px; 
-        max-height: 500px; 
-        overflow-y: auto; 
+        width: 380px;
+        max-height: 500px;
+        overflow-y: auto;
         padding: 10px;
     }
 
@@ -93,11 +120,18 @@
         line-height: 1.3rem;
     }
 
-    .notification-time {
-        font-size: 0.75rem;
+    .view-all-btn {
+        background: #8C5DD1;
+        color: white;
+        padding: 6px 18px;
+        border-radius: 20px;
+        font-weight: 600;
+        transition: 0.2s;
     }
 
-    .empty-notifications i {
-        color: #b5b5b5;
-    }
+        .view-all-btn:hover {
+            background: #7347b5;
+            color: white;
+            transform: translateY(-2px);
+        }
 </style>

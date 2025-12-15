@@ -277,35 +277,83 @@ namespace ProjectManagementSystem.Controllers
                 TempData["Error"] = "You cannot upload again. Wait for teacher feedback.";
                 return RedirectToAction(nameof(Index));
             }
-
             // Mark project as submitted
             existingProject.Status = "Pending";
             existingProject.ProjectSubmittedDate = DateTime.Now;
 
-            // Create notification for each team member
-            foreach (var member in existingProject.ProjectMembers)
+            // Leader name
+            var leader = existingProject.ProjectMembers
+                .FirstOrDefault(pm => pm.Role == "Leader")?.StudentPk?.StudentName ?? "Unknown Leader";
+
+            // Create only ONE notification for the teacher
+            var notification = new DBModels.Notification
             {
-                if (existingProject.ProjectPkId == 0)
-                    throw new Exception("Project PK not assigned yet!");
+                UserId = (int)existingProject.TeacherId,
+                Title = "Project Submitted",
+                Message = $"Leader {leader} submitted the project '{existingProject.ProjectName}'.",
+                CreatedAt = DateTime.Now,
+                IsRead = false,
+                NotificationType = "ProjectSubmitted",
+                ProjectPkId = existingProject.ProjectPkId,
+                TeacherId = existingProject.TeacherId
+            };
 
-                var leader = existingProject.ProjectMembers
-               .FirstOrDefault(pm => pm.Role == "Leader")?.StudentPk?.StudentName ?? "Unknown Leader";
-
-                var notification = new DBModels.Notification
-                {
-                    UserId = member.StudentPk.StudentPkId, // make sure member.StudentPk is loaded
-                    Title = "Project Submitted",
-                    Message = $"Leader {leader} submitted the project '{existingProject.ProjectName}'.",
-                    CreatedAt = DateTime.Now,
-                    IsRead = false,
-                    NotificationType = "ProjectSubmitted",
-                    ProjectPkId = existingProject?.ProjectPkId
-                };
-
-                _context.Notifications.Add(notification);
-            }
+            Console.WriteLine("Adding 1 Notification For TeacherId: " + notification.UserId);
+            _context.Notifications.Add(notification);
 
             await _context.SaveChangesAsync();
+            Console.WriteLine("SAVE CHANGED OK");
+
+            // Mark project as submitted
+            //existingProject.Status = "Pending";
+            //existingProject.ProjectSubmittedDate = DateTime.Now;
+
+            //// Create notification for each team member
+            //foreach (var member in existingProject.ProjectMembers)
+            //{
+            //    if (existingProject.ProjectPkId == 0)
+            //        throw new Exception("Project PK not assigned yet!");
+
+            //    var leader = existingProject.ProjectMembers
+            //     .FirstOrDefault(pm => pm.Role == "Leader")?.StudentPk?.StudentName ?? "Unknown Leader";
+
+            //    var notification = new DBModels.Notification
+            //    {
+            //        UserId = (int)existingProject.TeacherId,  
+            //        Title = "Project Submitted",
+            //        Message = $"Leader {leader} submitted the project '{existingProject.ProjectName}'.",
+            //        CreatedAt = DateTime.Now,
+            //        IsRead = false,
+            //        NotificationType = "ProjectSubmitted",
+            //        ProjectPkId = existingProject.ProjectPkId,
+            //        TeacherId = existingProject.TeacherId
+            //    };
+            //    Console.WriteLine("Notification Added For TeacherId: " + notification.UserId);
+
+            //    _context.Notifications.Add(notification);
+
+            //    // var leader = existingProject.ProjectMembers
+            //    //.FirstOrDefault(pm => pm.Role == "Leader")?.StudentPk?.StudentName ?? "Unknown Leader";
+
+            //    // var notification = new DBModels.Notification
+            //    // {
+            //    //     UserId = (int)existingProject.TeacherId,
+            //    //     //UserId = member.StudentPk.StudentPkId, 
+            //    //     Title = "Project Submitted",
+            //    //     Message = $"Leader {leader} submitted the project '{existingProject.ProjectName}'.",
+            //    //     CreatedAt = DateTime.Now,
+            //    //     IsRead = false,
+            //    //     NotificationType = "ProjectSubmitted",
+            //    //     ProjectPkId = existingProject?.ProjectPkId,
+            //    //     TeacherId = existingProject.TeacherId 
+            //    // };
+
+            //    // _context.Notifications.Add(notification);
+            //}
+            //Console.WriteLine("Creating Teacher Notification => TeacherId = "+ existingProject.TeacherId);
+
+            //await _context.SaveChangesAsync();
+            //Console.WriteLine("SAVE CHANGED OK");
 
             TempData["UploadSuccess"] = "Project successfully uploaded and sent to teacher.";
             TempData["Success"] = "Project submitted successfully!";
@@ -684,6 +732,7 @@ namespace ProjectManagementSystem.Controllers
             project.SubmittedByStudentPkId = student.StudentPkId;
             project.Status = "Draft";
             project.ProjectSubmittedDate = null;
+            project.TeacherId = 2;
 
             // Company update
             if (project.CompanyPkId != 0)

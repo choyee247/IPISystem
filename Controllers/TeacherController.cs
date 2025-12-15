@@ -213,11 +213,11 @@ namespace ProjectManagementSystem.Controllers
         
 
         [Authorize(Roles = "Admin,Teacher")]
-        private async Task<List<ViewModels.SubmissionStat>> GetSubmissionStatsAsync(DateTime currentDate)
+        private async Task<List<DBModels.SubmissionStat>> GetSubmissionStatsAsync(DateTime currentDate)
         {
             try
             {
-                var stats = new List<ViewModels.SubmissionStat>();
+                var stats = new List<DBModels.SubmissionStat>();
                 var dateRange = Enumerable.Range(0, 7)
                     .Select(i => currentDate.AddDays(-i).Date)
                     .ToList();
@@ -235,7 +235,7 @@ namespace ProjectManagementSystem.Controllers
 
                 foreach (var date in dateRange.OrderBy(d => d))
                 {
-                    stats.Add(new ViewModels.SubmissionStat
+                    stats.Add(new DBModels.SubmissionStat
                     {
                         Date = date.ToString("yyyy-MM-dd"),
                         Count = actualCounts.FirstOrDefault(a => a.Date == date)?.Count ?? 0
@@ -247,7 +247,7 @@ namespace ProjectManagementSystem.Controllers
             {
                 _logger.LogError(ex, "Error getting submission stats");
                 return Enumerable.Range(0, 7)
-                    .Select(i => new ViewModels.SubmissionStat
+                    .Select(i => new DBModels.SubmissionStat
                     {
                         Date = currentDate.AddDays(-i).ToString("yyyy-MM-dd"),
                         Count = 0

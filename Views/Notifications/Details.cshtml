@@ -5,9 +5,9 @@
 }
 <style>
     body {
-        background: linear-gradient(135deg, #e4eefd);
-        min-height: 100vh;
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #e4eefd);
+    min-height: 100vh;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
 </style>
 <h2>@Model.Title</h2>
@@ -17,16 +17,32 @@
     <small class="text-muted ms-2">@Model.CreatedAt.ToString("dd MMM yyyy HH:mm")</small>
 </div>
 
-<p>@Model.Message</p>
-
-@if (Model.ProjectId.HasValue)
+@if (Model.NotificationType == "Announcement")
 {
+    <h5>@Model.AnnouncementTitle</h5>
+    <p>@Model.AnnouncementMessage</p>
+    <p>
+        <strong>Start Date:</strong> @Model.AnnouncementStartDate?.ToString("dd MMM yyyy") <br />
+        <strong>Expiry Date:</strong> @Model.AnnouncementExpiryDate?.ToString("dd MMM yyyy") <br />
+        <strong>Blocks Submissions:</strong> @(Model.AnnouncementBlocksSubmissions == true ? "Yes" : "No") <br />
+        @if (!string.IsNullOrEmpty(Model.AnnouncementFilePath))
+        {
+            <strong>File:</strong> <a href="@Url.Content(Model.AnnouncementFilePath)" target="_blank">Download</a>
+        }
+    </p>
+}
+else
+{
+    <p>@Model.Message</p>
+    @if (Model.ProjectId.HasValue)
+    {
         <p>
-            Related Project: 
+            Related Project:
             <a href="@Url.Action("Details", "Project", new { id = Model.ProjectId.Value })">
-            @Model.ProjectName
+                @Model.ProjectName
             </a>
         </p>
+    }
 }
 
 <form asp-action="Delete" method="post" onsubmit="return confirm('Are you sure you want to delete this notification?');">

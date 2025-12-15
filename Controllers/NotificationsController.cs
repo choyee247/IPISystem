@@ -32,14 +32,23 @@ namespace ProjectManagementSystem.Controllers
                 return NotFound();
 
             var notifications = await _context.Notifications
+                .Include(n => n.Announcement)
                 .Where(n => n.UserId == student.StudentPkId)
+                .Where(n => n.IsDeleted == false || n.IsDeleted == null)
                 .Where(n => n.NotificationType != "ProjectSubmitted" && n.NotificationType != "ProjectStatus")
+
+                .Where(n => n.NotificationType != "Announcement" ||
+                    (n.NotificationType == "Announcement" && n.Announcement != null && n.Announcement.IsActive==true))
+
                 .OrderByDescending(n => n.CreatedAt)
                 .Select(n => new NotificationViewModel
                 {
                     Id = n.NotificationPkId,
                     Title = n.Title ?? "",
                     Message = n.Message ?? "",
+                    AnnouncementMessage = n.NotificationType == "Announcement" && n.Announcement != null
+                    ? n.Announcement.Message ?? ""
+                    : "",
                     CreatedAt = n.CreatedAt ?? DateTime.UtcNow,
                     ProjectId = n.ProjectPkId,
                     ProjectName = n.ProjectPk != null ? n.ProjectPk.ProjectName : "",
@@ -136,37 +145,77 @@ namespace ProjectManagementSystem.Controllers
         //        return "";
         //}
 
+        ///**********????/////
+        //public IActionResult IndexTeacher()
+        //{
+        //    var userIdStr = HttpContext.Session.GetString("UserId");
+        //    var userRole = HttpContext.Session.GetString("UserRole");
 
+        //    if (string.IsNullOrEmpty(userIdStr) || userRole != "Teacher")
+        //        return RedirectToAction("Login", "AdminLogin");
 
-        // ---------------------
-        // Teacher Notifications
-        // ---------------------
-        public async Task<IActionResult> IndexTeacher()
+        //    // Load ProjectSubmitted notifications only
+        //    var notifications = _context.Notifications
+        //        .Include(n => n.ProjectPk)
+        //        .Where(n => n.NotificationType == "ProjectSubmitted")
+        //        .Where(n => n.IsRead == false)
+        //        .OrderByDescending(n => n.CreatedAt)
+        //        .Take(5)
+        //        .Select(n => new NotificationViewModel
+        //        {
+        //            Id = n.NotificationPkId,
+        //            Message = n.Message,
+        //            CreatedAt = (DateTime)n.CreatedAt,
+        //            ProjectId = n.ProjectPkId ?? 0,
+        //            ProjectName = n.ProjectPk != null ? n.ProjectPk.ProjectName : "No Project",
+        //            IsRead = n.IsRead,
+        //        })
+        //        .ToList();
+
+        //    // Send to View
+        //    ViewBag.ProjectSubmittedNotifications = notifications;
+
+        //    return View();
+        //}
+
+        public IActionResult IndexTeacher()
         {
-            var userId = HttpContext.Session.GetInt32("StudentPkId");
-            if (userId == null)
-                return RedirectToAction("Login", "StudentLogin");
+            var userIdStr = HttpContext.Session.GetString("UserId");
+            var userRole = HttpContext.Session.GetString("UserRole");
 
-            var notifications = await _context.Notifications
+            if (string.IsNullOrEmpty(userIdStr) || userRole != "Teacher")
+                return RedirectToAction("Login", "AdminLogin");
+
+            int teacherId = int.Parse(userIdStr);
+            Console.WriteLine("teacherid.............." +teacherId);
+            // Load ProjectSubmitted notifications
+            var notifications = _context.Notifications
                 .Include(n => n.ProjectPk)
-                .Where(n => n.UserId == userId &&
-                            n.IsDeleted == false &&
-                            n.NotificationType == "ProjectSubmitted")
+                .Where(n => n.TeacherId == teacherId && n.UserId == teacherId)
+                //.Where(n => n.TeacherId == teacherId)
+                .Where(n => n.NotificationType == "ProjectSubmitted")
                 .OrderByDescending(n => n.CreatedAt)
                 .Select(n => new NotificationViewModel
                 {
                     Id = n.NotificationPkId,
-                    Title = n.Title ?? "",
-                    Message = n.Message ?? "",
+                    Message = n.Message,
+                    CreatedAt = (DateTime)n.CreatedAt,
+                    ProjectId = n.ProjectPkId ?? 0,
+                    ProjectName = n.ProjectPk != null ? n.ProjectPk.ProjectName : "No Project",
+                    IsDeleted = n.IsDeleted ?? false,
                     IsRead = n.IsRead ?? false,
-                    CreatedAt = n.CreatedAt ?? System.DateTime.Now,
-                    ProjectId = n.ProjectPkId,
-                    NotificationType = n.NotificationType ?? ""
                 })
-                .ToListAsync();
+                .ToList();
 
-            return View("IndexTeacher", notifications);
+            ViewBag.Notifications = notifications;
+            ViewBag.UnreadCount = notifications.Count(n => n.IsRead==false);
+            ViewBag.ReadCount = notifications.Count(n => n.IsRead==true);
+            Console.WriteLine("teacher noti................" + System.Text.Json.JsonSerializer.Serialize(notifications));
+            return View(notifications);
         }
+
+
+
 
         // ---------------------
         // Shared Actions
@@ -183,6 +232,8 @@ namespace ProjectManagementSystem.Controllers
         //    }
         //    return Ok();
         //}
+
+        [HttpGet]
         public async Task<IActionResult> GetUnreadCount()
         {
             var rollNumber = HttpContext.Session.GetString("RollNumber");
@@ -190,17 +241,17 @@ namespace ProjectManagementSystem.Controllers
                 return Json(0);
 
             var student = await _context.Students
+                .Include(s => s.Notifications)
                 .FirstOrDefaultAsync(s => s.EmailPk.RollNumber == rollNumber);
 
             if (student == null)
                 return Json(0);
 
-            var count = await _context.Notifications
-                .Where(n => n.UserId == student.StudentPkId && (n.IsRead == false || n.IsRead == null))
-                .CountAsync();
-
+            var count = student.Notifications.Count(n => n.IsRead==false);
             return Json(count);
         }
+
+     
         public async Task<IActionResult> GetReadCount()
         {
             var rollNumber = HttpContext.Session.GetString("RollNumber");
@@ -328,6 +379,7 @@ namespace ProjectManagementSystem.Controllers
         {
             var notification = await _context.Notifications
                 .Include(n => n.ProjectPk)
+                .Include(n => n. Announcement)
                 .Include(n => n.User)
                 .FirstOrDefaultAsync(n => n.NotificationPkId == id);
 
@@ -340,6 +392,24 @@ namespace ProjectManagementSystem.Controllers
                 Title = notification.Title ?? "",
                 Message = notification.Message ?? "",
                 CreatedAt = notification.CreatedAt ?? DateTime.Now,
+                AnnouncementMessage = notification.NotificationType == "Announcement" && notification.Announcement != null
+                ? notification.Announcement.Message ?? ""
+                : notification.Message ?? "",
+                AnnouncementTitle = notification.NotificationType == "Announcement" && notification.Announcement != null
+                ? notification.Announcement.Title ?? ""
+                : "",
+                AnnouncementStartDate = notification.NotificationType == "Announcement" && notification.Announcement != null
+                ? notification.Announcement.StartDate
+                : null,
+                AnnouncementExpiryDate = notification.NotificationType == "Announcement" && notification.Announcement != null
+                ? notification.Announcement.ExpiryDate
+                : null,
+                AnnouncementFilePath = notification.NotificationType == "Announcement" && notification.Announcement != null
+                ? notification.Announcement.FilePath ?? ""
+                : "",
+                AnnouncementBlocksSubmissions = notification.NotificationType == "Announcement" && notification.Announcement != null
+                ? notification.Announcement.BlocksSubmissions
+                : null,
                 IsRead = notification.IsRead,
                 NotificationType = notification.NotificationType ?? "",
                 ProjectId = notification.ProjectPkId,
@@ -365,11 +435,16 @@ namespace ProjectManagementSystem.Controllers
             if (notification == null)
                 return NotFound();
 
-            _context.Notifications.Remove(notification);
+            // Soft delete
+            notification.IsDeleted = true;
+            notification.DeletedDate = DateTime.Now;
+
+            _context.Notifications.Update(notification);
             await _context.SaveChangesAsync();
 
             return RedirectToAction(nameof(IndexStudent));
         }
+
 
 
         // -----------------------------
@@ -406,7 +481,90 @@ namespace ProjectManagementSystem.Controllers
         //    TempData["Success"] = "Project and related data deleted successfully.";
         //    return RedirectToAction("Index"); // Adjust redirect as needed
         //}
-    
+
+        [HttpGet]
+        public async Task<IActionResult> GetTeacherUnreadCount()
+        {
+            var userIdStr = HttpContext.Session.GetString("UserId");
+            var role = HttpContext.Session.GetString("UserRole");
+
+            if (string.IsNullOrEmpty(userIdStr) || role != "Teacher")
+                return Json(0);
+
+            int teacherId = int.Parse(userIdStr);
+
+            var count = await _context.Notifications
+                .Where(n => n.TeacherId == teacherId && n.IsRead == false)
+                .CountAsync();
+
+            return Json(count);
+        }
+        [HttpGet]
+        public async Task<IActionResult> GetTeacherReadCount()
+        {
+            var userIdStr = HttpContext.Session.GetString("UserId");
+            var role = HttpContext.Session.GetString("UserRole");
+
+            if (string.IsNullOrEmpty(userIdStr) || role != "Teacher")
+                return Json(0);
+
+            int teacherId = int.Parse(userIdStr);
+
+            var count = await _context.Notifications
+                .Where(n => n.TeacherId == teacherId && n.IsRead == true)
+                .CountAsync();
+
+            return Json(count);
+        }
+        [HttpPost]
+        public async Task<IActionResult> TeacherMarkAllRead()
+        {
+            var userIdStr = HttpContext.Session.GetString("UserId");
+            var role = HttpContext.Session.GetString("UserRole");
+
+            if (string.IsNullOrEmpty(userIdStr) || role != "Teacher")
+                return Unauthorized();
+
+            int teacherId = int.Parse(userIdStr);
+
+            var notifications = await _context.Notifications
+                .Where(n => n.TeacherId == teacherId && (n.IsRead == false || n.IsRead == null))
+                .ToListAsync();
+
+            notifications.ForEach(n => n.IsRead = true);
+            await _context.SaveChangesAsync();
+
+            return Ok();
+        }
+        [HttpPost]
+        public async Task<IActionResult> TeacherMarkAsRead(int id)
+        {
+            var notification = await _context.Notifications.FindAsync(id);
+
+            if (notification == null)
+                return NotFound();
+
+            if (notification.IsRead == false)
+            {
+                notification.IsRead = true;
+                await _context.SaveChangesAsync();
+            }
+
+            return Ok();
+        }
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> TeacherDelete(int id)
+        {
+            var notification = await _context.Notifications.FindAsync(id);
+            if (notification == null)
+                return NotFound();
+
+            _context.Notifications.Remove(notification);
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction(nameof(IndexTeacher));
+        }
 
 
         [HttpPost]

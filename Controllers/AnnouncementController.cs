@@ -192,6 +192,11 @@ namespace ProjectManagementSystem.Controllers
                     {
                         continue; 
                     }
+                    var teacherIdStr = HttpContext.Session.GetString("UserId"); // or your TeacherId session key
+                    int? teacherId = null;
+
+                    if (!string.IsNullOrEmpty(teacherIdStr))
+                        teacherId = int.Parse(teacherIdStr);
 
                     var notification = new Notification
                     {
@@ -201,7 +206,9 @@ namespace ProjectManagementSystem.Controllers
                         NotificationType = "Announcement",
                         CreatedAt = DateTime.Now,
                         ProjectPkId = projectId,
-                        IsRead=false,
+                        AnnouncementId = entity.AnnouncementId,
+                        TeacherId = teacherId,
+                        IsRead =false,
                         IsDeleted=false
                     };
                     _context.Notifications.Add(notification);
@@ -282,6 +289,19 @@ namespace ProjectManagementSystem.Controllers
                 announcement.IsActive = model.IsActive;
 
                 _context.Update(announcement);
+                await _context.SaveChangesAsync();
+
+                // ⭐ Update Notifications linked to this announcement
+                var relatedNotifications = await _context.Notifications
+                    .Where(n => n.AnnouncementId == announcement.AnnouncementId)
+                    .ToListAsync();
+
+                foreach (var noti in relatedNotifications)
+                {
+                    noti.Title = model.Title;
+                    noti.Message = model.Message;
+                }
+
                 await _context.SaveChangesAsync();
 
                 TempData["Success"] = "Announcement updated successfully!";

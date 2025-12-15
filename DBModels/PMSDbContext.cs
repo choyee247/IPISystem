@@ -21,19 +21,19 @@ public partial class PMSDbContext : DbContext
 
     public virtual DbSet<Announcement> Announcements { get; set; }
 
-    //public virtual DbSet<AspNetRole> AspNetRoles { get; set; }
+    public virtual DbSet<AspNetRole> AspNetRoles { get; set; }
 
-    //public virtual DbSet<AspNetRoleClaim> AspNetRoleClaims { get; set; }
+    public virtual DbSet<AspNetRoleClaim> AspNetRoleClaims { get; set; }
 
-    //public virtual DbSet<AspNetUser> AspNetUsers { get; set; }
+    public virtual DbSet<AspNetUser> AspNetUsers { get; set; }
 
-    //public virtual DbSet<AspNetUserClaim> AspNetUserClaims { get; set; }
+    public virtual DbSet<AspNetUserClaim> AspNetUserClaims { get; set; }
 
-    //public virtual DbSet<AspNetUserLogin> AspNetUserLogins { get; set; }
+    public virtual DbSet<AspNetUserLogin> AspNetUserLogins { get; set; }
 
-    //public virtual DbSet<AspNetUserRole> AspNetUserRoles { get; set; }
+    public virtual DbSet<AspNetUserRole> AspNetUserRoles { get; set; }
 
-    //public virtual DbSet<AspNetUserToken> AspNetUserTokens { get; set; }
+    public virtual DbSet<AspNetUserToken> AspNetUserTokens { get; set; }
 
     public virtual DbSet<AuditLog> AuditLogs { get; set; }
 
@@ -70,7 +70,7 @@ public partial class PMSDbContext : DbContext
     public virtual DbSet<Teacher> Teachers { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
+//#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
         => optionsBuilder.UseSqlServer("Server=203.81.89.218; Database=InternPMS; User Id=internadmin; Password=intern@dmin123;Trust Server Certificate=true");
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -97,61 +97,61 @@ public partial class PMSDbContext : DbContext
                 .OnDelete(DeleteBehavior.SetNull);
         });
 
-        //modelBuilder.Entity<AspNetRole>(entity =>
-        //{
-        //    entity.Property(e => e.Name).HasMaxLength(256);
-        //    entity.Property(e => e.NormalizedName).HasMaxLength(256);
-        //});
+        modelBuilder.Entity<AspNetRole>(entity =>
+        {
+            entity.Property(e => e.Name).HasMaxLength(256);
+            entity.Property(e => e.NormalizedName).HasMaxLength(256);
+        });
 
-        //modelBuilder.Entity<AspNetRoleClaim>(entity =>
-        //{
-        //    entity.Property(e => e.RoleId).HasMaxLength(450);
+        modelBuilder.Entity<AspNetRoleClaim>(entity =>
+        {
+            entity.Property(e => e.RoleId).HasMaxLength(450);
 
-        //    entity.HasOne(d => d.Role).WithMany(p => p.AspNetRoleClaims).HasForeignKey(d => d.RoleId);
-        //});
+            entity.HasOne(d => d.Role).WithMany(p => p.AspNetRoleClaims).HasForeignKey(d => d.RoleId);
+        });
 
-        //modelBuilder.Entity<AspNetUser>(entity =>
-        //{
-        //    entity.Property(e => e.Email).HasMaxLength(256);
-        //    entity.Property(e => e.FullName).HasMaxLength(100);
-        //    entity.Property(e => e.IsUsingDefaultPassword).HasDefaultValue(true);
-        //    entity.Property(e => e.NormalizedEmail).HasMaxLength(256);
-        //    entity.Property(e => e.NormalizedUserName).HasMaxLength(256);
-        //    entity.Property(e => e.UserName).HasMaxLength(256);
-        //});
+        modelBuilder.Entity<AspNetUser>(entity =>
+        {
+            entity.Property(e => e.Email).HasMaxLength(256);
+            entity.Property(e => e.FullName).HasMaxLength(100);
+            entity.Property(e => e.IsUsingDefaultPassword).HasDefaultValue(true);
+            entity.Property(e => e.NormalizedEmail).HasMaxLength(256);
+            entity.Property(e => e.NormalizedUserName).HasMaxLength(256);
+            entity.Property(e => e.UserName).HasMaxLength(256);
+        });
 
-        //modelBuilder.Entity<AspNetUserClaim>(entity =>
-        //{
-        //    entity.Property(e => e.UserId).HasMaxLength(450);
+        modelBuilder.Entity<AspNetUserClaim>(entity =>
+        {
+            entity.Property(e => e.UserId).HasMaxLength(450);
 
-        //    entity.HasOne(d => d.User).WithMany(p => p.AspNetUserClaims).HasForeignKey(d => d.UserId);
-        //});
+            entity.HasOne(d => d.User).WithMany(p => p.AspNetUserClaims).HasForeignKey(d => d.UserId);
+        });
 
-        //modelBuilder.Entity<AspNetUserLogin>(entity =>
-        //{
-        //    entity.HasKey(e => new { e.LoginProvider, e.ProviderKey });
+        modelBuilder.Entity<AspNetUserLogin>(entity =>
+        {
+            entity.HasKey(e => new { e.LoginProvider, e.ProviderKey });
 
-        //    entity.Property(e => e.UserId).HasMaxLength(450);
+            entity.Property(e => e.UserId).HasMaxLength(450);
 
-        //    entity.HasOne(d => d.User).WithMany(p => p.AspNetUserLogins).HasForeignKey(d => d.UserId);
-        //});
+            entity.HasOne(d => d.User).WithMany(p => p.AspNetUserLogins).HasForeignKey(d => d.UserId);
+        });
 
-        //modelBuilder.Entity<AspNetUserRole>(entity =>
-        //{
-        //    entity.Property(e => e.RoleId).HasMaxLength(450);
-        //    entity.Property(e => e.UserId).HasMaxLength(450);
+        modelBuilder.Entity<AspNetUserRole>(entity =>
+        {
+            entity.Property(e => e.RoleId).HasMaxLength(450);
+            entity.Property(e => e.UserId).HasMaxLength(450);
 
-        //    entity.HasOne(d => d.Role).WithMany(p => p.AspNetUserRoles).HasForeignKey(d => d.RoleId);
+            entity.HasOne(d => d.Role).WithMany(p => p.AspNetUserRoles).HasForeignKey(d => d.RoleId);
 
-        //    entity.HasOne(d => d.User).WithMany(p => p.AspNetUserRoles).HasForeignKey(d => d.UserId);
-        //});
+            entity.HasOne(d => d.User).WithMany(p => p.AspNetUserRoles).HasForeignKey(d => d.UserId);
+        });
 
-        //modelBuilder.Entity<AspNetUserToken>(entity =>
-        //{
-        //    entity.HasKey(e => new { e.UserId, e.LoginProvider, e.Name });
+        modelBuilder.Entity<AspNetUserToken>(entity =>
+        {
+            entity.HasKey(e => new { e.UserId, e.LoginProvider, e.Name });
 
-        //    entity.HasOne(d => d.User).WithMany(p => p.AspNetUserTokens).HasForeignKey(d => d.UserId);
-        //});
+            entity.HasOne(d => d.User).WithMany(p => p.AspNetUserTokens).HasForeignKey(d => d.UserId);
+        });
 
         modelBuilder.Entity<AuditLog>(entity =>
         {
@@ -239,7 +239,15 @@ public partial class PMSDbContext : DbContext
             entity.Property(e => e.ProjectPkId).HasColumnName("Project_pkId");
             entity.Property(e => e.Title).HasMaxLength(100);
 
+            entity.HasOne(d => d.Announcement).WithMany(p => p.Notifications)
+                .HasForeignKey(d => d.AnnouncementId)
+                .HasConstraintName("FK_Notifications_Announcements");
+
             entity.HasOne(d => d.ProjectPk).WithMany(p => p.Notifications).HasForeignKey(d => d.ProjectPkId);
+
+            entity.HasOne(d => d.Teacher).WithMany(p => p.Notifications)
+                .HasForeignKey(d => d.TeacherId)
+                .HasConstraintName("FK_Notifications_Teachers");
 
             entity.HasOne(d => d.User).WithMany(p => p.Notifications).HasForeignKey(d => d.UserId);
         });
@@ -326,6 +334,10 @@ public partial class PMSDbContext : DbContext
             entity.HasOne(d => d.SubmittedByStudentPk).WithMany(p => p.ProjectSubmittedByStudentPks)
                 .HasForeignKey(d => d.SubmittedByStudentPkId)
                 .OnDelete(DeleteBehavior.ClientSetNull);
+
+            entity.HasOne(d => d.Teacher).WithMany(p => p.Projects)
+                .HasForeignKey(d => d.TeacherId)
+                .HasConstraintName("FK_Projects_Teachers");
         });
 
         modelBuilder.Entity<ProjectFile>(entity =>
@@ -422,6 +434,10 @@ public partial class PMSDbContext : DbContext
             entity.Property(e => e.Role)
                 .HasMaxLength(20)
                 .HasDefaultValue("Teacher");
+
+            entity.HasOne(d => d.DepartmentPk).WithMany(p => p.Teachers)
+                .HasForeignKey(d => d.DepartmentPkId)
+                .HasConstraintName("FK_Teachers_StudentDepartments");
         });
 
         OnModelCreatingPartial(modelBuilder);

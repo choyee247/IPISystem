@@ -132,7 +132,8 @@
 <div class="d-flex justify-content-between align-items-center mb-3">
     <div>
         <span class="fw-bold">Unread:</span>
-        <span id="unreadCount">@Model.Count(n => n.IsRead==false)</span>
+        <span id="
+">@Model.Count(n => n.IsRead==false)</span>
 
         <span class="ms-3 fw-bold">Read:</span>
         <span id="readCount">@Model.Count(n => n.IsRead==true)</span>
@@ -215,7 +216,7 @@
     <ul class="list-group mb-4 noti-panel" id="panel-@group.Key" style="display:none;">
         @foreach (var noti in group)
         {
-            <li class="list-group-item d-flex justify-content-between align-items-start @(noti.IsRead==true ? "read" : "unread")">
+           @*  <li class="list-group-item d-flex justify-content-between align-items-start @(noti.IsRead==true ? "read" : "unread")">
                 <div class="ms-2 me-auto">
                     <div class="fw-bold">@noti.Title</div>
                     <div>@noti.Message</div>
@@ -234,6 +235,79 @@
                         <a href="javascript:void(0)" onclick="openDetail(@noti.Id)">
                             View Details
                         </a>
+                    }
+
+                    <br />
+                    <small class="text-muted">@noti.CreatedAt.ToString("dd MMM yyyy HH:mm")</small>
+                </div>
+                <span class="badge noti-badge rounded-pill">@noti.NotificationType</span>
+            </li> *@
+            <li class="list-group-item d-flex justify-content-between align-items-start @(noti.IsRead==true ? "read" : "unread")">
+                @* <div class="ms-2 me-auto">
+                    @if (noti.NotificationType == "Announcement")
+                    {
+                        <!-- Show Announcement Title and Message -->
+                        <div class="fw-bold">@noti.Title - @noti.Message</div>
+                        <div>@noti.AnnouncementMessage</div> <!-- Optional if you have separate property -->
+                    }
+                    else
+                    {
+                        <div class="fw-bold">@noti.Title</div>
+                        <div>@noti.Message</div>
+                    }
+
+                    @if (noti.ProjectId.HasValue)
+                    {
+                        <small class="text-muted">
+                            Project:
+                            <a href="javascript:void(0)" onclick="openDetail(@noti.Id)">
+                                @noti.ProjectName
+                            </a>
+                        </small>
+                    }
+                    else
+                    {
+                        <a href="javascript:void(0)" onclick="openDetail(@noti.Id)">
+                            View Details
+                        </a>
+                    }
+
+                    <br />
+                    <small class="text-muted">@noti.CreatedAt.ToString("dd MMM yyyy HH:mm")</small>
+                </div> *@
+                <div class="ms-2 me-auto">
+                    @if (noti.NotificationType == "Announcement")
+                    {
+                        <!-- Always show Announcement Title + Message -->
+                        <div class="fw-bold">@noti.Title</div>
+                        <div>@noti.AnnouncementMessage</div>
+
+                        <!-- Link to view Announcement details -->
+                        <a href="javascript:void(0)" onclick="openDetail(@noti.Id)">
+                            View Details
+                        </a>
+                    }
+                    else
+                    {
+                        <!-- For normal notifications -->
+                        <div class="fw-bold">@noti.Title</div>
+                        <div>@noti.Message</div>
+
+                        @if (noti.ProjectId.HasValue)
+                        {
+                            <small class="text-muted">
+                                Project:
+                                <a href="javascript:void(0)" onclick="openDetail(@noti.Id)">
+                                    @noti.ProjectName
+                                </a>
+                            </small>
+                        }
+                        else
+                        {
+                            <a href="javascript:void(0)" onclick="openDetail(@noti.Id)">
+                                View Details
+                            </a>
+                        }
                     }
 
                     <br />

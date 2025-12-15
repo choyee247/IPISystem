@@ -47,6 +47,8 @@ public partial class Project
 
     public DateTime? MeetingTime { get; set; }
 
+    public int? TeacherId { get; set; }
+
     public virtual Company CompanyPk { get; set; } = null!;
 
     public virtual Framework FrameworkPk { get; set; } = null!;
@@ -64,4 +66,6 @@ public partial class Project
     public virtual Student StudentPk { get; set; } = null!;
 
     public virtual Student SubmittedByStudentPk { get; set; } = null!;
+
+    public virtual Teacher? Teacher { get; set; }
 }

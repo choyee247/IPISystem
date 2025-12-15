@@ -126,6 +126,12 @@
                         <span class="menu-text">My Profile</span>
                     </a>
                 </li>
+                <li class="menu-item @(ViewContext.RouteData.Values["Action"]?.ToString() == "TeacherNotifications" ? "active" : "")">
+                    <a asp-area="" asp-controller="Notifications" asp-action="IndexTeacher">
+                        <i class="bx bx-bell"></i>
+                        <span class="menu-text">Notifications</span>
+                    </a>
+                </li>
               @*   <li class="menu-item @(ViewContext.RouteData.Values["Action"].ToString() == "ChangePassword" ? "active" : "")">
                     <a asp-area="" asp-controller="Admin" asp-action="ChangePassword">
                         <i class="bx bx-lock"></i>
@@ -161,9 +167,10 @@
                                 <path fill="#8C5DD1" d="M12,22A2,2 0 0,0 14,20H10A2,2 0 0,0 12,22M18,16V11C18,7.93 16.36,5.36 13.5,4.68V4A1.5,1.5 0 0,0 12,2.5A1.5,1.5 0 0,0 10.5,4V4.68C7.63,5.36 6,7.92 6,11V16L4,18V19H20V18L18,16Z" />
                                 <circle class="pulse" fill="#FF6B6B" cx="18" cy="5" r="3.2" />
                             </svg>
-                            <span class="cute-badge" id="notificationBadge">
+                            @* <span class="cute-badge" id="notificationBadge">
                                 @await Component.InvokeAsync(typeof(ProjectManagementSystem.ViewComponents.NotificationCountViewComponent))
-                            </span>
+                            </span> *@
+                            <span class="cute-badge" id="notificationBadge">0</span>
                         </a>
 
                         <!-- Notification Dropdown -->
@@ -535,6 +542,32 @@
 
     </script> *@
     <script>
+        ///TeacherCount///
+            function loadTeacherUnreadCount() {
+            fetch('/Notifications/GetTeacherUnreadCount')
+                .then(response => response.json())
+                .then(count => {
+                    let badge = document.getElementById("notificationBadge");
+
+                    if (count > 0) {
+                        badge.innerText = count;
+                        badge.style.display = "flex";
+                    } else {
+                        badge.innerText = "";
+                        badge.style.display = "none";
+                    }
+                });
+        }
+
+        // Load on page open
+        loadTeacherUnreadCount();
+
+        // Auto refresh every 10 seconds (optional)
+        setInterval(loadTeacherUnreadCount, 10000);
+        ////count///
+
+
+
         // ---------- LOGOUT ----------
         function confirmLogout() {
             if (confirm("Do you really want to log out?")) {

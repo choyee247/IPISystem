@@ -11,22 +11,23 @@
         <span class="badge bg-danger rounded-pill position-absolute top-0 start-100 translate-middle notification-badge"
               id="unreadCount"
               style="font-size: 0.65rem;">
-            @Model.Count(n => n.IsRead==false)
+            @Model.Count(n => n.IsRead == false)
         </span>
     </button>
 
     <ul class="dropdown-menu dropdown-menu-end shadow"
+        id="notifDropdownMenu"
         aria-labelledby="notifDropdown"
         style="width: 450px; border: 1px solid #8c5dd1; border-radius: 0.75rem; max-height: 400px; overflow-y: auto;">
 
         @if (Model.Any())
         {
-            @foreach (var notif in Model)
+            @foreach (var notif in Model.OrderByDescending(n => n.CreatedAt))
             {
-                <li class="dropdown-item p-3 @(notif.IsRead==false ? "" : "fw-bold")"
+                <li class="dropdown-item p-3 @(notif.IsRead == false ? "fw-bold" : "")"
                     data-id="@notif.NotificationPkId"
                     style="border-bottom: 1px solid #f0eaff;">
-                    <div class="text-decoration-none d-block" style="color: @(notif.IsRead==false ? "#333" : "#8c5dd1");">
+                    <div class="text-decoration-none d-block" style="color: @(notif.IsRead == false ? "#333" : "#8c5dd1");">
                         <div>@notif.Message</div>
                         <small class="text-muted">@notif.CreatedAt?.ToString("MMM dd, yyyy HH:mm")</small>
                     </div>
@@ -48,3 +49,46 @@
         </li>
     </ul>
 </div>
+
+@* <audio id="notificationSound"
+       src="~/sounds/mixkit-software-interface-back-2575.mp3"
+       preload="auto"></audio> *@
+
+<script>
+    let lastUnreadCount = @Model.Count(n => n.IsRead == false);
+
+    // Autoplay unlock on first user interaction
+    window.addEventListener("click", () => {
+        document.getElementById("notificationSound").play().catch(e => {});
+    }, { once: true });
+
+    function checkNotifications() {
+        $.ajax({
+            url: '@Url.Action("GetUnreadCount", "Notifications")',
+            type: 'GET',
+            success: function (newCount) {
+
+                if (newCount > lastUnreadCount) {
+                    // Play notification sound
+                    document.getElementById("notificationSound").play().catch(e => {});
+
+                    // Optional: dynamically fetch latest notifications via another API
+                    $.ajax({
+                        url: '@Url.Action("GetLatestNotifications", "Notifications")', // Create this API returning HTML or JSON
+                        type: 'GET',
+                        success: function (html) {
+                            // Prepend new notifications
+                            $("#notifDropdownMenu li:first-child").before(html);
+                        }
+                    });
+                }
+
+                $("#unreadCount").text(newCount);
+                lastUnreadCount = newCount;
+            }
+        });
+    }
+
+    // Poll every 10 seconds
+    setInterval(checkNotifications, 10000);
+</script>

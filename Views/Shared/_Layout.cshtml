@@ -656,7 +656,8 @@
             <div class="d-flex align-items-center gap-3 me-3">
 
                 <div class="position-relative">
-                    @await Component.InvokeAsync("NotificationBell")
+                    @await Component.InvokeAsync("NotificationBell") 
+                    @* <span class="notification-badge" id="studentReadBadge"></span> *@
                 </div>
 
                 <p class="mb-0 fw-semibold" style="color:#8c5dd1;">
@@ -696,26 +697,26 @@
     <script src="~/js/site.js" asp-append-version="true"></script>
     <script>
 
-              setInterval(() => {
-            $.get('@Url.Action("GetUnreadCount", "Notifications")', function (count) {
-                $('#unreadCount').text(count);
-            });
-        }, 30000);
+             function loadStudentReadCount() {
+            fetch('/Notifications/GetReadCount')
+                .then(response => response.json())
+                .then(count => {
+                    let badge = document.getElementById("studentReadBadge");
 
-
-            $(document).ready(function() {
-            // Load initial notification count
-            $.get('@Url.Action("GetUnreadCount", "Notifications")', function(count) {
-                $('.notification-badge').text(count);
-            });
-
-            // Update every 30 seconds
-            setInterval(function() {
-                $.get('@Url.Action("GetUnreadCount", "Notifications")', function(count) {
-                    $('.notification-badge').text(count);
+                    if (count > 0) {
+                        badge.innerText = count;
+                        badge.style.display = "flex";
+                    } else {
+                        badge.innerText = "";
+                        badge.style.display = "none";
+                    }
                 });
-            }, 30000);
-        });
+        }
+
+        // Load once student opens layout
+        loadStudentReadCount();
+
+      
 
         $(document).ready(function() {
             // Mobile menu toggle
@@ -801,21 +802,7 @@
             setActiveMenu();
         });
 
-                $(document).ready(function() {
-            // Click handler for notification icon
-            $('.notification-icon').click(function() {
-                window.location.href = '@Url.Action("Index", "Notifications")';
-            });
-
-            // Update notification count every 30 seconds
-            setInterval(updateNotificationCount, 30000);
-
-            function updateNotificationCount() {
-                $.get('@Url.Action("GetUnreadCount", "Notifications")', function(data) {
-                    $('.notification-badge').text(data.count);
-                });
-            }
-        });
+ 
     </script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>

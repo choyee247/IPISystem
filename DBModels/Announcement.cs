@@ -28,4 +28,6 @@ public partial class Announcement
     public string? Attachment { get; set; }
 
     public virtual AdminActivityLog? AdminActivityLog { get; set; }
+
+    public virtual ICollection<Notification> Notifications { get; set; } = new List<Notification>();
 }
