@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using ProjectManagementSystem.DBModels;
 using ProjectManagementSystem.Models;
@@ -96,82 +97,117 @@ namespace ProjectManagementSystem.Controllers
         //}
 
         // ---------------------- INDEX ----------------------
+        [HttpGet]
         public async Task<IActionResult> Index()
         {
-            var teachers = await _context.Teachers.ToListAsync();
+            // Get all teachers from the database
+            var teachers = await _context.Teachers
+                .OrderBy(t => t.FullName) // Optional: sort alphabetically
+                .ToListAsync();
+
+            // Pass the list to the view
             return View(teachers);
         }
 
         // ---------------------- CREATE ----------------------
+        // GET: Teacher/Create
         [HttpGet]
         public IActionResult Create()
         {
+            // Simply return the Create view
             return View();
         }
 
+        // POST: Teacher/Create
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(Teacher model)
         {
             if (!ModelState.IsValid)
+            {
+                // If model validation fails, return the form with validation messages
                 return View(model);
+            }
 
-            model.CreatedDate = DateTime.Now;
-            _context.Teachers.Add(model);
-            await _context.SaveChangesAsync();
+            try
+            {
+                // Set the created date
+                model.CreatedDate = DateTime.Now;
 
-            return RedirectToAction("Index");
+                // Optional: hash password if needed (currently saving as plain text)
+                // model.PasswordHash = HashPassword(model.PasswordHash);
+
+                // Add to database
+                _context.Teachers.Add(model);
+                await _context.SaveChangesAsync();
+
+                // Redirect to index after successful creation
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error creating teacher");
+                TempData["ErrorMessage"] = "An error occurred while creating the teacher.";
+                return View(model);
+            }
         }
 
+
         // ---------------------- EDIT ----------------------
+        // GET: Teacher/Edit/5
+        // GET: Teacher/Edit/5
         [HttpGet]
         public async Task<IActionResult> Edit(int id)
         {
             var teacher = await _context.Teachers.FindAsync(id);
-            if (teacher == null) return NotFound();
+            if (teacher == null)
+                return NotFound();
 
             return View(teacher);
         }
 
+        // POST: Teacher/Edit/5
         [HttpPost]
-        public async Task<IActionResult> Edit(int id, Teacher model)
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(Teacher model)
         {
-            if (!ModelState.IsValid)
+            if (ModelState.IsValid)
                 return View(model);
 
-            var teacher = await _context.Teachers.FindAsync(id);
+            var teacher = await _context.Teachers.FindAsync(model.Id);
             if (teacher == null) return NotFound();
 
             teacher.FullName = model.FullName;
             teacher.Email = model.Email;
-            teacher.PasswordHash = model.PasswordHash;
             teacher.Role = model.Role;
 
             await _context.SaveChangesAsync();
-
-            return RedirectToAction("Index");
+            TempData["SuccessMessage"] = "Teacher updated successfully!";
+            return RedirectToAction(nameof(Index));
         }
 
-        // ---------------------- DELETE ----------------------
-        [HttpGet]
+
+
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete(int id)
         {
             var teacher = await _context.Teachers.FindAsync(id);
-            if (teacher == null) return NotFound();
-
-            return View(teacher);
-        }
-
-        [HttpPost, ActionName("Delete")]
-        public async Task<IActionResult> DeleteConfirmed(int id)
-        {
-            var teacher = await _context.Teachers.FindAsync(id);
-            if (teacher == null) return NotFound();
+            if (teacher == null)
+                return NotFound();
 
             _context.Teachers.Remove(teacher);
             await _context.SaveChangesAsync();
 
-            return RedirectToAction("Index");
+            TempData["SuccessMessage"] = "Teacher deleted successfully!";
+            return RedirectToAction(nameof(Index));
         }
+
+
+
+
+        
         public async Task<IActionResult> Dashboard()
         {
             try

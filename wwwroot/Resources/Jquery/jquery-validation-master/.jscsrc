@@ -1,0 +1,8 @@
+{
+	"preset": "jquery",
+	"maximumLineLength": null,
+	"requireCamelCaseOrUpperCaseIdentifiers": null,
+	"excludeFiles": [
+		"test/custom-elements.js"
+	]
+}
