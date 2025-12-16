@@ -549,26 +549,12 @@
 
     </script> *@
     <script>
-                     // ---------- TEACHER UNREAD NOTIFICATION ----------
-        function loadTeacherUnreadCount(){
-            const badge = document.getElementById("notificationBadge");
-            if(!badge) return;
-
-            fetch('@Url.Action("GetTeacherUnreadCount", "Notifications")')
-            .then(res=>res.json())
-            .then(count=>{
-                badge.innerText = count>0 ? count : "";
-                badge.style.display = count>0 ? "flex" : "none";
-            })
-            .catch(err=>console.error(err));
-        /* ================= TEACHER NOTIFICATION COUNT ================= */
-        function loadTeacherUnreadCount() {
-            const badge = document.getElementById("notificationBadge");
-            if (!badge) return;
-
+                function loadTeacherUnreadCount() {
             fetch('/Notifications/GetTeacherUnreadCount')
-                .then(r => r.json())
+                .then(response => response.json())
                 .then(count => {
+                    let badge = document.getElementById("notificationBadge");
+
                     if (count > 0) {
                         badge.innerText = count;
                         badge.style.display = "flex";
@@ -577,11 +563,48 @@
                         badge.style.display = "none";
                     }
                 })
-                .catch(console.error);
+                .catch(err => console.error(err));
         }
+
+        // Page load
         loadTeacherUnreadCount();
-        setInterval(loadTeacherUnreadCount,10000);
+
+        // Refresh every 10 seconds
         setInterval(loadTeacherUnreadCount, 10000);
+
+        //              // ---------- TEACHER UNREAD NOTIFICATION ----------
+        // function loadTeacherUnreadCount(){
+        //     const badge = document.getElementById("notificationBadge");
+        //     if(!badge) return;
+
+        //     fetch('@Url.Action("GetTeacherUnreadCount", "Notifications")')
+        //     .then(res=>res.json())
+        //     .then(count=>{
+        //         badge.innerText = count>0 ? count : "";
+        //         badge.style.display = count>0 ? "flex" : "none";
+        //     })
+        //     .catch(err=>console.error(err));
+        // /* ================= TEACHER NOTIFICATION COUNT ================= */
+        // function loadTeacherUnreadCount() {
+        //     const badge = document.getElementById("notificationBadge");
+        //     if (!badge) return;
+
+        //     fetch('/Notifications/GetTeacherUnreadCount')
+        //         .then(r => r.json())
+        //         .then(count => {
+        //             if (count > 0) {
+        //                 badge.innerText = count;
+        //                 badge.style.display = "flex";
+        //             } else {
+        //                 badge.innerText = "";
+        //                 badge.style.display = "none";
+        //             }
+        //         })
+        //         .catch(console.error);
+        // }
+        // loadTeacherUnreadCount();
+        // setInterval(loadTeacherUnreadCount,10000);
+        // setInterval(loadTeacherUnreadCount, 10000);
 
 
         /* ================= LOGOUT ================= */
