@@ -25,7 +25,7 @@ public partial class Announcement
 
     public bool? IsActive { get; set; }
 
-    public string? Attachment { get; set; }
+    public bool IsDeleted { get; set; }
 
     public virtual AdminActivityLog? AdminActivityLog { get; set; }
 

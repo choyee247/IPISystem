@@ -285,22 +285,25 @@ namespace ProjectManagementSystem.Controllers
             var leader = existingProject.ProjectMembers
                 .FirstOrDefault(pm => pm.Role == "Leader")?.StudentPk?.StudentName ?? "Unknown Leader";
 
-            // Create only ONE notification for the teacher
-            var notification = new DBModels.Notification
+            foreach (var member in existingProject.ProjectMembers)
             {
-                UserId = (int)existingProject.TeacherId,
-                Title = "Project Submitted",
-                Message = $"Leader {leader} submitted the project '{existingProject.ProjectName}'.",
-                CreatedAt = DateTime.Now,
-                IsRead = false,
-                NotificationType = "ProjectSubmitted",
-                ProjectPkId = existingProject.ProjectPkId,
-                TeacherId = existingProject.TeacherId
-            };
+                // Create only ONE notification for the teacher
+                var notification = new DBModels.Notification
+                {
+                    UserId = member.StudentPk.StudentPkId,
+                    //UserId = (int)existingProject.TeacherId,
+                    Title = "Project Submitted",
+                    Message = $"Leader {leader} submitted the project '{existingProject.ProjectName}'.",
+                    CreatedAt = DateTime.Now,
+                    IsRead = false,
+                    NotificationType = "ProjectSubmitted",
+                    ProjectPkId = existingProject.ProjectPkId,
+                    TeacherId = existingProject.TeacherId
+                };
 
-            Console.WriteLine("Adding 1 Notification For TeacherId: " + notification.UserId);
-            _context.Notifications.Add(notification);
-
+                Console.WriteLine("Adding 1 Notification For TeacherId: " + notification.UserId);
+                _context.Notifications.Add(notification);
+            }
             await _context.SaveChangesAsync();
             Console.WriteLine("SAVE CHANGED OK");
 

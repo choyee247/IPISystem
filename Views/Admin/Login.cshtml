@@ -8,11 +8,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Internship Report Information System - Login</title>
+    <title>Internship Project Information System - Login</title>
+
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="~/Resources/fontawesome-free-6.7.2-web/css/all.min.css" rel="stylesheet" />
+
     <style>
-        /* Your existing CSS for login layout */
         :root {
             --primary: #8C5DD1;
             --secondary: #C8C6C1;
@@ -25,7 +26,7 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Poppins',sans-serif;
+            font-family: 'Poppins', sans-serif;
         }
 
         body {
@@ -34,32 +35,26 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            overflow: hidden;
         }
 
         .login-container {
-            position: relative;
             width: 100%;
             max-width: 420px;
             background: #fff;
             border-radius: 20px;
             box-shadow: 0 15px 35px rgba(0,0,0,0.1);
             padding: 40px;
-            z-index: 1;
-            overflow: hidden;
         }
 
         .header {
             text-align: center;
             margin-bottom: 30px;
-            position: relative;
         }
 
             .header h2 {
                 color: var(--primary);
                 font-weight: 700;
-                font-size: 28px;
-                margin-bottom: 5px;
+                font-size: 26px;
             }
 
             .header p {
@@ -68,26 +63,27 @@
             }
 
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 22px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--dark);
+        }
+
+        .input-wrapper {
             position: relative;
         }
 
-            .form-group label {
-                display: block;
-                margin-bottom: 8px;
-                color: var(--dark);
-                font-weight: 500;
-                font-size: 14px;
-            }
-
         .form-control {
             width: 100%;
-            padding: 12px 15px;
+            padding: 12px 45px 12px 15px;
             border: 2px solid var(--secondary);
             border-radius: 10px;
             font-size: 14px;
-            transition: all 0.3s ease;
-            background-color: rgba(255,255,255,0.8);
         }
 
             .form-control:focus {
@@ -96,10 +92,24 @@
                 outline: none;
             }
 
+        .password-toggle {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 18px;
+            cursor: pointer;
+            color: var(--secondary);
+        }
+
+            .password-toggle:hover {
+                color: var(--primary);
+            }
+
         .text-danger {
-            color: #E53E3E;
             font-size: 12px;
-            margin-top: 5px;
+            color: #E53E3E;
+            margin-top: 4px;
             display: block;
         }
 
@@ -110,106 +120,92 @@
         }
 
         .form-check-input {
-            margin-right: 10px;
-            width: 18px;
-            height: 18px;
-            border: 2px solid var(--secondary);
-            position: relative;
-            cursor: pointer;
-        }
-
-            .form-check-input:checked {
-                background-color: var(--primary);
-                border-color: var(--primary);
-            }
-
-        .form-check-label {
-            color: var(--dark);
-            font-size: 14px;
-            cursor: pointer;
+            margin-right: 8px;
         }
 
         .btn-primary {
             width: 100%;
             padding: 14px;
             background: var(--primary);
-            color: white;
+            color: #fff;
             border: none;
             border-radius: 10px;
             font-size: 16px;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
         }
 
             .btn-primary:hover {
                 background: #7B4CBF;
-                transform: translateY(-2px);
-                box-shadow: 0 5px 15px rgba(140,93,209,0.4);
-            }
-
-        .password-toggle {
-            position: absolute;
-            right: 15px;
-            top: 50%;
-            transform: translateY(-50%);
-            cursor: pointer;
-            color: var(--secondary);
-            font-size: 18px;
-        }
-
-            .password-toggle:hover {
-                color: var(--primary);
+                box-shadow: 0 6px 16px rgba(140,93,209,0.4);
             }
     </style>
 </head>
+
 <body>
     <div class="login-container">
         <div class="header">
-            <h2>Internship Report Information System</h2>
+            <h2>Internship Project Information System</h2>
             <p>Login as Admin or Teacher</p>
         </div>
 
         <form asp-action="Login" method="post" id="loginForm">
+
+            <!-- Email -->
             <div class="form-group">
                 <label asp-for="Email"></label>
-                <input asp-for="Email" class="form-control" placeholder="Enter your email" />
+                <div class="input-wrapper">
+                    <input asp-for="Email"
+                           class="form-control"
+                           placeholder="Enter your email" />
+                </div>
                 <span asp-validation-for="Email" class="text-danger"></span>
             </div>
 
-            <div class="form-group" style="position:relative;">
+            <!-- Password -->
+            <div class="form-group">
                 <label asp-for="Password"></label>
-                <input asp-for="Password" type="password" class="form-control" id="passwordField" placeholder="Enter your password" />
-                <i class="fas fa-eye password-toggle" id="togglePassword"></i>
+
+                <div class="input-wrapper">
+                    <input asp-for="Password"
+                           type="password"
+                           class="form-control"
+                           id="passwordField"
+                           placeholder="Enter your password" />
+
+                    <i class="fas fa-eye password-toggle" id="togglePassword"></i>
+                </div>
+
                 <span asp-validation-for="Password" class="text-danger"></span>
             </div>
 
-            <div class="form-group form-check">
+            <!-- Remember Me -->
+            <div class="form-check">
                 <input asp-for="RememberMe" class="form-check-input" />
                 <label asp-for="RememberMe" class="form-check-label">Remember me</label>
             </div>
 
-            <button type="submit" class="btn-primary" id="loginButton">Login</button>
+            <!-- Button -->
+            <button type="submit" class="btn-primary" id="loginButton">
+                Login
+            </button>
         </form>
     </div>
 
     <script>
-        // Password toggle
         const togglePassword = document.getElementById('togglePassword');
         const passwordField = document.getElementById('passwordField');
+
         togglePassword.addEventListener('click', () => {
             const type = passwordField.type === 'password' ? 'text' : 'password';
             passwordField.type = type;
             togglePassword.classList.toggle('fa-eye-slash');
         });
 
-        // Optional: show loading overlay
-        const loginForm = document.getElementById('loginForm');
-        loginForm.addEventListener('submit', () => {
-            document.getElementById('loginButton').textContent = "Authenticating...";
-            document.getElementById('loginButton').disabled = true;
+        document.getElementById('loginForm').addEventListener('submit', () => {
+            const btn = document.getElementById('loginButton');
+            btn.innerText = "Authenticating...";
+            btn.disabled = true;
         });
     </script>
 </body>

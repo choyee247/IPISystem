@@ -167,12 +167,16 @@
                                 <path fill="#8C5DD1" d="M12,22A2,2 0 0,0 14,20H10A2,2 0 0,0 12,22M18,16V11C18,7.93 16.36,5.36 13.5,4.68V4A1.5,1.5 0 0,0 12,2.5A1.5,1.5 0 0,0 10.5,4V4.68C7.63,5.36 6,7.92 6,11V16L4,18V19H20V18L18,16Z" />
                                 <circle class="pulse" fill="#FF6B6B" cx="18" cy="5" r="3.2" />
                             </svg>
-                            @* <span class="cute-badge" id="notificationBadge">
+                           @*  <span class="cute-badge" id="notificationBadge">
                                 @await Component.InvokeAsync(typeof(ProjectManagementSystem.ViewComponents.NotificationCountViewComponent))
                             </span> *@
-                            <span class="cute-badge" id="notificationBadge">0</span>
+                            <span class="cute-badge" id="notificationBadge" style="display:none;">0</span>
                         </a>
-
+                       @*  <a asp-area="" asp-controller="Notifications" asp-action="IndexTeacher">
+                            <i class="bx bx-bell"></i>
+                            <span class="menu-text">Notifications</span>
+                            <span class="cute-badge" id="notificationBadge" style="display:none;">0</span>
+                        </a> *@
                         <!-- Notification Dropdown -->
                         <div class="cute-notification-box">
                             <div class="notification-header">
@@ -243,11 +247,19 @@
                             </div>
                         </div>
                         </div> *@
-
                     <div class="profile-container">
+                        <span class="avatar" style="background-color:#8c5dd1; color:white; padding:5px 10px; border-radius:50%;">
+                            @HttpContextAccessor.HttpContext.Session.GetString("UserInitial")
+                        </span>
+                        <span class="profile-name">
+                            @HttpContextAccessor.HttpContext.Session.GetString("UserName")
+                        </span>
+                    </div>
+
+                  @*   <div class="profile-container">
                         <span class="avatar">@User.FindFirst("Initial")?.Value</span>
                         <span class="profile-name">@User.FindFirst("FullName")?.Value</span>
-                    </div>
+                    </div> *@
                 </div>
             </header>
 
@@ -542,29 +554,21 @@
 
     </script> *@
     <script>
-        ///TeacherCount///
-            function loadTeacherUnreadCount() {
-            fetch('/Notifications/GetTeacherUnreadCount')
-                .then(response => response.json())
-                .then(count => {
-                    let badge = document.getElementById("notificationBadge");
+                     // ---------- TEACHER UNREAD NOTIFICATION ----------
+        function loadTeacherUnreadCount(){
+            const badge = document.getElementById("notificationBadge");
+            if(!badge) return;
 
-                    if (count > 0) {
-                        badge.innerText = count;
-                        badge.style.display = "flex";
-                    } else {
-                        badge.innerText = "";
-                        badge.style.display = "none";
-                    }
-                });
+            fetch('@Url.Action("GetTeacherUnreadCount", "Notifications")')
+            .then(res=>res.json())
+            .then(count=>{
+                badge.innerText = count>0 ? count : "";
+                badge.style.display = count>0 ? "flex" : "none";
+            })
+            .catch(err=>console.error(err));
         }
-
-        // Load on page open
         loadTeacherUnreadCount();
-
-        // Auto refresh every 10 seconds (optional)
-        setInterval(loadTeacherUnreadCount, 10000);
-        ////count///
+        setInterval(loadTeacherUnreadCount,10000);
 
 
 

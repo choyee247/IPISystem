@@ -406,6 +406,8 @@ namespace ProjectManagementSystem.Controllers
 
             // Save to Session
             HttpContext.Session.SetString("UserId", user.Id.ToString());
+            HttpContext.Session.SetString("UserInitial", user.FullName.Substring(0, 1));
+
             HttpContext.Session.SetString("UserName", user.FullName);
             HttpContext.Session.SetString("UserEmail", user.Email);
             HttpContext.Session.SetString("UserRole", user.Role); // Admin or Teacher
