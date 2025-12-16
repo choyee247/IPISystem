@@ -16,20 +16,12 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - Internship Project Information System</title>
-
-    @*  <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
-
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> *@
-
+    <script src="~/Resources/Jquery/jquery-validation-master/js/jquery-3.7.1.min.js"></script>
+    <script src="~/Resources/chart/chart.umd.min.js"></script>
+    <script src="~/Resources/Jquery/jquery-validation-master/js/jquery.validate.min.js"></script>
+    <script src="~/Resources/Jquery/jquery-validation-unobtrusive-main/src/jquery.validate.unobtrusive.js"></script>
     <link href="~/Resources/boxicons-master/css/boxicons.min.css" rel="stylesheet" />
     <link href="~/Resources/fontawesome-free-6.7.2-web/css/all.min.css" rel="stylesheet" />
-    @* <link href="~/Resources/" rel="stylesheet" /> *@  <!-- see note below -->
     <link href="~/Resources/bootstrap538/css/bootstrap.min.css" rel="stylesheet" />
     <link href="~/Resources/icons-main/font/bootstrap-icons.css" rel="stylesheet" />
     <link rel="stylesheet" href="~/css/site.css" />
@@ -45,7 +37,7 @@
         <aside class="sidebar" id="sidebar">
             <div class="brand">
                 <img src="~/images/logo.png" alt="Company Logo" class="brand-logo" />
-                @if(userRole == "Admin")
+                @if (userRole == "Admin")
                 {
                     <span class="brand-name">Admin Panel</span>
                 }
@@ -56,11 +48,22 @@
             </div>
             <ul class="menu">
                 <li class="menu-item @(ViewContext.RouteData.Values["Action"]?.ToString() == "Dashboard" ? "active" : "")">
-                    <a asp-area="" asp-controller="Teacher" asp-action="Dashboard">
-                        <i class="bx bx-grid-alt"></i>
-                        <span class="menu-text">Dashboard</span>
-                    </a>
+                    @if (userRole == "Admin")
+                    {
+                        <a asp-controller="Admin" asp-action="Dashboard">
+                            <i class="bx bx-grid-alt"></i>
+                            <span class="menu-text">Dashboard</span>
+                        </a>
+                    }
+                    else
+                    {
+                        <a asp-controller="Teacher" asp-action="Dashboard">
+                            <i class="bx bx-grid-alt"></i>
+                            <span class="menu-text">Dashboard</span>
+                        </a>
+                    }
                 </li>
+
 
                 <li class="menu-item has-submenu" id="managementMenu">
                     <div class="submenu-header">
@@ -93,7 +96,7 @@
                 <li class="menu-item has-submenu" id="announcementMenu">
                     <div class="submenu-header">
                         <i class="bi bi-megaphone-fill"></i>
-                       
+
                         <span class="menu-text">Announcements</span>
                         <i class="bx bx-chevron-right submenu-toggle"></i>
                     </div>
@@ -114,12 +117,7 @@
                         <span class="menu-text">Project Approval</span>
                     </a>
                 </li>
-               @*  <li class="menu-item @(ViewContext.RouteData.Values["Action"].ToString() == "ActivityLog" ? "active" : "")">
-                    <a asp-area="" asp-controller="Admin" asp-action="ActivityLogs">
-                        <i class="bx bx-list-ul"></i>
-                        <span class="menu-text">Activity Log</span>
-                    </a>
-                </li> *@
+
                 <li class="menu-item @(ViewContext.RouteData.Values["Action"]?.ToString() == "Profile" ? "active" : "")">
                     <a asp-area="" asp-controller="Admin" asp-action="MyProfile">
                         <i class="bx bx-user"></i>
@@ -132,12 +130,7 @@
                         <span class="menu-text">Notifications</span>
                     </a>
                 </li>
-              @*   <li class="menu-item @(ViewContext.RouteData.Values["Action"].ToString() == "ChangePassword" ? "active" : "")">
-                    <a asp-area="" asp-controller="Admin" asp-action="ChangePassword">
-                        <i class="bx bx-lock"></i>
-                        <span class="menu-text">Change Password</span>
-                    </a>
-                </li> *@
+
                 <li class="menu-item">
                     <a href="#" onclick="return confirmLogout();">
                         <i class="bx bx-log-out"></i>
@@ -184,16 +177,16 @@
                                     <h6 class="cute-title">My Notifications</h6>
 
                                 </div>
-                                 <button class="mark-all-read" id="markAllRead"></button> 
+                                <button class="mark-all-read" id="markAllRead"></button>
                             </div>
 
                             <div class="notification-list">
                                 @await Component.InvokeAsync("Notification")
                             </div>
-                            
+
                         </div>
                     </div>
-                   @*  <!-- Notification Bell -->
+                    @*  <!-- Notification Bell -->
                     <div class="cute-notifications">
                         <a class="cute-bell" href="#" id="notificationDropdown">
                             <svg class="bell-icon" viewBox="0 0 24 24">
@@ -220,10 +213,10 @@
                             <div class="notification-list">
                                 @await Component.InvokeAsync("Notification")
                             </div>
-                            
+
                         </div>
                     </div> *@
-                 @*    <div class="cute-notifications">
+                    @*    <div class="cute-notifications">
                         <a class="cute-bell" href="@Url.Action("IndexTeacher","Notifications")" id="notificationDropdown">
                             <svg class="bell-icon" viewBox="0 0 24 24">
                                 <path fill="#8C5DD1" d="M12,22A2,2 0 0,0 14,20H10A2,2 0 0,0 12,22M18,16V11C18,7.93 16.36,5.36 13.5,4.68V4A1.5,1.5 0 0,0 12,2.5A1.5,1.5 0 0,0 10.5,4V4.68C7.63,5.36 6,7.92 6,11V16L4,18V19H20V18L18,16Z" />
@@ -269,11 +262,13 @@
         </div>
     </div>
 
-   @*  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> *@
-    <script src="~/Resources/Jquery/Jquery.js"></script>
-    <script src="~/Resources/package/dist/chart.js"></script>
+    @*  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> *@
+    <script src="~/Resources/Jquery/jquery-validation-master/js/jquery-3.7.1.min.js"></script>
+    <script src="~/Resources/Jquery/jquery-validation-master/js/jquery.validate.min.js"></script>
+    <script src="~/Resources/Jquery/jquery-validation-unobtrusive-main/src/jquery.validate.unobtrusive.js"></script>
     <script src="~/Resources/bootstrap538/js/bootstrap.bundle.min.js"></script>
     <script src="~/Resources/bootstrap538/js/bootstrap.min.js"></script>
+    <script src="~/Resources/chart/chart.umd.min.js"></script>
     @* <script>
                 function confirmLogout() {
             if(confirm("Do you really want to log out?")) {
@@ -566,31 +561,51 @@
                 badge.style.display = count>0 ? "flex" : "none";
             })
             .catch(err=>console.error(err));
+        /* ================= TEACHER NOTIFICATION COUNT ================= */
+        function loadTeacherUnreadCount() {
+            const badge = document.getElementById("notificationBadge");
+            if (!badge) return;
+
+            fetch('/Notifications/GetTeacherUnreadCount')
+                .then(r => r.json())
+                .then(count => {
+                    if (count > 0) {
+                        badge.innerText = count;
+                        badge.style.display = "flex";
+                    } else {
+                        badge.innerText = "";
+                        badge.style.display = "none";
+                    }
+                })
+                .catch(console.error);
         }
         loadTeacherUnreadCount();
         setInterval(loadTeacherUnreadCount,10000);
+        setInterval(loadTeacherUnreadCount, 10000);
 
 
-
-        // ---------- LOGOUT ----------
+        /* ================= LOGOUT ================= */
         function confirmLogout() {
             if (confirm("Do you really want to log out?")) {
-                document.getElementById('logoutForm').submit();
+                document.getElementById('logoutForm')?.submit();
             }
             return false;
         }
 
-        // ---------- SIDEBAR & MENU ----------
+
+        /* ================= DOM READY ================= */
         document.addEventListener("DOMContentLoaded", function () {
+
+            /* ---------- SIDEBAR & MENU ---------- */
+            const sidebar = document.getElementById("sidebar");
             const collapseBtn = document.getElementById("collapseBtn");
             const menuBtn = document.getElementById("menuBtn");
-            const sidebar = document.getElementById("sidebar");
-            const menuItems = document.querySelectorAll(".menu-item a");
+            const menuLinks = document.querySelectorAll(".menu-item > a");
             const submenuHeaders = document.querySelectorAll(".submenu-header");
 
             // Sidebar toggle
             [collapseBtn, menuBtn].forEach(btn => {
-                if(btn){
+                if (btn) {
                     btn.addEventListener("click", () => {
                         sidebar.classList.toggle("collapsed");
                     });
@@ -600,142 +615,152 @@
             // Submenu toggle
             submenuHeaders.forEach(header => {
                 header.addEventListener("click", () => {
-                    const parentItem = header.parentElement;
+                    const parent = header.closest(".has-submenu");
+
                     if (!sidebar.classList.contains("collapsed")) {
                         document.querySelectorAll(".has-submenu.open").forEach(item => {
-                            if(item !== parentItem) item.classList.remove("open");
+                            if (item !== parent) item.classList.remove("open");
                         });
                     }
-                    parentItem.classList.toggle("open");
+
+                    parent.classList.toggle("open");
                 });
             });
 
-            // Active menu item
-            menuItems.forEach(link => {
+            // Active menu (visual only, no conflict)
+            menuLinks.forEach(link => {
                 link.addEventListener("click", function () {
-                    menuItems.forEach(l => l.parentElement.classList.remove("active"));
-                    link.parentElement.classList.add("active");
+                    document.querySelectorAll(".menu-item")
+                        .forEach(item => item.classList.remove("active"));
+                    this.closest(".menu-item")?.classList.add("active");
                 });
             });
-        });
 
-        // ---------- NOTIFICATIONS ----------
-        document.addEventListener("DOMContentLoaded", function () {
+
+            /* ---------- NOTIFICATIONS ---------- */
             const notificationDropdown = document.getElementById("notificationDropdown");
-            const notificationList = document.querySelector(".cute-notifications");
+            const notificationBox = document.querySelector(".cute-notifications");
             const notificationBadge = document.getElementById("notificationBadge");
             const markAllBtn = document.getElementById("markAllRead");
 
             // Toggle dropdown
-            if(notificationDropdown && notificationList){
-                notificationDropdown.addEventListener("click", function(e){
+            if (notificationDropdown && notificationBox) {
+                notificationDropdown.addEventListener("click", function (e) {
                     e.preventDefault();
                     e.stopPropagation();
-                    notificationList.classList.toggle("active");
+                    notificationBox.classList.toggle("active");
                 });
 
-                document.addEventListener("click", function(e){
-                    if (!notificationList.contains(e.target)) {
-                        notificationList.classList.remove("active");
+                document.addEventListener("click", function (e) {
+                    if (!notificationBox.contains(e.target)) {
+                        notificationBox.classList.remove("active");
                     }
                 });
             }
 
             // Notification item click
-            function markAsReadAndRedirect(notificationId, redirectUrl) {
-                if(!notificationId) {
-                    window.location.href = redirectUrl;
-                    return;
-                }
-
-                fetch('/Notifications/MarkAsRead', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
-                    },
-                    body: JSON.stringify({ id: notificationId })
-                })
-                .then(res => res.json())
-                .then(res => {
-                    if(res.success){
-                        if(notificationBadge) notificationBadge.textContent = res.unreadCount;
-                    }
-                    window.location.href = redirectUrl;
-                })
-                .catch(console.error);
-            }
-
             document.querySelectorAll(".notification-item").forEach(item => {
-                item.addEventListener("click", function(e){
+                item.addEventListener("click", function (e) {
                     e.preventDefault();
-                    const notificationId = this.dataset.notificationId;
-                    const redirectUrl = this.href;
-                    markAsReadAndRedirect(notificationId, redirectUrl);
-                });
-            });
 
-            // Mark all as read
-            if(markAllBtn){
-                markAllBtn.addEventListener("click", function(){
-                    fetch('/Notifications/MarkAllAsRead', {
+                    const id = this.dataset.notificationId;
+                    const url = this.href;
+
+                    if (!id) {
+                        window.location.href = url;
+                        return;
+                    }
+
+                    fetch('/Notifications/MarkAsRead', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
-                            'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
-                        }
+                            'RequestVerificationToken':
+                                document.querySelector('input[name="__RequestVerificationToken"]')?.value
+                        },
+                        body: JSON.stringify({ id })
                     })
+                    .then(r => r.json())
                     .then(res => {
-                        if(res.ok){
-                            document.querySelectorAll(".notification-item").forEach(item => {
-                                item.classList.remove("new-notification");
-                            });
-                            if(notificationBadge) notificationBadge.textContent = '0';
+                        if (res.success && notificationBadge) {
+                            notificationBadge.textContent = res.unreadCount;
                         }
+                        window.location.href = url;
                     })
                     .catch(console.error);
                 });
+            });
+
+            // Mark all as read (SAFE)
+            if (markAllBtn) {
+                markAllBtn.addEventListener("click", function () {
+                    fetch('/Notifications/MarkAllAsRead', { method: 'POST' })
+                        .then(() => {
+                            document.querySelectorAll(".notification-item")
+                                .forEach(i => i.classList.remove("new-notification"));
+                            if (notificationBadge) notificationBadge.textContent = "0";
+                        })
+                        .catch(console.error);
+                });
             }
 
-            // Refresh notification count every 60s
-            setInterval(function(){
+            // Refresh notification count
+            setInterval(() => {
+                if (!notificationBadge) return;
                 fetch('/Notifications/GetNotificationCount')
-                .then(res => res.json())
-                .then(count => {
-                    if(notificationBadge) notificationBadge.textContent = count;
-                })
-                .catch(console.error);
+                    .then(r => r.json())
+                    .then(count => notificationBadge.textContent = count)
+                    .catch(console.error);
             }, 60000);
 
-            // Pulse animation
-            window.triggerNewNotification = function(){
-                const bell = document.querySelector('.bell-icon');
-                if(bell){
-                    bell.classList.add('pulse-once');
-                    setTimeout(()=> bell.classList.remove('pulse-once'), 1000);
-                }
-            };
+
+            /* ---------- TIME DISPLAY ---------- */
+            function updateTime() {
+                const el = document.getElementById("dateTimeDisplay");
+                if (!el) return;
+
+                el.textContent = new Date().toLocaleString("en-US", {
+                    weekday: "short",
+                    year: "numeric",
+                    month: "short",
+                    day: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit"
+                });
+            }
+
+            updateTime();
+            setInterval(updateTime, 1000);
         });
 
-        // ---------- TIME DISPLAY ----------
-        function updateTime() {
-            const el = document.getElementById('dateTimeDisplay');
-            if(!el) return;
-            const now = new Date();
-            const options = {
-                weekday: "short",
-                year: "numeric",
-                month: "short",
-                day: "numeric",
-                hour: "2-digit",
-                minute: "2-digit"
-            };
-            el.textContent = now.toLocaleString("en-US", options);
-        }
-        updateTime();
-        setInterval(updateTime, 1000);
+
     </script>
 
+    <style>
+        /* In site.css or approve.css */
+        .menu-item.active > a,
+        .submenu-item.active > a {
+            text-decoration: none !important;
+        }
+
+        .menu-item.has-submenu .submenu-header.active {
+            text-decoration: none !important;
+        }
+
+        .menu a,
+        .submenu a {
+            text-decoration: none !important;
+        }
+
+        .menu-item.active > a,
+        .submenu-item.active > a {
+            text-decoration: none !important;
+            background: rgba(140,93,209,0.15);
+            border-left: 4px solid #8C5DD1;
+        }
+
+
+    </style>
 
     @await RenderSectionAsync("Scripts", required: false)
 </body>
