@@ -32,6 +32,7 @@ namespace ProjectManagementSystem.Controllers
             int pageNumber = page ?? 1;
 
             var announcements = _context.Announcements
+                .Where(a => !a.IsDeleted)
                 .OrderByDescending(a => a.CreatedDate)
                 .ToPagedList(pageNumber, pageSize);
 
@@ -225,7 +226,10 @@ namespace ProjectManagementSystem.Controllers
         {
             if (id == null) return NotFound();
 
-            var announcement = await _context.Announcements.FindAsync(id);
+            //var announcement = await _context.Announcements.FindAsync(id);
+            var announcement = await _context.Announcements
+            .FirstOrDefaultAsync(a => a.AnnouncementId == id && !a.IsDeleted);
+
             if (announcement == null) return NotFound();
 
             var vm = new AnnouncementViewModel
@@ -389,29 +393,36 @@ namespace ProjectManagementSystem.Controllers
             return View(announcement);
         }
 
-        // POST: /Announcement/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var announcement = await _context.Announcements.FindAsync(id);
-            if (announcement != null)
-            {
-                // Delete attached file if exists
-                if (!string.IsNullOrEmpty(announcement.FilePath))
-                {
-                    string file = Path.Combine(_env.WebRootPath, announcement.FilePath.TrimStart('/').Replace("/", "\\"));
-                    if (System.IO.File.Exists(file))
-                        System.IO.File.Delete(file);
-                }
+            var announcement = await _context.Announcements
+                .FirstOrDefaultAsync(a => a.AnnouncementId == id);
 
-                _context.Announcements.Remove(announcement);
-                await _context.SaveChangesAsync();
-                TempData["Success"] = "Announcement deleted successfully!";
+            if (announcement == null)
+                return NotFound();
+
+            // ✅ Soft Delete
+            announcement.IsDeleted = true;
+            announcement.IsActive = false;
+
+            // ✅ Related notifications
+            var notifications = await _context.Notifications
+                .Where(n => n.AnnouncementId == id)
+                .ToListAsync();
+
+            foreach (var noti in notifications)
+            {
+                noti.IsDeleted = true;
             }
 
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = "Announcement deleted successfully!";
             return RedirectToAction(nameof(Index));
         }
+
 
         // GET: /Announcement/Detail/5
         [AllowAnonymous]
@@ -421,7 +432,7 @@ namespace ProjectManagementSystem.Controllers
                 return NotFound();
 
             var announcement = await _context.Announcements
-                .FirstOrDefaultAsync(a => a.AnnouncementId == id);
+            .FirstOrDefaultAsync(a => a.AnnouncementId == id && !a.IsDeleted);
 
             if (announcement == null)
                 return NotFound();
@@ -445,7 +456,7 @@ namespace ProjectManagementSystem.Controllers
         public IActionResult StudentView()
         {
             var activeAnnouncements = _context.Announcements
-                .Where(a => a.IsActive == true) 
+                .Where(a => a.IsActive == true && !a.IsDeleted)
                 .OrderByDescending(a => a.CreatedDate)
                 .Select(a => new AnnouncementViewModel
                 {

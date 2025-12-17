@@ -35,8 +35,8 @@ namespace ProjectManagementSystem.Controllers
                 .Include(n => n.Announcement)
                 .Where(n => n.UserId == student.StudentPkId)
                 .Where(n => n.IsDeleted == false || n.IsDeleted == null)
-                .Where(n => n.NotificationType != "ProjectSubmitted" && n.NotificationType != "ProjectStatus")
-
+                 //.Where(n => n.NotificationType != "ProjectSubmitted" && n.NotificationType != "ProjectStatus")
+                 .Where(n => n.NotificationType != "ProjectSubmitted")
                 .Where(n => n.NotificationType != "Announcement" ||
                     (n.NotificationType == "Announcement" && n.Announcement != null && n.Announcement.IsActive==true))
 
@@ -183,36 +183,101 @@ namespace ProjectManagementSystem.Controllers
             var userIdStr = HttpContext.Session.GetString("UserId");
             var userRole = HttpContext.Session.GetString("UserRole");
 
-            if (string.IsNullOrEmpty(userIdStr) || userRole != "Teacher")
-                return RedirectToAction("Login", "AdminLogin");
+            // Redirect only if not logged in
+            if (string.IsNullOrEmpty(userIdStr))
+                return RedirectToAction("Login", "Admin"); // Or your actual login controller
 
-            int teacherId = int.Parse(userIdStr);
-            Console.WriteLine("teacherid.............." +teacherId);
-            // Load ProjectSubmitted notifications
-            var notifications = _context.Notifications
-                .Include(n => n.ProjectPk)
-                .Where(n => n.TeacherId == teacherId && n.UserId == teacherId)
-                //.Where(n => n.TeacherId == teacherId)
-                .Where(n => n.NotificationType == "ProjectSubmitted")
-                .OrderByDescending(n => n.CreatedAt)
-                .Select(n => new NotificationViewModel
-                {
-                    Id = n.NotificationPkId,
-                    Message = n.Message,
-                    CreatedAt = (DateTime)n.CreatedAt,
-                    ProjectId = n.ProjectPkId ?? 0,
-                    ProjectName = n.ProjectPk != null ? n.ProjectPk.ProjectName : "No Project",
-                    IsDeleted = n.IsDeleted ?? false,
-                    IsRead = n.IsRead ?? false,
-                })
-                .ToList();
+            int userId = int.Parse(userIdStr);
+
+            List<NotificationViewModel> notifications;
+
+            if (userRole == "Teacher")
+            {
+                // Only teacher-specific notifications
+                notifications = _context.Notifications
+                    .Include(n => n.ProjectPk)
+                    .Where(n => n.TeacherId == userId && n.UserId == userId)
+                    .Where(n => n.NotificationType == "ProjectSubmitted")
+                    .OrderByDescending(n => n.CreatedAt)
+                    .Select(n => new NotificationViewModel
+                    {
+                        Id = n.NotificationPkId,
+                        Message = n.Message,
+                        CreatedAt = (DateTime)n.CreatedAt,
+                        ProjectId = n.ProjectPkId ?? 0,
+                        ProjectName = n.ProjectPk != null ? n.ProjectPk.ProjectName : "No Project",
+                        IsDeleted = n.IsDeleted ?? false,
+                        IsRead = n.IsRead ?? false,
+                    })
+                    .ToList();
+            }
+            else if (userRole == "Admin")
+            {
+                // Admin sees all notifications
+                notifications = _context.Notifications
+                    .Include(n => n.ProjectPk)
+                    .Where(n => n.NotificationType == "ProjectSubmitted")
+                    .OrderByDescending(n => n.CreatedAt)
+                    .Select(n => new NotificationViewModel
+                    {
+                        Id = n.NotificationPkId,
+                        Message = n.Message,
+                        CreatedAt = (DateTime)n.CreatedAt,
+                        ProjectId = n.ProjectPkId ?? 0,
+                        ProjectName = n.ProjectPk != null ? n.ProjectPk.ProjectName : "No Project",
+                        IsDeleted = n.IsDeleted ?? false,
+                        IsRead = n.IsRead ?? false,
+                    })
+                    .ToList();
+            }
+            else
+            {
+                notifications = new List<NotificationViewModel>();
+            }
 
             ViewBag.Notifications = notifications;
-            ViewBag.UnreadCount = notifications.Count(n => n.IsRead==false);
-            ViewBag.ReadCount = notifications.Count(n => n.IsRead==true);
-            Console.WriteLine("teacher noti................" + System.Text.Json.JsonSerializer.Serialize(notifications));
+            ViewBag.UnreadCount = notifications.Count(n => n.IsRead == false);
+            ViewBag.ReadCount = notifications.Count(n => n.IsRead == true);
+
             return View(notifications);
         }
+
+        ///1111???///
+        //public IActionResult IndexTeacher()
+        //{
+        //    var userIdStr = HttpContext.Session.GetString("UserId");
+        //    var userRole = HttpContext.Session.GetString("UserRole");
+
+        //    if (string.IsNullOrEmpty(userIdStr) || userRole != "Teacher")
+        //        return RedirectToAction("Login", "AdminLogin");
+
+        //    int teacherId = int.Parse(userIdStr);
+        //    Console.WriteLine("teacherid.............." +teacherId);
+        //    // Load ProjectSubmitted notifications
+        //    var notifications = _context.Notifications
+        //        .Include(n => n.ProjectPk)
+        //        .Where(n => n.TeacherId == teacherId && n.UserId == teacherId)
+        //        //.Where(n => n.TeacherId == teacherId)
+        //        .Where(n => n.NotificationType == "ProjectSubmitted")
+        //        .OrderByDescending(n => n.CreatedAt)
+        //        .Select(n => new NotificationViewModel
+        //        {
+        //            Id = n.NotificationPkId,
+        //            Message = n.Message,
+        //            CreatedAt = (DateTime)n.CreatedAt,
+        //            ProjectId = n.ProjectPkId ?? 0,
+        //            ProjectName = n.ProjectPk != null ? n.ProjectPk.ProjectName : "No Project",
+        //            IsDeleted = n.IsDeleted ?? false,
+        //            IsRead = n.IsRead ?? false,
+        //        })
+        //        .ToList();
+
+        //    ViewBag.Notifications = notifications;
+        //    ViewBag.UnreadCount = notifications.Count(n => n.IsRead==false);
+        //    ViewBag.ReadCount = notifications.Count(n => n.IsRead==true);
+        //    Console.WriteLine("teacher noti................" + System.Text.Json.JsonSerializer.Serialize(notifications));
+        //    return View(notifications);
+        //}
 
 
 
