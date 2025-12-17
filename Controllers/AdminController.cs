@@ -271,7 +271,7 @@
 
 //    }
 using System.Security.Claims;
-using Microsoft.AspNetCore.Authorization;
+//using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ProjectManagementSystem.DBModels;
@@ -425,7 +425,7 @@ namespace ProjectManagementSystem.Controllers
         // ===============================
         // ADMIN ONLY PAGES
         // ===============================
-        [Authorize(Roles = "Admin")]
+        //[Authorize(Roles = "Admin")]
         public async Task<IActionResult> ActivityLogs()
         {
             var logs = await _context.AdminActivityLogs
@@ -439,14 +439,14 @@ namespace ProjectManagementSystem.Controllers
         // CHANGE PASSWORD (Teacher Table)
         // ===============================
         [HttpGet]
-        [Authorize(Roles = "Admin,Teacher")]
+        //[Authorize(Roles = "Admin,Teacher")]
         public IActionResult ChangePassword()
         {
             return View();
         }
 
         [HttpPost]
-        [Authorize(Roles = "Admin,Teacher")]
+        //[Authorize(Roles = "Admin,Teacher")]
         public async Task<IActionResult> ChangePassword(ChangePasswordViewModel model)
         {
             if (!ModelState.IsValid)
