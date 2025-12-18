@@ -492,7 +492,7 @@ namespace ProjectManagementSystem.Controllers
             if (!IsLoggedIn())
                 return RedirectToAction("Login", "Teacher");
 
-            if (!ModelState.IsValid) return View(model);
+            if (ModelState.IsValid) return View(model);
 
             var teacher = await _context.Teachers.FindAsync(model.Id);
             if (teacher == null) return NotFound();
