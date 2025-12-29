@@ -313,6 +313,12 @@
                 .approval-table th, .approval-table td {
                     padding: 6px 8px;
                 }
+
+            .search-form {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            }
         }
     </style>
 </head>
@@ -323,24 +329,58 @@
     <div class="search-filter-container">
         <form asp-action="Index" method="get" class="search-form">
             <div class="search-box">
-                <input type="text" class="search-input" name="searchString" value="@Model.SearchString" placeholder="Search projects, students or emails...">
-                <button type="submit" class="search-btn"><i class="fas fa-search"></i></button>
+                <input type="text"
+                       class="search-input"
+                       name="searchString"
+                       value="@Model.SearchString"
+                       placeholder="Search projects, students or emails...">
+
+                <button type="submit" class="search-btn">
+                    <i class="fas fa-search"></i>
+                </button>
+
+                
             </div>
+            
+            
             <div class="date-range-container">
-                <input type="date" name="fromDate" value="@Model.FromDate?.ToString("yyyy-MM-dd")" class="form-control">
+                <input type="date"
+                       name="fromDate"
+                       value="@Model.FromDate?.ToString("yyyy-MM-dd")"
+                       class="form-control">
+
                 <span>to</span>
-                <input type="date" name="toDate" value="@Model.ToDate?.ToString("yyyy-MM-dd")" class="form-control">
+
+                <input type="date"
+                       name="toDate"
+                       value="@Model.ToDate?.ToString("yyyy-MM-dd")"
+                       class="form-control">
             </div>
+
             <input type="hidden" name="statusFilter" value="@Model.StatusFilter" />
         </form>
+       
+
+
         <div class="filter-buttons">
             <button type="button" class="filter-btn @(Model.StatusFilter == "all" ? "active" : "")" onclick="updateStatusFilter('all')">All (@Model.TotalCount)</button>
             <button type="button" class="filter-btn @(Model.StatusFilter == "Pending" ? "active" : "")" onclick="updateStatusFilter('Pending')">Pending (@Model.PendingCount)</button>
             <button type="button" class="filter-btn @(Model.StatusFilter == "Approved" ? "active" : "")" onclick="updateStatusFilter('Approved')">Approved (@Model.ApprovedCount)</button>
             <button type="button" class="filter-btn @(Model.StatusFilter == "Rejected" ? "active" : "")" onclick="updateStatusFilter('Rejected')">Rejected (@Model.RejectedCount)</button>
+            <button type="button"
+                    class="filter-btn reset-btn"
+                    title="Reset All Filters"
+                    onclick="window.location.href='@Url.Action("Index", new { statusFilter = Model.StatusFilter })'">
+                <i class="fas fa-undo"></i> Reset
+            </button>
+
             <button class="export-btn" onclick="printTable();"><i class="fas fa-print"></i> Print</button>
             <button class="export-btn" onclick="exportToExcel();"><i class="fas fa-file-excel"></i> Export</button>
         </div>
+        <div class="reset">
+       
+    </div>
+
     </div>
     <div class="table-responsive">
         <table class="approval-table" id="projectsTable">
