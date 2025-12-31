@@ -212,21 +212,17 @@ namespace ProjectManagementSystem.Controllers.Public
 
             return View(companyList);
         }
-
-
-
-
-
-
         public async Task<IActionResult> Index()
         {
-            var projects = await _context.Projects
+            // 🔹 LOAD ONLY APPROVED PROJECTS
+            var approvedProjects = await _context.Projects
+                .Where(p => p.Status == "Approved")   // ⭐ FILTER HERE
                 .Include(p => p.LanguagePk)
                 .Include(p => p.ProjectTypePk)
                 .ToListAsync();
 
-            // Group languages by trimmed lowercase to avoid duplicates caused by casing/spaces
-            var languageGroups = projects
+            // 🔹 GROUP LANGUAGES (APPROVED ONLY)
+            var languageGroups = approvedProjects
                 .Where(p => p.LanguagePk != null)
                 .GroupBy(p => p.LanguagePk.LanguageName.Trim().ToLower())
                 .Select(g => new
@@ -236,8 +232,8 @@ namespace ProjectManagementSystem.Controllers.Public
                 })
                 .ToList();
 
-            // Group project types normally
-            var projectTypeGroups = projects
+            // 🔹 GROUP PROJECT TYPES (APPROVED ONLY)
+            var projectTypeGroups = approvedProjects
                 .Where(p => p.ProjectTypePk != null)
                 .GroupBy(p => p.ProjectTypePk.TypeName)
                 .Select(g => new
@@ -247,9 +243,11 @@ namespace ProjectManagementSystem.Controllers.Public
                 })
                 .ToList();
 
+            // 🔹 DASHBOARD VIEW MODEL
             var viewModel = new DashboardViewModel
             {
-                ProjectCount = projects.Count,
+                // ✅ APPROVED PROJECT COUNT
+                ProjectCount = approvedProjects.Count,
 
                 LanguageCount = languageGroups.Count,
                 LanguageNames = languageGroups.Select(x => x.LanguageName).ToList(),
@@ -259,7 +257,8 @@ namespace ProjectManagementSystem.Controllers.Public
                 ProjectTypeChartLabels = projectTypeGroups.Select(x => x.TypeName).ToList(),
                 ProjectTypeChartValues = projectTypeGroups.Select(x => x.Count).ToList(),
 
-                PopularProjects = projects
+                // ✅ APPROVED POPULAR PROJECTS
+                PopularProjects = approvedProjects
                     .OrderByDescending(p => p.ProjectPkId)
                     .Take(6)
                     .Select(p => new ProjectIdea
@@ -275,6 +274,7 @@ namespace ProjectManagementSystem.Controllers.Public
 
             return View(viewModel);
         }
+
 
         // Helper method to capitalize first letter
         private static string Capitalize(string input)
