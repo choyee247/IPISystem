@@ -427,16 +427,29 @@ namespace ProjectManagementSystem.Controllers
 
         // ---------------------- INDEX ----------------------
         [HttpGet]
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(int page = 1)
         {
             if (!IsLoggedIn())
                 return RedirectToAction("Login", "Teacher");
 
-            var teachers = await _context.Teachers
-                .OrderBy(t => t.FullName)
+            int pageSize = 3; // ✅ teachers per page
+
+            var query = _context.Teachers
+                .OrderBy(t => t.FullName);
+
+            int totalTeachers = await query.CountAsync();
+
+            var teachers = await query
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
                 .ToListAsync();
+
+            ViewBag.CurrentPage = page;
+            ViewBag.TotalPages = (int)Math.Ceiling(totalTeachers / (double)pageSize);
+
             return View(teachers);
         }
+
 
         // ---------------------- CREATE ----------------------
         [HttpGet]
