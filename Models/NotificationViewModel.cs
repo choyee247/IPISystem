@@ -20,5 +20,22 @@
         public string DeadlineStatus { get; set; } = "";
         
         public bool? IsDeleted { get; set; }
+
+        // role-specific flags
+        public bool IsReadByTeacher { get; set; }
+        public bool IsDeletedByTeacher { get; set; }
+        public bool IsReadByAdmin { get; set; }
+        public bool IsDeletedByAdmin { get; set; }
+
+        // computed property for view convenience
+        public bool IsUnread(string role)
+        {
+            return role switch
+            {
+                "Teacher" => !IsReadByTeacher,
+                "Admin" => !IsReadByAdmin,
+                _ => false
+            };
+        }
     }
 }

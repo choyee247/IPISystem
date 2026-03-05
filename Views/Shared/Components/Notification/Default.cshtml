@@ -1,4 +1,73 @@
-﻿@model IEnumerable<ProjectManagementSystem.DBModels.NotificationViewModel>
+﻿@model List<ProjectManagementSystem.DBModels.NotificationViewModel>
+
+<style>
+    :root {
+        --primary: #8c5dd1;
+        --primary-dark: #7347b5;
+        --primary-light: #f7f2ff;
+    }
+
+    .notification-wrapper {
+        width: 380px;
+        max-height: 500px;
+        overflow-y: auto;
+        padding: 10px;
+    }
+
+    .notification-item {
+        background: white;
+        border: 1px solid #f1f1f1;
+        transition: 0.2s ease;
+        text-decoration: none;
+        color: #4b4b4b;
+        display: block;
+        border-radius: 10px;
+    }
+
+        .notification-item:hover {
+            background: #faf8ff;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(140,93,209,0.15);
+        }
+
+        .notification-item.unread {
+            background: var(--primary-light);
+            border-left: 6px solid var(--primary);
+        }
+
+    .icon-area {
+        width: 34px;
+        height: 34px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #f3eaff;
+        color: var(--primary);
+        border-radius: 8px;
+        flex-shrink: 0;
+    }
+
+    .notification-content {
+        font-size: 0.92rem;
+        line-height: 1.3rem;
+    }
+
+    .view-all-btn {
+        background: var(--primary);
+        color: white;
+        padding: 6px 18px;
+        border-radius: 20px;
+        font-weight: 600;
+        transition: 0.2s;
+        border: none;
+    }
+
+        .view-all-btn:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            color: white;
+        }
+</style>
 
 <div class="notification-wrapper">
 
@@ -6,25 +75,25 @@
     {
         foreach (var notification in Model)
         {
-            <a class="notification-item d-flex align-items-start gap-3 p-3 mb-2 rounded shadow-sm
-                      @(notification.IsRead == false ? "unread" : "")"
+            <a class="notification-item d-flex align-items-start gap-3 p-3 mb-2 shadow-sm
+                  @(notification.IsRead==true ? "" : "unread")"
                asp-controller="ProjectApproval"
                asp-action="Details"
                asp-route-id="@notification.ProjectId">
 
                 <div class="icon-area">
-                    <i class="fas fa-bell text-purple fs-5"></i>
+                    <i class="fas fa-bell"></i>
                 </div>
 
-                <div class="flex-grow-1">
-                    <div class="notification-content fw-semibold">
-                        @Html.Raw(notification.Message) <br />
+                <div class="flex-grow-1 notification-content fw-semibold">
 
-                        <div class="small text-muted">
-                            <i class="far fa-clock me-1"></i>
-                            @notification.CreatedAt.ToString("MMM dd, yyyy • hh:mm tt")
-                        </div>
+                    @notification.Message
+
+                    <div class="small text-muted mt-1">
+                        <i class="far fa-clock me-1"></i>
+                        @notification.CreatedAt.ToString("MMM dd, yyyy • hh:mm tt")
                     </div>
+
                 </div>
             </a>
         }
@@ -39,99 +108,32 @@
     }
     else
     {
-        <div class="empty-notifications text-center py-4">
-            <i class="far fa-bell-slash fs-1 text-muted"></i>
-            <p class="text-muted mt-2 mb-0">No new notifications</p>
+        <div class="text-center py-4 text-muted">
+            <i class="far fa-bell-slash fs-3"></i>
+            <p class="mt-2 mb-0">No new notifications</p>
         </div>
     }
+
 </div>
 @* <audio id="notificationSound"
        src="~/sounds/mixkit-software-interface-back-2575.mp3"
        preload="auto"></audio>
- *@
 
 <script>
     document.addEventListener("DOMContentLoaded", function () {
 
-        let hasUnread = document.querySelectorAll(".notification-item.unread").length;
+        let unreadCount = document.querySelectorAll(".notification-item.unread").length;
 
-        if (hasUnread > 0) {
-            let sound = document.getElementById("notificationSound");
+        if (unreadCount > 0) {
+            const sound = document.getElementById("notificationSound");
 
-            sound.play().catch(err => {
-                console.log("Autoplay blocked by browser. Waiting for user interaction...");
-            });
-
-            // One-time unlock when user clicks anywhere
-            window.addEventListener("click", () => {
-                sound.play();
-            }, { once: true });
+            if (sound) {
+                sound.play().catch(() => {
+                    window.addEventListener("click", () => {
+                        sound.play();
+                    }, { once: true });
+                });
+            }
         }
     });
-</script>
-
-
-<style>
-    .notification-wrapper {
-        width: 380px;
-        max-height: 500px;
-        overflow-y: auto;
-        padding: 10px;
-    }
-
-    .notification-item {
-        background: #ffffff;
-        border: 1px solid #f1f1f1;
-        transition: 0.2s;
-        text-decoration: none;
-        color: #4b4b4b;
-        display: block;
-    }
-
-        .notification-item:hover {
-            background: #faf8ff;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-        }
-
-        .notification-item.unread {
-            background: #f7f2ff;
-            border-left: 6px solid #8C5DD1;
-        }
-
-    .icon-area {
-        width: 34px;
-        height: 34px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: #f3eaff;
-        color: #8C5DD1;
-        border-radius: 8px;
-        flex-shrink: 0;
-    }
-
-    .text-purple {
-        color: #8C5DD1;
-    }
-
-    .notification-content {
-        font-size: 0.92rem;
-        line-height: 1.3rem;
-    }
-
-    .view-all-btn {
-        background: #8C5DD1;
-        color: white;
-        padding: 6px 18px;
-        border-radius: 20px;
-        font-weight: 600;
-        transition: 0.2s;
-    }
-
-        .view-all-btn:hover {
-            background: #7347b5;
-            color: white;
-            transform: translateY(-2px);
-        }
-</style>
+</script> *@

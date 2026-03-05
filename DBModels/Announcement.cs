@@ -21,13 +21,9 @@ public partial class Announcement
 
     public string? FilePath { get; set; }
 
-    public int? AdminActivityLogId { get; set; }
-
     public bool? IsActive { get; set; }
 
     public bool IsDeleted { get; set; }
-
-    public virtual AdminActivityLog? AdminActivityLog { get; set; }
 
     public virtual ICollection<Notification> Notifications { get; set; } = new List<Notification>();
 }

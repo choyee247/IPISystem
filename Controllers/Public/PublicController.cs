@@ -11,6 +11,8 @@ using ProjectManagementSystem.ViewModels;
 using X.PagedList;
 using System.Net.Mail;
 using MailKit.Net.Smtp;
+using System.IO.Compression;
+using ProjectManagementSystem.Models.Public;
 
 namespace ProjectManagementSystem.Controllers.Public
 {
@@ -19,34 +21,43 @@ namespace ProjectManagementSystem.Controllers.Public
         private readonly PMSDbContext _context;
         private const string AccessCode = "OLDSTUDENT2025"; // your secret code
         private readonly string _imageFolder = "uploads/successstories";
-        public PublicController(PMSDbContext context)
+        private readonly IWebHostEnvironment _env;
+        private int id;
+
+        public PublicController(IWebHostEnvironment env,PMSDbContext context)
         {
+            _env = env;
             _context = context;
-        }      
-        public async Task<IActionResult> ProjectIdeas(int? projectTypeId, int? languageId, string? searchTerm, int page = 1)
+        }
+        public async Task<IActionResult> ProjectIdeas(
+        int? projectTypeId,
+        int? languageId,
+        string? searchTerm,
+        int? academicYearId,
+        int page = 1)
         {
             var projectsQuery = _context.Projects
                 .Include(p => p.ProjectTypePk)
                 .Include(p => p.LanguagePk)
                 .Include(p => p.ProjectFiles)
+                .Include(p => p.StudentPk) // Student join
+                    .ThenInclude(s => s.AcademicYearPk) // Academic Year join
+                .Include(p => p.CompanyPk) // 🔹 Company join
                 .Where(p => (bool)!p.IsDeleted && p.Status == "Approved");
 
             if (projectTypeId.HasValue)
-            {
                 projectsQuery = projectsQuery.Where(p => p.ProjectTypePkId == projectTypeId);
-            }
 
             if (languageId.HasValue)
-            {
                 projectsQuery = projectsQuery.Where(p => p.LanguagePkId == languageId);
-            }
 
             if (!string.IsNullOrWhiteSpace(searchTerm))
-            {
                 projectsQuery = projectsQuery.Where(p =>
                     p.ProjectName.Contains(searchTerm) ||
                     p.Description.Contains(searchTerm));
-            }
+
+            if (academicYearId.HasValue)
+                projectsQuery = projectsQuery.Where(p => p.StudentPk.AcademicYearPkId == academicYearId);
 
             var totalProjects = await projectsQuery.CountAsync();
             var pageSize = 6;
@@ -57,6 +68,71 @@ namespace ProjectManagementSystem.Controllers.Public
                 .Take(pageSize)
                 .ToListAsync();
 
+            var academicYears = await _context.AcademicYears
+                .Where(ay => (bool)ay.IsActive)
+                .Select(ay => new SelectListItem
+                {
+                    Value = ay.AcademicYearPkId.ToString(),
+                    Text = ay.YearRange
+                }).ToListAsync();
+
+            // Get all requests for the current project files
+            //var allRequests = await _context.DownloadRequests
+            //    .Include(r => r.ProjectFilePk)
+            //    .ToListAsync();
+
+            //// Prepare dictionary: Key = ProjectFilePkId, Value = latest request
+            //ViewBag.RequestStatuses = allRequests
+            //    .GroupBy(r => r.ProjectFilePkId)
+            //    .ToDictionary(
+            //        g => g.Key,
+            //        g => g.OrderByDescending(r => r.RequestDate).FirstOrDefault()
+            //    );
+
+            var studentId = HttpContext.Session.GetInt32("StudentId");
+
+            if (studentId != null)
+            {
+                var approvedFiles = await _context.DownloadRequests
+                    .Where(r => r.StudentPkId == studentId && r.IsApproved == true)
+                    .Select(r => r.ProjectFilePkId)
+                    .ToListAsync();
+
+                ViewBag.ApprovedFiles = approvedFiles;
+            }
+            // Latest request per project
+            var projectRequests = await _context.DownloadRequests
+                .Where(r => paginatedProjects.Select(p => p.ProjectPkId).Contains(r.ProjectFilePk.ProjectPkId)
+                            && (studentId == null || r.StudentPkId == studentId))
+                .Include(r => r.ProjectFilePk)
+                .ToListAsync();
+
+            ViewBag.ProjectRequestStatuses = projectRequests
+                .GroupBy(r => r.ProjectFilePk.ProjectPkId)   // Project-level
+                .ToDictionary(
+                    g => g.Key,
+                    g => g.OrderByDescending(r => r.RequestDate).FirstOrDefault()
+                );
+
+            var projectFileIds = paginatedProjects
+            .SelectMany(p => p.ProjectFiles)
+            .Select(f => f.ProjectFilePkId)
+            .ToList();
+
+            var allRequests = await _context.DownloadRequests
+                .Where(r => projectFileIds.Contains(r.ProjectFilePkId)
+                            && (studentId == null || r.StudentPkId == studentId))
+                .Include(r => r.ProjectFilePk)
+                .ToListAsync();
+
+            // Latest request per file
+            ViewBag.RequestStatuses = allRequests
+                .GroupBy(r => r.ProjectFilePkId)
+                .ToDictionary(
+                    g => g.Key,
+                    g => g.OrderByDescending(r => r.RequestDate).FirstOrDefault()
+                );
+
             var viewModel = new ProjectIdeasViewModel
             {
                 Projects = paginatedProjects,
@@ -66,8 +142,7 @@ namespace ProjectManagementSystem.Controllers.Public
                         Value = pt.ProjectTypePkId.ToString(),
                         Text = pt.TypeName
                     }).ToListAsync(),
-
-                Languages = projectTypeId.HasValue
+                Languages = languageId.HasValue
                     ? await _context.Languages
                         .Where(l => l.ProjectTypePkId == projectTypeId)
                         .Select(l => new SelectListItem
@@ -76,16 +151,103 @@ namespace ProjectManagementSystem.Controllers.Public
                             Text = l.LanguageName
                         }).ToListAsync()
                     : new List<SelectListItem>(),
-
+                AcademicYears = academicYears,
                 SelectedProjectTypeId = projectTypeId,
                 SelectedLanguageId = languageId,
+                SelectedAcademicYearId = academicYearId,
                 SearchTerm = searchTerm,
                 TotalProjects = totalProjects,
                 CurrentPage = page
             };
 
             return View(viewModel);
-        }      
+        }
+        public IActionResult RequestDownload(int fileId)
+        {
+            if (fileId == 0)
+                return BadRequest("Invalid FileId");
+
+            var model = new DownloadRequest
+            {
+                ProjectFilePkId = fileId
+            };
+
+            return View(model);
+        }
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RequestDownload(DownloadRequest model)
+        {
+            // Validate ProjectFilePkId
+            if (model.ProjectFilePkId == 0)
+                return BadRequest("Invalid file.");
+
+            // Optionally, check file exists
+            var fileExists = await _context.ProjectFiles
+                .AnyAsync(f => f.ProjectFilePkId == model.ProjectFilePkId);
+
+            if (!fileExists)
+                return NotFound("File does not exist.");
+
+            // Fill other fields
+            model.StudentPkId = null; // For anonymous request
+            model.RequestDate = DateTime.Now;
+            model.IsApproved = null;
+            model.IsBlocked = false;
+
+            _context.DownloadRequests.Add(model);
+            await _context.SaveChangesAsync();
+
+            TempData["Message"] = "Request submitted successfully.";
+            return RedirectToAction("ProjectIdeas");
+        }
+        public async Task<IActionResult> DownloadProject(int requestId)
+        {
+            var request = await _context.DownloadRequests
+                .Include(r => r.ProjectFilePk)
+                    .ThenInclude(f => f.ProjectPk)
+                        .ThenInclude(p => p.ProjectFiles)
+                .FirstOrDefaultAsync(r => r.DownloadRequestPkId == requestId);
+
+            if (request == null || request.IsApproved != true)
+                return Unauthorized();
+
+            // Log
+            _context.DownloadTransactions.Add(new DownloadTransaction
+            {
+                DownloadRequestPkId = requestId,
+                DownloadDate = DateTime.Now,
+                IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString()
+            });
+
+            await _context.SaveChangesAsync();
+
+            var projectFiles = request.ProjectFilePk.ProjectPk.ProjectFiles;
+
+            using var memoryStream = new MemoryStream();
+            using (var zip = new ZipArchive(memoryStream, ZipArchiveMode.Create, true))
+            {
+                foreach (var file in projectFiles)
+                {
+                    var fullPath = Path.Combine(_env.WebRootPath,
+                        file.FilePath.TrimStart('/'));
+
+                    if (System.IO.File.Exists(fullPath))
+                    {
+                        var entry = zip.CreateEntry(Path.GetFileName(fullPath));
+                        using var entryStream = entry.Open();
+                        using var fileStream = System.IO.File.OpenRead(fullPath);
+                        await fileStream.CopyToAsync(entryStream);
+                    }
+                }
+            }
+
+            memoryStream.Position = 0;
+
+            return File(memoryStream.ToArray(),
+                        "application/zip",
+                        "ProjectFiles.zip");
+        }
 
         [HttpGet]
         public async Task<IActionResult> SearchSuggestions(string term)
@@ -135,35 +297,33 @@ namespace ProjectManagementSystem.Controllers.Public
             // Return Help view
             return View();
         }
-        public async Task<IActionResult> InternshipCompanies(int? selectedCityId, int page = 1)
+        public async Task<IActionResult> InternshipCompanies(int page = 1)
         {
             int pageSize = 5;
 
-            // All cities that have at least one internship company
-            var allCities = await _context.Cities
-                .Where(c => _context.Companies.Any(co => co.CityPkId == c.CityPkId))
-                .OrderBy(c => c.CityName)
+            var cities = await _context.Cities
+                .Where(c => c.Companies
+                    .Any(co => co.Projects
+                        .Any(p => p.ProjectMembers.Any())))
+                .Select(c => new CityInternshipViewModel
+                {
+                    CityPkId = c.CityPkId,
+                    CityName = c.CityName ?? "",
+                    ImageFileName = c.ImageFileName ?? "",
+                    TotalStudents = c.Companies
+                        .SelectMany(co => co.Projects)
+                        .SelectMany(p => p.ProjectMembers)
+                        .Count()
+                })
+                .OrderByDescending(c => c.TotalStudents)
                 .ToListAsync();
 
-            // Filter for display (if selected city is chosen)
-            var filteredCities = selectedCityId.HasValue
-                ? allCities.Where(c => c.CityPkId == selectedCityId.Value).ToList()
-                : allCities;
-
-            var pagedCities = filteredCities.ToPagedList(page, pageSize);
+            var pagedList = cities.ToPagedList(page, pageSize);
 
             var viewModel = new CityListViewModel
             {
-                SelectedCityId = selectedCityId,
-                CityList = allCities.Select(c => new SelectListItem
-                {
-                    Value = c.CityPkId.ToString(),
-                    Text = c.CityName
-                }),
-                TotalCities = filteredCities.Count,
-                Cities = (IPagedList<DBModels.City>)pagedCities,
-                CurrentPage = page,
-                //TotalPages = pagedCities.PageCount
+                Cities = pagedList,
+                CurrentPage = page
             };
 
             return View(viewModel);

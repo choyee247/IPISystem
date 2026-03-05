@@ -182,9 +182,6 @@ Account Team"
         [HttpPost]
         public IActionResult VerifyOtp(VerifyOtpViewModel model)
         {
-
-            Console.WriteLine("her everify otp post......................................");
-
             var otp = _context.Otps
                 .Where(o => o.RollNumber == model.RollNumber && !o.IsUsed)
                 .OrderByDescending(o => o.SendTime)
@@ -194,7 +191,6 @@ Account Team"
                 otp.Otpcode == model.OTPCode &&
                 otp.SendTime.AddMinutes(5) > DateTime.Now)
             {
-                Console.WriteLine("here success otp.......................................");
                 otp.IsUsed = true;
                 _context.SaveChanges();
 
@@ -203,17 +199,14 @@ Account Team"
                 var student = _context.Students
                     .Include(s => s.EmailPk)
                     .FirstOrDefault(s => s.EmailPk.RollNumber == model.RollNumber && s.IsDeleted == false);
-                Console.WriteLine("here student null?........................" + (student == null));
+
                 if (student != null)
                 {
-                    Console.WriteLine("here student not null.........................");
                     HttpContext.Session.SetString("StudentName", student.StudentName);
                     HttpContext.Session.SetString("EmailAddress", student.EmailPk?.EmailAddress ?? "");
                 }
                 else
                 {
-                    Console.WriteLine("here student null.........................");
-
                     var emailRecord = _context.Emails
                         .FirstOrDefault(e => e.RollNumber == model.RollNumber && e.IsDeleted == false);
 
@@ -223,14 +216,14 @@ Account Team"
                         HttpContext.Session.SetString("EmailAddress", emailRecord.EmailAddress);
                     }
                 }
-                Console.WriteLine("roll number................................." + HttpContext.Session.GetString("RollNumber"));
-
+                HttpContext.Session.SetInt32("CurrentStep", 2);
                 return RedirectToAction("ChooseRole");
             }
 
             ViewBag.Error = "Invalid or expired OTP.";
             return View(model);
         }
+
 
 
 
@@ -352,6 +345,7 @@ Internship Project Information System Team"
             HttpContext.Session.Clear();
             TempData.Clear();
             TempData["Success"] = "You have been logged out successfully.";
+            HttpContext.Session.SetInt32("CurrentStep", 2);
             return RedirectToAction("Login");
         }
 
@@ -368,23 +362,17 @@ Internship Project Information System Team"
         public IActionResult ChooseRole()
         {
             var rollNumber = HttpContext.Session.GetString("RollNumber");
-            Console.WriteLine("roll number................................." + rollNumber);
             if (string.IsNullOrEmpty(rollNumber))
             {
-                Console.WriteLine("here roll no null.........................");
-
                 TempData["Error"] = "Session expired. Please login again.";
                 return RedirectToAction("Login");
             }
-
-            Console.WriteLine("here roll no not null.........................");
+            //HttpContext.Session.SetInt32("CurrentStep", 2);
 
             var isLeader = _context.ProjectMembers
                 .Any(pm => pm.StudentPk.EmailPk.RollNumber == rollNumber &&
                            pm.Role == "Leader" &&
                            pm.IsDeleted == false);
-
-            Console.WriteLine("here isLeader ........................." + isLeader);
 
             if (isLeader)
             {
@@ -394,16 +382,13 @@ Internship Project Information System Team"
                 if (student == null)
                 {
                     TempData["NextAction"] = "CreateProject";
+
                     return RedirectToAction("Create", "Student");
                 }
                 HttpContext.Session.SetInt32("StudentPkId", student.StudentPkId);
 
-                Console.WriteLine("here is leader...............................");
                 return RedirectToAction("Dashboard", "Student");
             }
-
-            Console.WriteLine("here not leader...............................");
-
             return View();
         }
 
@@ -420,6 +405,7 @@ Internship Project Information System Team"
             }
 
             HttpContext.Session.SetString("UserRole", role);
+            //HttpContext.Session.SetInt32("CurrentStep", 2);
 
             var student = _context.Students
                 .Include(s => s.EmailPk)

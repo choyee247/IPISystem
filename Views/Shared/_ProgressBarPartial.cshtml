@@ -1,4 +1,8 @@
-﻿<style>
+﻿@{
+    var currentStep = Context.Session.GetInt32("CurrentStep") ?? 1;
+}
+
+<style>
     .progress-steps-container {
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         max-width: 1000px;
@@ -30,8 +34,8 @@
         top: 0;
         left: 0;
         height: 100%;
-        background: linear-gradient(90deg, #4facfe 0%, #00f2fe 100%);
-        width: 0%;
+        background: linear-gradient(90deg, #8c5dd1);
+        width: @((currentStep - 1) * 16.66)%;
         transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
         border-radius: 3px;
     }
@@ -42,7 +46,7 @@
         align-items: center;
         position: relative;
         z-index: 1;
-        width: 25%;
+        width: 14%; /* 7 steps = 100/7≈14% */
     }
 
     .step-indicator {
@@ -75,8 +79,8 @@
 
     .step-item.active .step-indicator {
         background: white;
-        color: #4facfe;
-        border-color: #4facfe;
+        color: #8c5dd1;
+        border-color: #8c5dd1;
         transform: scale(1.1);
         box-shadow: 0 8px 15px rgba(79, 172, 254, 0.2);
     }
@@ -87,7 +91,7 @@
     }
 
     .step-item.completed .step-indicator {
-        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        background: linear-gradient(135deg, #8c5dd1);
         color: white;
         border-color: transparent;
     }
@@ -108,7 +112,7 @@
         height: 6px;
         top: 25px;
         z-index: -1;
-        background: linear-gradient(90deg, #4facfe 0%, #00f2fe 100%);
+        background: linear-gradient(90deg, #8c5dd1);
         opacity: 0;
         transition: opacity 0.4s ease;
     }
@@ -132,7 +136,6 @@
         box-shadow: 0 10px 20px rgba(79, 172, 254, 0.3);
     }
 
-    
     .step-item.active .step-indicator {
         animation: pulse 2s infinite;
     }
@@ -175,138 +178,30 @@
 <div class="progress-steps-container">
     <div class="progress-steps">
         <div class="progress-track">
-            <div class="progress-fill" style="width: @((ViewBag.CurrentStep-1)*20)%"></div>
+            <div class="progress-fill" style="width:@((currentStep-1)*16.66)%"></div>
         </div>
 
-        <!-- Step 1: Login -->
-        <div class="step-item @(ViewBag.CurrentStep >= 1 ? "completed" : "") @(ViewBag.CurrentStep == 1 ? "active" : "")">
-            <a href="@Url.Action("Login", "StudentLogin")">
-                <div class="step-indicator">
-                    @if (ViewBag.CurrentStep > 1)
-                    {
-                        <i class="fas fa-check step-icon"></i>
-                    }
-                    else
-                    {
-                        <i class="fas fa-sign-in-alt step-icon"></i>
-                    }
-                    <span class="step-tooltip">Student Login</span>
-                </div>
-            </a>
-            <div class="step-label">Login</div>
-            <div class="step-connector"></div>
-        </div>
-
-        <!-- Step 2: Role -->
-        <div class="step-item @(ViewBag.CurrentStep >= 2 ? "completed" : "") @(ViewBag.CurrentStep == 2 ? "active" : "")">
-            <a href="@Url.Action("ChooseRole", "StudentLogin")">
-                <div class="step-indicator">
-                    @if (ViewBag.CurrentStep > 2)
-                    {
-                        <i class="fas fa-check step-icon"></i>
-                    }
-                    else
-                    {
-                        <i class="fas fa-user-edit step-icon"></i>
-                    }
-                    <span class="step-tooltip">Choose Student Role</span>
-                </div>
-            </a>
-            <div class="step-label">Role</div>
-            <div class="step-connector"></div>
-        </div>
-
-        <!-- Step 3: Create Profile -->
-        <div class="step-item @(ViewBag.CurrentStep >= 3 ? "completed" : "") @(ViewBag.CurrentStep == 3 ? "active" : "")">
-            <a href="@Url.Action("Create", "Student")">
-                <div class="step-indicator">
-                    @if (ViewBag.CurrentStep > 3)
-                    {
-                        <i class="fas fa-check step-icon"></i>
-                    }
-                    else
-                    {
-                        <i class="fas fa-id-card step-icon"></i>
-                    }
-                    <span class="step-tooltip">Create Student Profile</span>
-                </div>
-            </a>
-            <div class="step-label">Profile</div>
-            <div class="step-connector"></div>
-        </div>
-
-        <!-- Step 4: Create Project -->
-        <div class="step-item @(ViewBag.CurrentStep >= 4 ? "completed" : "") @(ViewBag.CurrentStep == 4 ? "active" : "")">
-            <a href="@Url.Action("Create", "Project")">
-                <div class="step-indicator">
-                    @if (ViewBag.CurrentStep > 4)
-                    {
-                        <i class="fas fa-check step-icon"></i>
-                    }
-                    else
-                    {
-                        <i class="fas fa-tasks step-icon"></i>
-                    }
-                    <span class="step-tooltip">Create Project</span>
-                </div>
-            </a>
-            <div class="step-label">Project</div>
-            <div class="step-connector"></div>
-        </div>
-
-        <!-- Step 5: Add Members -->
-        <div class="step-item @(ViewBag.CurrentStep >= 5 ? "completed" : "") @(ViewBag.CurrentStep == 5 ? "active" : "")">
-            <a href="@Url.Action("AddMember", "Project")">
-                <div class="step-indicator">
-                    @if (ViewBag.CurrentStep > 5)
-                    {
-                        <i class="fas fa-check step-icon"></i>
-                    }
-                    else
-                    {
-                        <i class="fas fa-users step-icon"></i>
-                    }
-                    <span class="step-tooltip">Add Team Members</span>
-                </div>
-            </a>
-            <div class="step-label">Team Setup</div>
-            <div class="step-connector"></div>
-        </div>
-
-        <!-- Step 6: Submit Project -->
-        <div class="step-item @(ViewBag.CurrentStep >= 6 ? "completed" : "") @(ViewBag.CurrentStep == 6 ? "active" : "")">
-            <a href="@Url.Action("Index", "Project")">
-                <div class="step-indicator">
-                    @if (ViewBag.CurrentStep > 6)
-                    {
-                        <i class="fas fa-check step-icon"></i>
-                    }
-                    else
-                    {
-                        <i class="fas fa-file-upload step-icon"></i>
-                    }
-                    <span class="step-tooltip">Submit Project</span>
-                </div>
-            </a>
-            <div class="step-label">Submission</div>
-        </div>
-
-        <!-- Step 7: Logout -->
-        <div class="step-item @(ViewBag.CurrentStep >= 7 ? "completed" : "") @(ViewBag.CurrentStep == 7 ? "active" : "")">
-            <a href="@Url.Action("Logout", "StudentLogin")">
-                <div class="step-indicator">
-                    @if (ViewBag.CurrentStep > 7)
-                    {
-                        <i class="fas fa-check step-icon"></i>
-                    }
-                    else
-                    {
-                        <i class="fas fa-sign-out-alt step-icon"></i>
-                    }
-                    <span class="step-tooltip">Logout</span>
-                </div>
-            </a>
-            <div class="step-label">Logout</div>
-        </div>
+        @foreach (var step in new[]{
+        new { Step=1, Name="Login", Icon="fas fa-sign-in-alt", Url=Url.Action("Login","StudentLogin"), Tooltip="Student Login" },
+        new { Step=2, Name="Profile", Icon="fas fa-id-card", Url=Url.Action("Create","Student"), Tooltip="Create Student Profile" },
+        new { Step=3, Name="Project", Icon="fas fa-tasks", Url=Url.Action("Create","Project"), Tooltip="Create Project" },
+        new { Step=4, Name="Team", Icon="fas fa-users", Url=Url.Action("AddMember","Project"), Tooltip="Add Team Members" },
+        new { Step=5, Name="Submission", Icon="fas fa-file-upload", Url=Url.Action("Index","Project"), Tooltip="Submit Project" },
+        new { Step=6, Name="Logout", Icon="fas fa-sign-out-alt", Url=Url.Action("Logout","StudentLogin"), Tooltip="Logout" }
+        })
+        {
+            var isActive = step.Step == currentStep;
+            var isCompleted = step.Step < currentStep;
+            <div class="step-item @(isCompleted ? "completed" : "") @(isActive ? "active" : "")">
+                <a href="@step.Url">
+                    <div class="step-indicator">
+                        <i class="@((isCompleted) ? "fas fa-check step-icon" : step.Icon + " step-icon")"></i>
+                        <span class="step-tooltip">@step.Tooltip</span>
+                    </div>
+                </a>
+                <div class="step-label">@step.Name</div>
+                <div class="step-connector"></div>
+            </div>
+        }
     </div>
 </div>

@@ -9,7 +9,7 @@ namespace ProjectManagementSystem.DBModels
         public int PendingProjects { get; set; }
         public int ApprovedProjects { get; set; }
         public int RejectedProjects { get; set; }
-        public int RevisionRequired { get; set; }
+        public int Cancelled { get; set; }
 
     }
 }

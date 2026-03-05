@@ -23,7 +23,15 @@ public partial class Company
 
     public string? ImageFileName { get; set; }
 
+    public int? TeacherId { get; set; }
+
     public virtual City? CityPk { get; set; }
 
     public virtual ICollection<Project> Projects { get; set; } = new List<Project>();
+
+    public virtual ICollection<StudentCompany> StudentCompanies { get; set; } = new List<StudentCompany>();
+
+    public virtual Teacher? Teacher { get; set; }
+
+    public virtual ICollection<TeacherCompany> TeacherCompanies { get; set; } = new List<TeacherCompany>();
 }

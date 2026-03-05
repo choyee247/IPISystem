@@ -49,6 +49,10 @@ public partial class Project
 
     public int? TeacherId { get; set; }
 
+    public int? AcademicYearPkId { get; set; }
+
+    public virtual AcademicYear? AcademicYearPk { get; set; }
+
     public virtual Company CompanyPk { get; set; } = null!;
 
     public virtual Framework FrameworkPk { get; set; } = null!;

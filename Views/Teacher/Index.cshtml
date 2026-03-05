@@ -1,201 +1,587 @@
-﻿@model IEnumerable<ProjectManagementSystem.DBModels.Teacher>
+﻿@model IEnumerable<dynamic>
 @{
     Layout = "_TeacherLayout";
     int currentPage = ViewBag.CurrentPage != null ? (int)ViewBag.CurrentPage : 1;
     int totalPages = ViewBag.TotalPages != null ? (int)ViewBag.TotalPages : 1;
-    int rowNumber = ViewBag.StartRowNumber != null ? (int)ViewBag.StartRowNumber : 1;
+    int rowNumber = 1;
+    string searchTerm = ViewBag.SearchTerm ?? "";
+    string roleFilter = ViewBag.RoleFilter ?? "all";
 }
 
-<style>
-    .btn-purple {
-        background-color: #8C5DD1 !important;
-        color: #fff !important;
-        border: none;
-        transition: background-color 0.3s ease, transform 0.2s ease;
-    }
-
-        .btn-purple:hover {
-            background-color: #6b3fa0 !important;
-            color: #fff !important;
-            transform: translateY(-2px);
-        }
-
-    .avatar-circle {
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        background: linear-gradient(135deg, #8C5DD1, #8C5DD1);
-        color: #fff;
-        font-weight: 600;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        font-size: 1rem;
-    }
-
-    .table-row:hover {
-        background-color: #f8f9fa;
-        transition: background-color 0.2s ease-in-out;
-    }
-
-    .table th {
-        font-size: 0.85rem;
-        text-transform: uppercase;
-        letter-spacing: 0.03em;
-        color: #6c757d;
-    }
-
-    .table td {
-        vertical-align: middle;
-        padding-top: 0.75rem;
-        padding-bottom: 0.75rem;
-    }
-
-    /* ===== Email-style Pagination ===== */
-    .pagination-container {
-        display: flex;
-        justify-content: center;
-        margin-top: 1.5rem;
-    }
-
-    .pagination {
-        display: flex;
-        gap: 0.5rem;
-        list-style: none;
-        padding: 0;
-    }
-
-    .page-link {
-        color: #8C5DD1;
-        background: white;
-        border: 1px solid #C8C6C1;
-        padding: 0.5rem 0.9rem;
-        border-radius: 6px;
-        text-decoration: none;
-        transition: all 0.3s;
-    }
-
-        .page-link:hover {
-            background: #E4EEFD;
-            border-color: #8C5DD1;
-        }
-
-    .page-item.active .page-link {
-        background: #8C5DD1;
-        color: white;
-        border-color: #8C5DD1;
-    }
-
-    .page-item.disabled .page-link {
-        opacity: 0.5;
-        pointer-events: none;
-    }
-</style>
-
-<script src="~/Resources/bootstrap538/js/bootstrap.bundle.min.js"></script>
-<link href="~/Resources/bootstrap538/css/bootstrap.min.css" rel="stylesheet" />
-
 <div class="container-fluid py-4">
-
-    <!-- Header -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="fw-bold mb-0">Teacher Management</h2>
-        <a asp-action="Create" class="btn rounded-pill px-4 shadow-sm" style="background-color:#8C5DD1;color:#fff;">
-            <i class="bi bi-person-plus me-1"></i> Add Teacher
-        </a>
+    <!-- Header Section -->
+    <div class="d-flex flex-column flex-lg-row justify-content-between align-items-start align-items-lg-center mb-5 gap-3">
+        <div>
+            <h2 class="fw-bold mb-2 text-dark">Teacher Management</h2>
+            <p class="text-muted mb-0">Manage all teachers, their roles, departments, and assigned students</p>
+        </div>
+        <div class="d-flex gap-2">
+            <form method="get" action="@Url.Action("Index")" class="d-flex gap-2 align-items-center">
+                <div class="input-group input-group-sm" style="max-width: 300px;">
+                    <span class="input-group-text bg-white border-end-0">
+                        <i class="bi bi-search text-secondary"></i>
+                    </span>
+                    <input type="text" class="form-control border-start-0" name="searchTerm" placeholder="Search teachers..." value="@searchTerm">
+                </div>
+                <div class="dropdown">
+                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle d-flex align-items-center gap-1" type="button" data-bs-toggle="dropdown">
+                        <i class="bi bi-filter me-1"></i>
+                        <span>@(roleFilter == "all" ? "All Roles" : roleFilter == "Admin" ? "Admin Only" : "Teacher Only")</span>
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li>
+                            <a class="dropdown-item @(roleFilter == "all" ? "active" : "")" href="@Url.Action("Index", new { searchTerm = searchTerm, roleFilter = "all", page = 1 })">
+                                <i class="bi bi-people me-2"></i>All Roles
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item @(roleFilter == "Admin" ? "active" : "")" href="@Url.Action("Index", new { searchTerm = searchTerm, roleFilter = "Admin", page = 1 })">
+                                <i class="bi bi-shield-check me-2"></i>Admin Only
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item @(roleFilter == "Teacher" ? "active" : "")" href="@Url.Action("Index", new { searchTerm = searchTerm, roleFilter = "Teacher", page = 1 })">
+                                <i class="bi bi-person-check me-2"></i>Teacher Only
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+                @if (!string.IsNullOrEmpty(searchTerm) || roleFilter != "all")
+                {
+                    <a href="@Url.Action("Index")" class="btn btn-sm btn-outline-danger d-flex align-items-center">
+                        <i class="bi bi-x-circle me-1"></i> Clear
+                    </a>
+                }
+            </form>
+            <a asp-action="Create" class="btn d-flex align-items-center gap-2 btn-gradient">
+                <i class="bi bi-person-plus-fill"></i>
+                <span>Add Teacher</span>
+            </a>
+        </div>
     </div>
 
-    <!-- Table -->
-    <div class="card border-0 shadow-sm rounded-4">
+    <!-- Stats Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm rounded-3 h-100">
+                <div class="card-body d-flex align-items-center">
+                    <div class="rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px; background: rgba(140, 93, 209, 0.1);">
+                        <i class="bi bi-people-fill" style="color: #8C5DD1; font-size: 1.3rem;"></i>
+                    </div>
+                    <div>
+                        <h5 class="mb-0 fw-bold">@Model.Count()</h5>
+                        <p class="text-muted mb-0 small">Total Teachers</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm rounded-3 h-100">
+                <div class="card-body d-flex align-items-center">
+                    <div class="rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px; background: rgba(25, 135, 84, 0.1);">
+                        <i class="bi bi-person-check-fill" style="color: #198754; font-size: 1.3rem;"></i>
+                    </div>
+                    <div>
+                        <h5 class="mb-0 fw-bold">@Model.Count(t => t.Teacher.Role == "Teacher")</h5>
+                        <p class="text-muted mb-0 small">Regular Teachers</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm rounded-3 h-100">
+                <div class="card-body d-flex align-items-center">
+                    <div class="rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px; background: rgba(220, 53, 69, 0.1);">
+                        <i class="bi bi-person-badge-fill" style="color: #dc3545; font-size: 1.3rem;"></i>
+                    </div>
+                    <div>
+                        <h5 class="mb-0 fw-bold">@Model.Count(t => t.Teacher.Role == "Admin")</h5>
+                        <p class="text-muted mb-0 small">Admin Teachers</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm rounded-3 h-100">
+                <div class="card-body d-flex align-items-center">
+                    <div class="rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px; background: rgba(13, 110, 253, 0.1);">
+                        <i class="bi bi-person-lines-fill" style="color: #0d6efd; font-size: 1.3rem;"></i>
+                    </div>
+                    <div>
+                        <h5 class="mb-0 fw-bold">@Model.Sum(t => t.AssignedStudentsCount)</h5>
+                        <p class="text-muted mb-0 small">Assigned Students</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Table Section -->
+    <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
+        <div class="card-header bg-white border-0 py-3">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="fw-semibold mb-0">Teacher List</h5>
+                <div class="d-flex gap-2 align-items-center">
+                    @if (!string.IsNullOrEmpty(searchTerm) || roleFilter != "all")
+                    {
+                        <div class="alert alert-light py-1 px-3 mb-0 d-flex align-items-center gap-2">
+                            @if (!string.IsNullOrEmpty(searchTerm))
+                            {
+                                <span class="badge bg-light text-dark">
+                                    Search: "@searchTerm"
+                                    <a href="@Url.Action("Index", new { roleFilter = roleFilter })" class="ms-1 text-danger"><i class="bi bi-x"></i></a>
+                                </span>
+                            }
+                            @if (roleFilter != "all")
+                            {
+                                <span class="badge bg-light text-dark">
+                                    Filter: @(roleFilter == "Admin" ? "Admin Only" : "Teacher Only")
+                                    <a href="@Url.Action("Index", new { searchTerm = searchTerm })" class="ms-1 text-danger"><i class="bi bi-x"></i></a>
+                                </span>
+                            }
+                        </div>
+                    }
+                    <span class="text-muted small">Showing @Model.Count() teachers</span>
+                </div>
+            </div>
+        </div>
+
         <div class="table-responsive">
-            <table class="table align-middle mb-0" id="teacherTable">
-                <thead class="bg-light">
+            <table class="table table-hover align-middle mb-0" style="table-layout: fixed;">
+                <colgroup>
+                    <col style="width: 60px;"> <!-- No -->
+                    <col style="width: 220px;"> <!-- Teacher -->
+                    <col style="width: 240px;"> <!-- Email -->
+                    <col style="width: 130px;"> <!-- Role -->
+                    <col style="width: 150px;"> <!-- Academic Year -->
+                    <col style="width: 150px;"> <!-- Assigned Students -->
+                    <col style="width: 140px;"> <!-- Created Date -->
+                    <col style="width: 250px;"> <!-- Actions -->
+                </colgroup>
+                <thead class="bg-light" style="background-color: #f9f9fc !important;">
                     <tr>
-                        <th>No</th>
-                        <th>Teacher</th>
-                        <th>Email</th>
-                        <th>Role</th>
-                        <th>Created Date</th>
-                        <th class="text-end">Actions</th>
+                        <th class="ps-4 fw-semibold text-secondary text-center">No</th>
+                        <th class="fw-semibold text-secondary text-center">Teacher</th>
+                        <th class="fw-semibold text-secondary text-center">Email</th>
+                        <th class="fw-semibold text-secondary text-center">Role</th>
+                        <th class="fw-semibold text-secondary text-center">Academic Year</th>
+                        <th class="fw-semibold text-secondary text-center">Assigned Students</th>
+                        <th class="fw-semibold text-secondary text-center">Created Date</th>
+                        <th class="fw-semibold text-secondary text-center text-end pe-4">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach (var t in Model)
+                    @if (Model.Any())
                     {
-                        <tr class="table-row">
-                            <td>@rowNumber</td>
-                            <td>
-                                <div class="d-flex align-items-center gap-3">
-                                    <div class="avatar-circle">@t.FullName?.Substring(0, 1)</div>
-                                    <div>
-                                        <div class="fw-semibold">@t.FullName</div>
-                                        <small class="text-muted">ID: @t.Id</small>
+                        @foreach (var t in Model)
+                        {
+                            <tr class="border-bottom">
+                                <td class="ps-4 fw-medium text-secondary text-center">@rowNumber</td>
+                                <td class="text-center">
+                                    <div class="d-flex align-items-center gap-3">
+                                        <div class="avatar-circle-lg d-flex align-items-center justify-content-center fw-bold" style="background: linear-gradient(135deg, #8C5DD1 0%, #a881f7 100%); color: white; width: 44px; height: 44px; border-radius: 50%;">
+                                            @t.Teacher.FullName?.Substring(0, 1)
+                                        </div>
+                                        <div class="d-flex flex-column" style="max-width: 200px;">
+                                            <div class="fw-semibold text-dark text-truncate" title="@t.Teacher.FullName">@t.Teacher.FullName</div>
+                                            <small class="text-muted d-block text-truncate" title="@t.Teacher.DepartmentPk?.DepartmentName">@t.Teacher.DepartmentPk?.DepartmentName</small>
+                                        </div>
                                     </div>
+                                </td>
+                                <td class="text-dark text-truncate text-center" title="@t.Teacher.Email" style="max-width: 220px;">@t.Teacher.Email</td>
+                                <td class="text-center">
+                                    @if (t.Teacher.Role == "Admin")
+                                    {
+                                        <span class="badge d-inline-flex align-items-center gap-1 rounded-pill px-3 py-2" style="background-color: rgba(220, 53, 69, 0.1); color: #dc3545; border: 1px solid rgba(220, 53, 69, 0.2); max-width: 100px;">
+                                            <i class="bi bi-shield-check small"></i> Admin
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge d-inline-flex align-items-center gap-1 rounded-pill px-3 py-2" style="background-color: rgba(25, 135, 84, 0.1); color: #198754; border: 1px solid rgba(25, 135, 84, 0.2); max-width: 100px;">
+                                            <i class="bi bi-person-check small"></i> Teacher
+                                        </span>
+                                    }
+                                </td>
+                                <td class="text-dark text-center">@t.Teacher.AcademicYearPk?.YearRange</td>
+                                <td class="text-center">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <span class="badge rounded-pill d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; background-color: rgba(13, 110, 253, 0.1); color: #0d6efd; font-weight: 600;">
+                                            @t.AssignedStudentsCount
+                                        </span>
+                                        <span class="text-muted small">students</span>
+                                    </div>
+                                </td>
+                                <td class="text-center">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <i class="bi bi-calendar3 text-secondary"></i>
+                                        <span class="text-dark">@t.Teacher.CreatedDate?.ToString("dd MMM yyyy")</span>
+                                    </div>
+                                </td>
+                                <td class="text-end pe-4 text-center">
+                                    <div class="d-flex justify-content-end gap-2">
+                                        <!-- Edit Button -->
+                                        <a asp-action="Edit" asp-route-id="@t.Teacher.Id" class="btn btn-action" title="Edit"
+                                           style="width: 38px; height: 38px; border-radius: 8px; background-color: rgba(255, 193, 7, 0.1); color: #ffc107; border: none; display: flex; align-items: center; justify-content: center;">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+
+                                        <!-- Assign Students Button -->
+                                        <a asp-action="AssignStudents" asp-route-teacherId="@t.Teacher.Id" class="btn btn-action" title="Assign Students"
+                                           style="width: 38px; height: 38px; border-radius: 8px; background-color: rgba(13, 110, 253, 0.1); color: #0d6efd; border: none; display: flex; align-items: center; justify-content: center;">
+                                            <i class="bi bi-person-plus"></i>
+                                        </a>
+                                        <a asp-action="AssignCompanies" asp-route-teacherId="@t.Teacher.Id"
+                                           class="btn btn-action" title="Assign Companies"
+                                           style="width:38px;height:38px;border-radius:8px;
+                                              background-color:rgba(140,93,209,.12);
+                                              color:#8c5dd1;border:none;
+                                              display:flex;align-items:center;justify-content:center;">
+                                            <i class="bi bi-buildings"></i>
+                                        </a>
+
+                                        <!-- Detail Button -->
+                                        <a asp-action="Details" asp-route-id="@t.Teacher.Id" class="btn btn-action" title="View Details"
+                                           style="width: 38px; height: 38px; border-radius: 8px; background-color: rgba(40, 167, 69, 0.1); color: #28a745; border: none; display: flex; align-items: center; justify-content: center;">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+
+                                        <!-- Delete Button -->
+                                        <button type="button" class="btn btn-action delete-btn" data-bs-toggle="modal" data-bs-target="#deleteModal"
+                                                data-id="@t.Teacher.Id" data-name="@t.Teacher.FullName" title="Delete"
+                                                style="width: 38px; height: 38px; border-radius: 8px; background-color: rgba(220, 53, 69, 0.1); color: #dc3545; border: none; display: flex; align-items: center; justify-content: center;">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+
+                                </td>
+                            </tr>
+                            rowNumber++;
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="8" class="text-center py-5">
+                                <div class="d-flex flex-column align-items-center">
+                                    <i class="bi bi-people text-muted" style="font-size: 3rem;"></i>
+                                    <h5 class="mt-3 text-muted">No teachers found</h5>
+                                    @if (!string.IsNullOrEmpty(searchTerm) || roleFilter != "all")
+                                    {
+                                        <p class="text-muted">Try changing your search or filter criteria</p>
+                                        <a href="@Url.Action("Index")" class="btn btn-outline-purple mt-2">
+                                            <i class="bi bi-arrow-counterclockwise me-1"></i> Clear filters
+                                        </a>
+                                    }
+                                    else
+                                    {
+                                        <p class="text-muted">Add your first teacher to get started</p>
+                                        <a asp-action="Create" class="btn btn-gradient mt-2">
+                                            <i class="bi bi-person-plus-fill me-1"></i> Add Teacher
+                                        </a>
+                                    }
                                 </div>
                             </td>
-                            <td>@t.Email</td>
-                            <td>
-                                @if (t.Role == "Admin")
-                                {
-                                    <span class="badge rounded-pill bg-danger-subtle text-danger px-3 py-2">Admin</span>
-                                }
-                                else
-                                {
-                                    <span class="badge rounded-pill bg-success-subtle text-success px-3 py-2">Teacher</span>
-                                }
-                            </td>
-                            <td>@t.CreatedDate?.ToString("dd MMM yyyy")</td>
-                            <td class="text-end">
-                                <a asp-action="Edit" asp-route-id="@t.Id" class="btn btn-outline-warning btn-sm rounded-circle me-1">
-                                    <i class="bi bi-pencil"></i>
-                                </a>
-                                <button type="button" class="btn btn-outline-danger btn-sm rounded-circle" data-bs-toggle="modal" data-bs-target="#deleteModal" data-id="@t.Id">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            </td>
                         </tr>
-                        rowNumber++;
                     }
                 </tbody>
             </table>
         </div>
-    </div>
 
-    <!-- Pagination -->
-    @if (totalPages > 1)
-    {
-        <div class="pagination-container">
-            <ul class="pagination">
-               
-                @for (int i = 1; i <= totalPages; i++)
-                {
-                    <li class="page-item @(i == currentPage ? "active" : "")">
-                        <a class="page-link" asp-action="Index" asp-route-page="@i">@i</a>
-                    </li>
-                }                
-            </ul>
-        </div>
-    }
+        <!-- Pagination -->
+        @if (totalPages > 1)
+        {
+            <div class="card-footer bg-white border-0 py-3">
+                <div class="d-flex flex-column flex-md-row justify-content-between align-items-center">
+                    <div class="text-muted small mb-2 mb-md-0">
+                        Page @currentPage of @totalPages • @Model.Count() teachers
+                    </div>
+                    <nav aria-label="Page navigation">
+                        <ul class="pagination mb-0">
+                            <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+                                <a class="page-link border-0 rounded-3 mx-1"
+                                   href="@Url.Action("Index", new { searchTerm = searchTerm, roleFilter = roleFilter, page = currentPage - 1 })"
+                                   style="color: #8C5DD1;">
+                                    <i class="bi bi-chevron-left"></i> Previous
+                                </a>
+                            </li>
+
+                            @for (int i = 1; i <= totalPages; i++)
+                            {
+                                if (i == 1 || i == totalPages || (i >= currentPage - 1 && i <= currentPage + 1))
+                                {
+                                    <li class="page-item @(i == currentPage ? "active" : "")">
+                                        <a class="page-link border-0 rounded-3 mx-1 @(i == currentPage ? "text-white" : "")"
+                                           href="@Url.Action("Index", new { searchTerm = searchTerm, roleFilter = roleFilter, page = i })"
+                                           style="@(i == currentPage ? "background-color: #8C5DD1; border-color: #8C5DD1;" : "color: #8C5DD1;")">
+                                            @i
+                                        </a>
+                                    </li>
+                                }
+                                else if (i == currentPage - 2 || i == currentPage + 2)
+                                {
+                                    <li class="page-item disabled">
+                                        <span class="page-link border-0 rounded-3 mx-1">...</span>
+                                    </li>
+                                }
+                            }
+
+                            <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
+                                <a class="page-link border-0 rounded-3 mx-1"
+                                   href="@Url.Action("Index", new { searchTerm = searchTerm, roleFilter = roleFilter, page = currentPage + 1 })"
+                                   style="color: #8C5DD1;">
+                                    Next <i class="bi bi-chevron-right"></i>
+                                </a>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+        }
+    </div>
 </div>
 
 <!-- Delete Modal -->
-<div class="modal fade" id="deleteModal" tabindex="-1">
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Confirm Delete</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            <div class="modal-header border-0">
+                <h5 class="modal-title fw-bold text-danger" id="deleteModalLabel">Delete Teacher</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body">
-                Are you sure you want to delete teacher ID: <strong id="deleteTeacherId"></strong>?
+            <div class="modal-body text-center py-4">
+                <div class="rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px; background-color: rgba(220, 53, 69, 0.1);">
+                    <i class="bi bi-exclamation-triangle-fill" style="color: #dc3545; font-size: 2rem;"></i>
+                </div>
+                <h5 class="fw-bold mb-2" id="teacherName">Are you sure?</h5>
+                <p class="text-muted">This action cannot be undone. All data associated with this teacher will be permanently removed.</p>
             </div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <form id="deleteForm" method="post">
-                    @Html.AntiForgeryToken()
-                    <button class="btn btn-danger">Delete</button>
+            <div class="modal-footer border-0 justify-content-center">
+                <button type="button" class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
+                <form id="deleteForm" method="post" asp-action="Delete">
+                    <input type="hidden" id="teacherId" name="id" />
+                    <button type="submit" class="btn btn-danger rounded-pill px-4">Delete Teacher</button>
                 </form>
             </div>
         </div>
     </div>
 </div>
+
+<style>
+    /* Custom Styles */
+    body {
+        background-color: #f8f9fc;
+    }
+
+    .card {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1) !important;
+        }
+
+    .btn-action {
+        transition: all 0.2s ease;
+    }
+
+        .btn-action:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+    .table-hover tbody tr:hover {
+        background-color: rgba(140, 93, 209, 0.03) !important;
+    }
+
+    .page-link:hover {
+        background-color: rgba(140, 93, 209, 0.1) !important;
+    }
+
+    .avatar-circle-lg {
+        font-size: 1.1rem;
+    }
+
+    /* Purple color highlights */
+    .text-purple {
+        color: #8C5DD1 !important;
+    }
+
+    .bg-purple {
+        background-color: #8C5DD1 !important;
+    }
+
+    .border-purple {
+        border-color: #8C5DD1 !important;
+    }
+
+    .btn-outline-purple {
+        color: #8C5DD1;
+        border-color: #8C5DD1;
+    }
+
+        .btn-outline-purple:hover {
+            background-color: #8C5DD1;
+            color: white;
+        }
+
+    /* Gradient background for header button */
+    .btn-gradient {
+        background: linear-gradient(135deg, #8C5DD1 0%, #6b3fa0 100%);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        padding: 8px 20px;
+        transition: all 0.3s ease;
+    }
+
+        .btn-gradient:hover {
+            background: linear-gradient(135deg, #7a4bc0 0%, #5a3385 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(140, 93, 209, 0.3);
+            transform: translateY(-2px);
+        }
+
+    /* Table improvements */
+    .table td, .table th {
+        vertical-align: middle;
+    }
+
+    /* Dropdown active state */
+    .dropdown-item.active {
+        background-color: #8C5DD1;
+        color: white;
+    }
+
+    /* Badge improvements */
+    .badge {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    /* Responsive adjustments */
+    @@media (max-width: 768px) {
+        .table-responsive {
+            border: 0;
+        }
+
+        .table thead {
+            display: none;
+        }
+
+        .table, .table tbody, .table tr, .table td {
+            display: block;
+            width: 100%;
+        }
+
+            .table tr {
+                margin-bottom: 15px;
+                border: 1px solid #dee2e6;
+                border-radius: 8px;
+                padding: 10px;
+            }
+
+            .table td {
+                text-align: right;
+                padding-left: 50%;
+                position: relative;
+                border: none;
+                border-bottom: 1px solid #dee2e6;
+            }
+
+                .table td:last-child {
+                    border-bottom: 0;
+                }
+
+                .table td::before {
+                    content: attr(data-label);
+                    position: absolute;
+                    left: 15px;
+                    width: calc(50% - 30px);
+                    padding-right: 10px;
+                    text-align: left;
+                    font-weight: 600;
+                    color: #6c757d;
+                }
+                /* Set data labels for mobile */
+                .table td:nth-child(1)::before {
+                    content: "No";
+                }
+
+                .table td:nth-child(2)::before {
+                    content: "Teacher";
+                }
+
+                .table td:nth-child(3)::before {
+                    content: "Email";
+                }
+
+                .table td:nth-child(4)::before {
+                    content: "Role";
+                }
+
+                .table td:nth-child(5)::before {
+                    content: "Academic Year";
+                }
+
+                .table td:nth-child(6)::before {
+                    content: "Assigned Students";
+                }
+
+                .table td:nth-child(7)::before {
+                    content: "Created Date";
+                }
+
+                .table td:nth-child(8)::before {
+                    content: "Actions";
+                }
+    }
+</style>
+
+@section Scripts {
+    <script>
+        // Delete modal functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const deleteButtons = document.querySelectorAll('.delete-btn');
+            const deleteModal = document.getElementById('deleteModal');
+            const teacherNameElement = document.getElementById('teacherName');
+            const teacherIdElement = document.getElementById('teacherId');
+            const deleteForm = document.getElementById('deleteForm');
+
+            deleteButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const teacherId = this.getAttribute('data-id');
+                    const teacherName = this.getAttribute('data-name');
+
+                    teacherNameElement.textContent = `Delete ${teacherName}?`;
+                    teacherIdElement.value = teacherId;
+
+                    // Update form action to include the teacher ID
+                    deleteForm.action = `@Url.Action("Delete")/${teacherId}`;
+                });
+            });
+
+            // Search functionality
+            const searchInput = document.querySelector('input[name="searchTerm"]');
+            let searchTimeout;
+
+            searchInput.addEventListener('input', function() {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(function() {
+                    searchInput.closest('form').submit();
+                }, 500);
+            });
+
+            // Mobile responsive table labels
+            if (window.innerWidth <= 768) {
+                const tableCells = document.querySelectorAll('.table td');
+                tableCells.forEach(cell => {
+                    const text = cell.textContent;
+                    cell.setAttribute('data-label', text);
+                });
+            }
+        });
+    </script>
+}

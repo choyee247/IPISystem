@@ -17,5 +17,7 @@ public partial class ProjectFile
 
     public DateTime? UploadedAt { get; set; }
 
+    public virtual ICollection<DownloadRequest> DownloadRequests { get; set; } = new List<DownloadRequest>();
+
     public virtual Project ProjectPk { get; set; } = null!;
 }

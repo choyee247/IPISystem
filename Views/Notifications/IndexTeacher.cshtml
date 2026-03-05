@@ -1,72 +1,108 @@
-﻿@model IEnumerable<ProjectManagementSystem.DBModels.NotificationViewModel>
+﻿@model List<ProjectManagementSystem.DBModels.NotificationViewModel>
 @{
     Layout = "~/Views/Shared/_TeacherLayout.cshtml";
+    var role = ViewBag.Role?.ToString() ?? "Teacher"; // Teacher/Admin role
 }
 
 <style>
+    :root {
+        --primary: #8c5dd1;
+        --primary-dark: #6f42c1;
+        --primary-light: #f4ecff;
+        --text-dark: #522a87;
+        --text-muted: #777;
+    }
+
     body {
         background: linear-gradient(135deg, #e4eefd, #f8f9ff);
-        min-height: 100vh;
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
 
     h2 {
-        color: #8c5dd1;
+        color: var(--primary);
         text-align: center;
-        margin: 35px 0;
+        margin: 35px 0 25px;
         font-weight: 700;
-        font-size: 28px;
         letter-spacing: 0.5px;
     }
 
+    .stats-bar {
+        display: flex;
+        justify-content: flex-end;
+        gap: 25px;
+        margin-bottom: 15px;
+        font-size: 14px;
+    }
+
+        .stats-bar strong {
+            color: var(--primary-dark);
+        }
+
+    .btn-theme {
+        background: var(--primary);
+        color: white;
+        border-radius: 8px;
+        padding: 6px 14px;
+        border: none;
+        transition: 0.2s ease;
+    }
+
+        .btn-theme:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+
     .notif-wrapper {
         max-width: 900px;
-        margin: 0 auto;
-        padding: 20px;
+        margin: auto;
+        padding: 10px;
     }
 
     .notif-card {
-        background: #ffffff;
-        border-left: 6px solid #8c5dd1;
+        background: white;
+        border-left: 6px solid var(--primary);
         padding: 18px 22px;
         margin-bottom: 18px;
-        border-radius: 10px;
+        border-radius: 12px;
         box-shadow: 0 4px 12px rgba(0,0,0,0.06);
-        transition: all 0.2s ease;
+        transition: 0.2s ease;
         position: relative;
     }
 
         .notif-card.unread {
-            background: #f4ecff;
-            border-left-color: #6f42c1;
+            background: var(--primary-light);
+            border-left-color: var(--primary-dark);
         }
 
         .notif-card:hover {
             transform: translateY(-4px);
-            box-shadow: 0 8px 18px rgba(0,0,0,0.12);
-            background: #f9f4ff;
+            box-shadow: 0 10px 22px rgba(140,93,209,0.25);
         }
 
-    .notif-title {
+    .notif-title a {
         font-size: 17px;
         font-weight: 600;
-        color: #522a87;
-        margin-bottom: 6px;
+        color: var(--text-dark);
+        text-decoration: none;
     }
+
+        .notif-title a:hover {
+            color: var(--primary-dark);
+        }
 
     .notif-message {
         font-size: 14px;
-        color: #5d5d5d;
-        margin-bottom: 10px;
+        color: #555;
+        margin: 8px 0;
     }
 
     .notif-date {
         font-size: 12px;
-        color: #888;
+        color: var(--text-muted);
     }
 
     .badge-unread {
-        background: #8c5dd1;
+        background: var(--primary);
         color: white;
         padding: 3px 8px;
         border-radius: 8px;
@@ -80,86 +116,112 @@
         right: 18px;
     }
 
+        .notif-actions button {
+            background: none;
+            border: none;
+            padding: 0;
+        }
+
         .notif-actions i {
             cursor: pointer;
             margin-left: 12px;
             font-size: 15px;
-            color: #6f42c1;
+            color: var(--primary-dark);
+            transition: 0.2s;
         }
+
+            .notif-actions i:hover {
+                transform: scale(1.15);
+            }
 
     .no-notifications {
         text-align: center;
-        padding-top: 40px;
+        padding: 60px 0;
         font-size: 18px;
         color: #666;
-        font-weight: 500;
-    }
-
-    .mark-all-btn {
-        display: flex;
-        justify-content: flex-end;
-        margin: 0 20px 15px 0;
     }
 </style>
 
 <h2>Student Submissions</h2>
 
-<div class="mb-3 text-end">
-    <span class="me-3">Unread: <strong>@ViewBag.UnreadCount</strong></span>
+<div class="stats-bar">
+    <span>Unread: <strong>@ViewBag.UnreadCount</strong></span>
     <span>Read: <strong>@ViewBag.ReadCount</strong></span>
 </div>
 
-<form asp-controller="Notifications" asp-action="TeacherMarkAllRead" method="post" class="mb-3 text-end">
-    <button type="submit" class="btn btn-sm" style="background:#8c5dd1; color:white; border-radius:6px;">
+<form asp-controller="Notifications"
+      asp-action="TeacherMarkAllRead"
+      method="post"
+      class="text-end mb-3">
+    @Html.AntiForgeryToken()
+    <button type="submit" class="btn-theme">
         Mark All as Read
     </button>
 </form>
 
 <div class="notif-wrapper">
+
     @if (Model != null && Model.Any())
     {
         foreach (var notification in Model)
         {
-            <div class="notif-card @(notification.IsRead==true ? "" : "unread")">
+            // Determine role-specific unread
+            bool isUnread = role == "Teacher" ? !notification.IsReadByTeacher : !notification.IsReadByAdmin;
+
+            <div class="notif-card @(isUnread ? "unread" : "")">
 
                 <!-- Action Icons -->
                 <div class="notif-actions">
-                    @if (notification.IsRead==false)
+
+                    @if (isUnread)
                     {
-                        <form asp-controller="Notifications" asp-action="TeacherMarkAsRead" method="post" style="display:inline;">
+                        <form asp-controller="Notifications"
+                              asp-action="TeacherMarkAsRead"
+                              method="post"
+                              style="display:inline;">
+                            @Html.AntiForgeryToken()
                             <input type="hidden" name="id" value="@notification.Id" />
-                            <button type="submit" style="background:none; border:none; padding:0;" title="Mark as Read">
+                            <button type="submit" title="Mark as Read">
                                 <i class="fas fa-check-circle"></i>
                             </button>
                         </form>
                     }
 
-                    <form asp-controller="Notifications" asp-action="TeacherDelete" method="post" style="display:inline;"
+                    <form asp-controller="Notifications"
+                          asp-action="TeacherDelete"
+                          method="post"
+                          style="display:inline;"
                           onsubmit="return confirm('Delete this notification?');">
+                        @Html.AntiForgeryToken()
                         <input type="hidden" name="id" value="@notification.Id" />
-                        <button type="submit" style="background:none; border:none; padding:0;" title="Delete">
+                        <button type="submit" title="Delete">
                             <i class="fas fa-trash"></i>
                         </button>
                     </form>
+
                 </div>
 
-                <!-- Main Link -->
-                <a asp-controller="ProjectApproval" asp-action="Details" asp-route-id="@notification.ProjectId"
-                   style="text-decoration:none; color:inherit; display:block;">
-                    <div class="notif-title">
+                <!-- Title -->
+                <div class="notif-title">
+                    <a asp-controller="ProjectApproval"
+                       asp-action="Details"
+                       asp-route-id="@notification.ProjectId">
                         @notification.ProjectName
-                        @if (notification.IsRead==false)
-                        {
-                            <span class="badge-unread">Unread</span>
-                        }
-                    </div>
+                    </a>
 
-                    <div class="notif-message">@notification.Message</div>
-                    <div class="notif-date">
-                        <i class="fas fa-clock"></i>
-                        @notification.CreatedAt.ToString("dd MMM yyyy • hh:mm tt")
-                    </div>
-                </a>
+                    @if (isUnread)
+                    {
+                        <span class="badge-unread">Unread</span>
+                    }
+                </div>
+
+                <div class="notif-message">@notification.Message</div>
+
+                <div class="notif-date">
+                    <i class="fas fa-clock"></i>
+                    @notification.CreatedAt.ToString("dd MMM yyyy • hh:mm tt")
+                </div>
+
             </div>
         }
     }
@@ -169,5 +231,5 @@
             No project submissions found.
         </div>
     }
-</div>
 
+</div>

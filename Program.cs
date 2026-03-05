@@ -41,8 +41,8 @@ builder.Services.ConfigureApplicationCookie(options =>
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddSession();
 
-builder.Services.AddScoped<ProjectManagementSystem.Services.Interface.IActivityLogger,
-                           ProjectManagementSystem.Services.ActivityLogger>();
+//builder.Services.AddScoped<ProjectManagementSystem.Services.Interface.IActivityLogger,
+//                           ProjectManagementSystem.Services.ActivityLogger>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.Configure<IdentityOptions>(options =>
 {
@@ -72,8 +72,8 @@ app.UseStatusCodePagesWithReExecute("/Home/Error/{0}");
 
 app.MapControllerRoute(
     name: "default",
-    //pattern: "{controller=Welcome}/{action=Index}/{id?}");
-    pattern: "{controller=Admin}/{action=Login}/{id?}");
+    pattern: "{controller=Welcome}/{action=Index}/{id?}");
+    //pattern: "{controller=StudentLogin}/{action=Login}/{id?}");
 
 
 app.Run();

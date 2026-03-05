@@ -19,5 +19,9 @@ public partial class Email
 
     public DateTimeOffset? CreatedDate { get; set; }
 
+    public int? AssignedTeacherId { get; set; }
+
+    public virtual Teacher? AssignedTeacher { get; set; }
+
     public virtual ICollection<Student> Students { get; set; } = new List<Student>();
 }

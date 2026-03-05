@@ -579,9 +579,9 @@ body.loaded .hero-image {
 /* —— footer-alt styles —— */
 #footer-alt {
     position: relative;
-    color: #fff;
+    /*color: #fff;*/
     margin-top: 4rem;
-}
+    background-color: #b39ddb}
 
 .footer-overlay {
     position: absolute;
@@ -589,8 +589,8 @@ body.loaded .hero-image {
     right: 0;
     bottom: 0;
     left: 0;
-    background-color: rgb(0, 0, 0);
-    z-index: 0;
+/*    background-color: rgb(0, 0, 0);
+*/    z-index: 0;
 }
 
 .footer-content {

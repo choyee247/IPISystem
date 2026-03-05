@@ -55,7 +55,7 @@
             display: flex;
             flex-direction: column;
             min-height: 100vh;
-            font-family: 'Poppins', sans-serif;
+            /* font-family: 'Poppins', sans-serif; */
             color: var(--text-dark);
             margin: 0;
             padding: 0;
@@ -629,7 +629,15 @@
                   
                 </div>
             </li>
-
+            @if (ViewBag.IsLeader != null && ViewBag.IsLeader == true && ViewBag.LeaderProjectId != null)
+            {
+                <li>
+                    <a asp-controller="Project" asp-action="ManageLeader" asp-route-projectId="@ViewBag.LeaderProjectId">
+                        <i class="fas fa-user-shield"></i>
+                        <span>Change Role</span>
+                    </a>
+                </li>
+            }
             <!-- Notifications Menu -->
             <li>
                 <a asp-area="" asp-controller="Notifications" asp-action="IndexStudent">

@@ -175,11 +175,47 @@
                 <strong>Rejection Reason:</strong> @Model.AdminComment
             </div>
         }
+        @if (Model.Status == "Cancelled")
+        {
+            <div class="alert alert-warning mt-4">
+                <h6>Revision Required</h6>
 
+                @if (!string.IsNullOrWhiteSpace(Model.AdminComment))
+                {
+                    <p>
+                        <strong>Reason:</strong> @Model.AdminComment
+                    </p>
+                }
+
+                @if (Model.ProjectFiles != null &&
+               Model.ProjectFiles.Any(f => f.FileType == "CancelReason"))
+                {
+                    <hr />
+                    <strong>Attachments:</strong>
+
+                    <ul class="mt-2">
+                        @foreach (var file in Model.ProjectFiles
+                       .Where(f => f.FileType == "CancelReason"))
+                        {
+                            <li>
+                                <a href="@file.FilePath"
+                                   target="_blank">
+                                    📎 View Attachment
+                                </a>
+                            </li>
+                        }
+                    </ul>
+                }
+            </div>
+        }
         @if (Model.CompanyPk != null)
         {
             <div class="company-card mt-4">
-                @if (!string.IsNullOrEmpty(Model.CompanyPk.ImageFileName))
+                @if (string.IsNullOrEmpty(Model.CompanyPk.ImageFileName))
+                {
+                    <div class="alert alert-warning">No company image available</div>
+                }
+                else
                 {
                     <img class="company-image" src="~/images/companies/@Model.CompanyPk.ImageFileName" alt="Company Image" />
                 }
@@ -206,6 +242,14 @@
                 }
             </ul>
         }
+      @*   @foreach (var file in Model.ProjectFiles
+        .Where(f => f.FileType == "CancelReason"))
+        {
+            <a href="@file.FilePath"
+               target="_blank">
+                📎 View Attachment
+            </a>
+        } *@
 
         <div class="back-button text-end">
             <a asp-action="Index" class="btn btn-secondary">⬅ Back to List</a>

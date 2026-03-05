@@ -1,4 +1,4 @@
-﻿@model X.PagedList.IPagedList<ProjectManagementSystem.DBModels.Student>
+﻿@model X.PagedList.IPagedList<ProjectManagementSystem.Models.StudentWithProjectViewModel>
 
 @{
     ViewData["Title"] = "Student Management";
@@ -8,23 +8,25 @@
 
 <h2 class="mb-4" style="color:@primaryColor;">Student Management</h2>
 
-<!-- Filter Form -->
-<form method="get" class="mb-4 d-flex align-items-center gap-2">
-    <label for="yearSelect" class="form-label mb-0" style="color:@primaryColor;">Filter by Academic Year:</label>
+<!-- Filter & Search Form -->
+<form method="get" class="mb-4 d-flex gap-2 align-items-center">
+    <input type="text" name="searchString" value="@ViewBag.SearchString" placeholder="Search Name, Roll, Email" class="form-control w-auto" />
+
     <select id="yearSelect" name="yearId" class="form-select w-auto">
         <option value="">-- All Years --</option>
         @foreach (var year in (List<ProjectManagementSystem.DBModels.AcademicYear>)ViewBag.AcademicYears)
         {
             if (ViewBag.SelectedYear != null && (int)ViewBag.SelectedYear == year.AcademicYearPkId)
             {
-                        <option value="@year.AcademicYearPkId" selected>@year.YearRange</option>
+                <option value="@year.AcademicYearPkId" selected>@year.YearRange</option>
             }
             else
             {
-                        <option value="@year.AcademicYearPkId">@year.YearRange</option>
+                <option value="@year.AcademicYearPkId">@year.YearRange</option>
             }
         }
     </select>
+
     <button type="submit" class="btn" style="background-color:@primaryColor; color:white;">Filter</button>
 </form>
 
@@ -38,8 +40,7 @@
             <th>Email</th>
             <th>Department</th>
             <th>Academic Year</th>
-            <th>NRC</th>
-            <th>Phone</th>
+            <th>Has Project</th>
             <th>Actions</th>
         </tr>
     </thead>
@@ -47,30 +48,37 @@
         @if (Model.Any())
         {
             int index = ((Model.PageNumber - 1) * Model.PageSize) + 1;
-            foreach (var student in Model)
+            foreach (var s in Model)
             {
-                        <tr>
-                            <td>@index</td>
-                            <td>@student.StudentName</td>
-                            <td>@student.EmailPk?.RollNumber</td>
-                            <td>@student.EmailPk?.EmailAddress</td>
-                            <td>@student.DepartmentPk?.DepartmentName</td>
-                            <td>@student.AcademicYearPk?.YearRange</td>
-                            <td>@student.Nrcnumber</td>
-                            <td>@student.PhoneNumber</td>
-                            <td>
-                                <a asp-action="Detail" asp-route-id="@student.StudentPkId" class="btn btn-sm btn-info text-white">Detail</a>
-                                @* <a asp-action="Delete" asp-route-id="@student.StudentPkId" class="btn btn-sm btn-danger">Delete</a> *@
-                            </td>
-                        </tr>
+                <tr>
+                    <td>@index</td>
+                    <td>@s.StudentName</td>
+                    <td>@s.RollNumber</td>
+                    <td>@s.Email</td>
+                    <td>@s.DepartmentName</td>
+                    <td>@s.AcademicYear</td>
+                    <td>
+                        @if (s.HasProject)
+                        {
+                            <span class="badge bg-success">Yes</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-secondary">No</span>
+                        }
+                    </td>
+                    <td>
+                        <a asp-action="Detail" asp-route-id="@s.StudentPkId" class="btn btn-sm btn-info text-white">Detail</a>
+                    </td>
+                </tr>
                 index++;
             }
         }
         else
         {
-                <tr>
-                    <td colspan="9" class="text-center">No students found.</td>
-                </tr>
+            <tr>
+                <td colspan="10" class="text-center">No students found.</td>
+            </tr>
         }
     </tbody>
 </table>
@@ -78,36 +86,36 @@
 <!-- Pagination -->
 @if (Model.PageCount > 1)
 {
-        <nav aria-label="Page navigation">
-            <ul class="pagination justify-content-center">
+    <nav aria-label="Page navigation">
+        <ul class="pagination justify-content-center">
             @if (Model.HasPreviousPage)
             {
-                        <li class="page-item">
-                            <a class="page-link" asp-route-page="@(Model.PageNumber - 1)" asp-route-yearId="@(ViewBag.SelectedYear)">Previous</a>
-                        </li>
+                <li class="page-item">
+                    <a class="page-link" asp-route-page="@(Model.PageNumber - 1)" asp-route-yearId="@(ViewBag.SelectedYear)" asp-route-searchString="@(ViewBag.SearchString)">Previous</a>
+                </li>
             }
             else
             {
-                        <li class="page-item disabled"><span class="page-link">Previous</span></li>
+                <li class="page-item disabled"><span class="page-link">Previous</span></li>
             }
 
             @for (int i = 1; i <= Model.PageCount; i++)
             {
-                        <li class="page-item @(i == Model.PageNumber ? "active" : "")">
-                            <a class="page-link" asp-route-page="@i" asp-route-yearId="@(ViewBag.SelectedYear)">@i</a>
-                        </li>
+                <li class="page-item @(i == Model.PageNumber ? "active" : "")">
+                    <a class="page-link" asp-route-page="@i" asp-route-yearId="@(ViewBag.SelectedYear)" asp-route-searchString="@(ViewBag.SearchString)">@i</a>
+                </li>
             }
 
             @if (Model.HasNextPage)
             {
-                        <li class="page-item">
-                            <a class="page-link" asp-route-page="@(Model.PageNumber + 1)" asp-route-yearId="@(ViewBag.SelectedYear)">Next</a>
-                        </li>
+                <li class="page-item">
+                    <a class="page-link" asp-route-page="@(Model.PageNumber + 1)" asp-route-yearId="@(ViewBag.SelectedYear)" asp-route-searchString="@(ViewBag.SearchString)">Next</a>
+                </li>
             }
             else
             {
-                        <li class="page-item disabled"><span class="page-link">Next</span></li>
+                <li class="page-item disabled"><span class="page-link">Next</span></li>
             }
-            </ul>
-        </nav>
+        </ul>
+    </nav>
 }

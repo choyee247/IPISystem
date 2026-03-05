@@ -3,12 +3,16 @@
     Layout = null;
     // var fullName = ViewBag.FullName ?? "Teacher";
     // var userRole = HttpContextAccessor.HttpContext.Session.GetString("UserRole");
-    var userRole = HttpContextAccessor.HttpContext.Session.GetString("UserRole") ?? "Teacher";
+    //var userRole = HttpContextAccessor.HttpContext.Session.GetString("UserRole") ?? "Teacher";
     var fullName = HttpContextAccessor.HttpContext.Session.GetString("UserName") ?? "Teacher";
 
 }
 
-
+@{
+    var userRole = Context.Session.GetString("UserRole") ?? "Guest";
+    var currentController = ViewContext.RouteData.Values["Controller"]?.ToString();
+    var currentAction = ViewContext.RouteData.Values["Action"]?.ToString();
+}
 
 <!DOCTYPE html>
 <html lang="en">
@@ -47,7 +51,11 @@
                 }
             </div>
             <ul class="menu">
-                <li class="menu-item @(ViewContext.RouteData.Values["Action"]?.ToString() == "Dashboard" ? "active" : "")">
+                <li class="menu-item @(
+    (userRole == "Admin" && currentController == "Admin" && currentAction == "Dashboard") ||
+    (userRole == "Teacher" && currentController == "Teacher" && currentAction == "Dashboard")
+    ? "active" : "")">
+
                     @if (userRole == "Admin")
                     {
                         <a asp-controller="Admin" asp-action="Dashboard">
@@ -55,9 +63,17 @@
                             <span class="menu-text">Dashboard</span>
                         </a>
                     }
-                    else
+                    else if (userRole == "Teacher")
                     {
                         <a asp-controller="Teacher" asp-action="Dashboard">
+                            <i class="bx bx-grid-alt"></i>
+                            <span class="menu-text">Dashboard</span>
+                        </a>
+                    }
+                    else
+                    {
+                        <!-- Guest or unknown role -->
+                        <a href="#">
                             <i class="bx bx-grid-alt"></i>
                             <span class="menu-text">Dashboard</span>
                         </a>
@@ -77,6 +93,9 @@
                             <li class="submenu-item @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Teacher" ? "active" : "")">
                                 <a asp-controller="Teacher" asp-action="Index">Teacher Management</a>
                             </li>
+                            <li class="submenu-item @(ViewContext.RouteData.Values["Controller"]?.ToString() == "DownloadRequest" ? "active" : "")">
+                                <a asp-controller="Admin" asp-action="DownloadRequests">Download Requests</a>
+                            </li>
                         }
                         <li class="submenu-item @(ViewContext.RouteData.Values["Action"]?.ToString() == "Student" ? "active" : "")">
                             <a asp-area="" asp-controller="Student" asp-action="Index">Student Management</a>
@@ -87,9 +106,6 @@
                         <li class="submenu-item @(ViewContext.RouteData.Values["Action"]?.ToString() == "Company" ? "active" : "")">
                             <a asp-area="" asp-controller="Company" asp-action="Index">Company</a>
                         </li>
-                        @* <li class="submenu-item @(ViewContext.RouteData.Values["Action"].ToString() == "Tasks" ? "active" : "")">
-                            <a asp-area="Teacher" asp-controller="Management" asp-action="Tasks">Tasks</a>
-                        </li> *@
                     </ul>
                 </li>
                 <!-- Announcement Menu -->

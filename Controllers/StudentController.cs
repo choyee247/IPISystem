@@ -10,108 +10,103 @@ using X.PagedList;
 
 namespace ProjectManagementSystem.Controllers
 {
-    public class StudentController : Controller
+    public class StudentController : BaseStudentController
     {
         private readonly PMSDbContext _context;
         private readonly IWebHostEnvironment _env;
         public StudentController(PMSDbContext context, IWebHostEnvironment env)
+             : base(context)
         {
             _context = context;
             _env = env;
 
         }
-        public async Task<IActionResult> Index(int? yearId, int page = 1, int pageSize = 20)
+        public async Task<IActionResult> Index(
+      int? yearId,
+      string searchString = "",
+      int page = 1,
+      int pageSize = 20)
         {
-            // 1️⃣ Academic Years list
+            // 1️⃣ Logged-in user
+            var userRole = HttpContext.Session.GetString("UserRole");
+            var userIdString = HttpContext.Session.GetString("UserId");
+            int userId = 0;
+            if (!string.IsNullOrEmpty(userIdString))
+                userId = int.Parse(userIdString);
+
+            // 2️⃣ Academic Years list
             var years = await _context.AcademicYears
                 .OrderByDescending(y => y.YearRange)
                 .ToListAsync();
-            ViewBag.AcademicYears = years;      
-            ViewBag.SelectedYear = yearId;     
+            ViewBag.AcademicYears = years;
+            ViewBag.SelectedYear = yearId;
 
-            // 2️⃣ Students query
+            // 3️⃣ Students query
             var studentsQuery = _context.Students
                 .Include(s => s.EmailPk)
                 .Include(s => s.DepartmentPk)
-                .Include(s => s.NrcPk)
-                .Include(s => s.NrctypePk)
                 .Include(s => s.AcademicYearPk)
                 .Where(s => s.IsDeleted == false)
                 .AsQueryable();
 
+            // 4️⃣ Filter by year
             if (yearId.HasValue)
-            {
                 studentsQuery = studentsQuery.Where(s => s.AcademicYearPkId == yearId.Value);
+
+            // 5️⃣ Filter by teacher role
+            if (userRole == "Teacher")
+            {
+                studentsQuery = studentsQuery
+                    .Where(s => _context.TeacherStudents
+                        .Any(ts => ts.StudentPkId == s.StudentPkId
+                                   && ts.TeacherId == userId
+                                   && ts.IsActive));
+            }
+            else if (userRole != "Admin")
+            {
+                return RedirectToAction("Login", "Teacher");
+            }
+
+            // 6️⃣ Apply search filter
+            if (!string.IsNullOrEmpty(searchString))
+            {
+                studentsQuery = studentsQuery
+                    .Where(s => s.StudentName.Contains(searchString)
+                             || s.EmailPk.RollNumber.Contains(searchString)
+                             || s.EmailPk.EmailAddress.Contains(searchString));
             }
 
             studentsQuery = studentsQuery.OrderBy(s => s.StudentName);
 
-            // 3️⃣ Pagination
-            var pagedStudents = await studentsQuery.ToPagedListAsync(page, pageSize);
+            // 7️⃣ Project info
+            var studentsWithProjects = await studentsQuery
+                .Select(s => new StudentWithProjectViewModel
+                {
+                    StudentPkId = s.StudentPkId,
+                    StudentName = s.StudentName,
+                    RollNumber = s.EmailPk.RollNumber,
+                    Email = s.EmailPk.EmailAddress,
+                    DepartmentName = s.DepartmentPk.DepartmentName,
+                    AcademicYear = s.AcademicYearPk.YearRange,
+                    HasProject =
+                    _context.Projects.Any(p =>
+                        (p.StudentPkId == s.StudentPkId) &&
+                        (p.IsDeleted == null || p.IsDeleted == false)
+                    )
+                    ||
+                    _context.ProjectMembers.Any(pm =>
+                        pm.StudentPkId == s.StudentPkId &&
+                        pm.IsDeleted == false
+                    )
+                                })
+                .ToPagedListAsync(page, pageSize);
 
-            return View(pagedStudents);
+            ViewBag.SearchString = searchString;
+
+            return View(studentsWithProjects);
         }
 
 
-        public IActionResult Create()
-        {
-            var nrcTypes = _context.Nrctypes.ToList();
-            var townships = _context.Nrctownships.ToList();
-            var regionCodes = townships.Select(t => t.RegionCodeM).Distinct().ToList();
-            var departments = _context.StudentDepartments.OrderBy(d => d.DepartmentName).ToList();
-            var years = _context.AcademicYears.OrderByDescending(y => y.YearRange).ToList();
-
-            var viewModel = new NRCFormViewModel
-            {
-                Student = new DBModels.Student
-                {
-                    EmailPk=new DBModels.Email()
-                },
-                
-                NRCTypeList = nrcTypes,
-                RegionCodeMList = regionCodes,
-                TownshipList = townships,
-                DepartmentList = departments,
-                AcademicYearList = years,
-            };
-
-            // Read session values for Leader role
-            var roll = HttpContext.Session.GetString("RollNumber");
-            var email = HttpContext.Session.GetString("EmailAddress");
-            var role = HttpContext.Session.GetString("UserRole");
-
-            if (string.IsNullOrEmpty(email) && !string.IsNullOrEmpty(roll))
-            {
-                var emailEntry = _context.Emails
-                    .FirstOrDefault(e => e.RollNumber == roll && (e.IsDeleted ?? false) == false);
-                if (emailEntry != null)
-                {
-                    email = emailEntry.EmailAddress;
-                    HttpContext.Session.SetString("EmailAddress", email);
-                    // Academic Year auto-select for Leader
-                    if (!string.IsNullOrEmpty(role) && role == "Leader")
-                    {
-                        viewModel.Student.AcademicYearPkId = emailEntry.AcademicYearPkId;
-                    }
-                }
-            }
-
-            if (!string.IsNullOrEmpty(role) && role == "Leader")
-            {
-                // Initialize Email object if null to avoid NullReferenceException
-                if (viewModel.Student.EmailPk == null)
-                {
-                    viewModel.Student.EmailPk = new DBModels.Email();
-                   
-                }
-
-                viewModel.Student.EmailPk.RollNumber = roll;
-                viewModel.Student.EmailPk.EmailAddress = email;
-                ViewBag.NextAction = "CreateProject"; // redirect target for Leader
-            }
-
-            return View(viewModel);
-        }
 
         public async Task<IActionResult> Detail(int id)
         {
@@ -140,77 +135,77 @@ namespace ProjectManagementSystem.Controllers
 
             return View(student);
         }
+        public IActionResult Create()
+        {
+            var nrcTypes = _context.Nrctypes.ToList();
+            var townships = _context.Nrctownships.ToList();
+            var regionCodes = townships.Select(t => t.RegionCodeM).Distinct().ToList();
+            var departments = _context.StudentDepartments.OrderBy(d => d.DepartmentName).ToList();
+            var years = _context.AcademicYears.OrderByDescending(y => y.YearRange).ToList();
 
+            var viewModel = new NRCFormViewModel
+            {
+                Student = new DBModels.Student
+                {
+                    EmailPk = new DBModels.Email()
+                },
+                NRCTypeList = nrcTypes,
+                RegionCodeMList = regionCodes,
+                TownshipList = townships,
+                DepartmentList = departments,
+                AcademicYearList = years,
+            };
+            var academicYearId = HttpContext.Session.GetInt32("AcademicYearPkId");
+
+            if (academicYearId.HasValue)
+            {
+                viewModel.Student.AcademicYearPkId = academicYearId.Value;
+            }
+
+            var roll = HttpContext.Session.GetString("RollNumber");
+            var email = HttpContext.Session.GetString("EmailAddress");
+            var role = HttpContext.Session.GetString("UserRole");
+
+            HttpContext.Session.SetInt32("CurrentStep", 2);
+
+            if (string.IsNullOrEmpty(email) && !string.IsNullOrEmpty(roll))
+            {
+                var emailEntry = _context.Emails
+                    .FirstOrDefault(e => e.RollNumber == roll && (e.IsDeleted ?? false) == false);
+
+                if (emailEntry != null)
+                {
+                    email = emailEntry.EmailAddress;
+                    HttpContext.Session.SetString("EmailAddress", email);
+                }
+            }
+
+            if (!string.IsNullOrEmpty(role) && role == "Leader")
+            {
+                viewModel.Student.AcademicYearPkId = _context.Emails
+                    .Where(e => e.RollNumber == roll && e.EmailAddress == email && e.IsDeleted == false)
+                    .Select(e => e.AcademicYearPkId)
+                    .FirstOrDefault();
+            }
+
+            // Auto fill
+            viewModel.Student.EmailPk.RollNumber = roll;
+            viewModel.Student.EmailPk.EmailAddress = email;
+
+            return View(viewModel);
+        }
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(NRCFormViewModel model, IFormFile? ProfilePhoto, string? nextAction)
         {
-            if (ModelState.IsValid)
-            {
-                model.NRCTypeList = _context.Nrctypes.ToList();
-                model.RegionCodeMList = _context.Nrctownships.Select(t => t.RegionCodeM).Distinct().ToList();
-                model.TownshipList = _context.Nrctownships.ToList();
-                model.DepartmentList = _context.StudentDepartments.OrderBy(d => d.DepartmentName).ToList();
-                model.AcademicYearList = _context.AcademicYears.OrderByDescending(y => y.YearRange).ToList();
+            // Always fill dropdown lists
+            model.NRCTypeList = _context.Nrctypes.ToList();
+            model.RegionCodeMList = _context.Nrctownships.Select(t => t.RegionCodeM).Distinct().ToList();
+            model.TownshipList = _context.Nrctownships.ToList();
+            model.DepartmentList = _context.StudentDepartments.OrderBy(d => d.DepartmentName).ToList();
+            model.AcademicYearList = _context.AcademicYears.OrderByDescending(y => y.YearRange).ToList();
 
-                return View(model);
-            }
-
-            // ---------------------------
-            // 🖼️ Profile Photo Upload Start
-            // ---------------------------
-            if (ProfilePhoto != null && ProfilePhoto.Length > 0)
-            {
-                // Folder path
-                var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "students");
-
-                if (!Directory.Exists(uploadsFolder))
-                    Directory.CreateDirectory(uploadsFolder);
-
-                // Unique filename
-                var uniqueFileName = Guid.NewGuid().ToString() + Path.GetExtension(ProfilePhoto.FileName);
-                var filePath = Path.Combine(uploadsFolder, uniqueFileName);
-
-                // Save file physically
-                using (var fileStream = new FileStream(filePath, FileMode.Create))
-                {
-                    await ProfilePhoto.CopyToAsync(fileStream);
-                }
-
-                // Save relative path to DB
-                model.Student.ProfilePhotoUrl = "/uploads/students/" + uniqueFileName;
-            }
-            else
-            {
-                // Default profile photo
-                model.Student.ProfilePhotoUrl = "/uploads/students/default-avatar.png";
-            }
-            // ---------------------------
-            // 🖼️ Profile Photo Upload End
-            // ---------------------------
-
-            // Set additional fields
-            model.Student.CreatedDate = DateTime.Now;
-            model.Student.IsDeleted = false;
-
-            //// Get RollNumber and Email from session
-            //var roll = HttpContext.Session.GetString("RollNumber");
-            //var email = HttpContext.Session.GetString("EmailAddress");
-
-            //Console.WriteLine($"Roll: {roll}, Email: {email}");
-
-            //var emailEntry = _context.Emails.FirstOrDefault(e =>
-            //    e.RollNumber == roll && e.EmailAddress == email && e.IsDeleted==false);
-
-
-            //if (emailEntry == null)
-            //{
-            //    TempData["Error"] = "Email record not found. Please log in again.";
-            //    return RedirectToAction("Login", "StudentLogin");
-            //}
-
-            //model.Student.EmailPkId = emailEntry.EmailPkId;
-            //model.Student.CreatedBy = roll;
+            // Get session values
             var roll = HttpContext.Session.GetString("RollNumber");
             var email = HttpContext.Session.GetString("EmailAddress");
 
@@ -230,31 +225,69 @@ namespace ProjectManagementSystem.Controllers
                 return RedirectToAction("Login", "StudentLogin");
             }
 
-            // DB query
-            var emailEntry = _context.Emails.FirstOrDefault(e =>
-                e.RollNumber == roll && e.EmailAddress == email && e.IsDeleted == false);
-   
+            var emailEntry = _context.Emails.FirstOrDefault(e => e.RollNumber == roll && e.EmailAddress == email && e.IsDeleted == false);
 
             if (emailEntry != null)
             {
-                model.Student.AcademicYearPkId = emailEntry.AcademicYearPkId; // <-- important
+                model.Student.AcademicYearPkId = emailEntry.AcademicYearPkId;
+                model.Student.EmailPkId = emailEntry.EmailPkId;
             }
 
+            // Auto fill for view model
+            if (model.Student.EmailPk == null)
+                model.Student.EmailPk = new Email();
 
-            // Save student to DB
+            var sessionYearId = HttpContext.Session.GetInt32("AcademicYearPkId");
+
+            if (sessionYearId.HasValue)
+            {
+                model.Student.AcademicYearPkId = sessionYearId.Value;
+            }
+
+            model.Student.EmailPk.RollNumber = roll;
+            model.Student.EmailPk.EmailAddress = email;
+
+            if (ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            // Profile photo upload
+            if (ProfilePhoto != null && ProfilePhoto.Length > 0)
+            {
+                var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "students");
+                if (!Directory.Exists(uploadsFolder))
+                    Directory.CreateDirectory(uploadsFolder);
+
+                var uniqueFileName = Guid.NewGuid().ToString() + Path.GetExtension(ProfilePhoto.FileName);
+                var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+                using (var fileStream = new FileStream(filePath, FileMode.Create))
+                {
+                    await ProfilePhoto.CopyToAsync(fileStream);
+                }
+
+                model.Student.ProfilePhotoUrl = "/uploads/students/" + uniqueFileName;
+            }
+            else
+            {
+                model.Student.ProfilePhotoUrl = "/uploads/students/default-avatar.png";
+            }
+
+            model.Student.CreatedDate = DateTime.Now;
+            model.Student.IsDeleted = false;
+
             _context.Students.Add(model.Student);
             await _context.SaveChangesAsync();
 
-            // Save student id to session
             HttpContext.Session.SetInt32("StudentPkId", model.Student.StudentPkId);
 
-            // Redirect by role or next action
             if (!string.IsNullOrEmpty(nextAction) && nextAction == "CreateProject")
             {
                 return RedirectToAction("Create", "Project");
             }
+            HttpContext.Session.SetInt32("CurrentStep", 3);
 
-            // Default redirect
             return RedirectToAction("Dashboard", "Student");
         }
 
@@ -421,7 +454,16 @@ namespace ProjectManagementSystem.Controllers
                 if (student == null)
                 {
                     TempData["Error"] = "Student not found.";
-                    return RedirectToAction("Login", "StudentLogin");
+
+                //var isLeader = await _context.ProjectMembers
+                //.AnyAsync(pm =>
+                //    pm.StudentPkId == studentId &&
+                //    pm.Role == "Leader" &&
+                //    pm.IsDeleted == false);
+
+                //ViewBag.IsLeader = isLeader;
+
+                return RedirectToAction("Login", "StudentLogin");
                 }
 
                 var projects = await _context.Projects
@@ -471,6 +513,9 @@ namespace ProjectManagementSystem.Controllers
                         //leaderMember.RoleDescription = leaderMember.RoleDescription ?? "Manage project and assign members";
                     }
                 }
+            var leaderProject = projects.FirstOrDefault(p => p.SubmittedByStudentPkId == studentId);
+            ViewBag.IsLeader = leaderProject != null;
+            ViewBag.LeaderProjectId = leaderProject?.ProjectPkId;
 
             var isSubmissionBlocked = await _context.Announcements
                 .AnyAsync(a => a.IsActive == true && a.BlocksSubmissions == true);
@@ -485,7 +530,7 @@ namespace ProjectManagementSystem.Controllers
                     PendingProjects = projects.Count(p => p.Status == "Pending"),
                     ApprovedProjects = projects.Count(p => p.Status == "Approved"),
                     RejectedProjects = projects.Count(p => p.Status == "Rejected"),
-                    RevisionRequired = projects.Count(p => p.Status == "Revision Required")
+                    Cancelled = projects.Count(p => p.Status == "Cancelled")
                 };
             var notifications = await _context.Notifications
             .Where(n => n.UserId == student.StudentPkId)

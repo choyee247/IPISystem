@@ -88,6 +88,90 @@
         display: none;
     }
 
+    .ideas-section {
+        max-width: 1100px;
+        margin: auto;
+        padding: 20px 10px;
+    }
+
+    .section-title {
+        font-weight: 600;
+        color: #4b0082;
+        position: relative;
+    }
+
+        .section-title::after {
+            content: "";
+            width: 60px;
+            height: 3px;
+            background-color: #8c5dd1;
+            display: block;
+            margin: 10px auto 0;
+            border-radius: 2px;
+        }
+
+    /* Grid Layout */
+    .ideas-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 20px;
+    }
+
+    /* Remove default link style */
+    .idea-link {
+        text-decoration: none;
+    }
+
+    /* Card Design */
+    .idea-card {
+        background: #f8f6ff;
+        border: 1px solid #8c5dd1;
+        border-radius: 14px;
+        padding: 22px;
+        text-align: center;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        box-shadow: 0 4px 12px rgba(140, 93, 209, 0.08);
+        position: relative;
+        overflow: hidden;
+    }
+
+        /* Hover Effect */
+        .idea-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 18px 40px rgba(140, 93, 209, 0.3);
+            background: linear-gradient(135deg, #8c5dd1, #6b46c1);
+        }
+
+    .idea-title {
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: #8c5dd1;
+        transition: all 0.3s ease;
+    }
+
+    /* Title change on hover */
+    .idea-card:hover .idea-title {
+        color: white;
+        transform: scale(1.05);
+    }
+
+    /* Optional smooth animation */
+    .idea-card::before {
+        content: "";
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        top: 0;
+        left: -100%;
+        background: rgba(255, 255, 255, 0.1);
+        transition: 0.5s;
+    }
+
+    .idea-card:hover::before {
+        left: 100%;
+    }
+
 </style>
 
 <section id="welcome" class="py-4" style="background-color: #f5f7ff;">
@@ -149,30 +233,25 @@
             </div>
         </div>
     </div>
-    <div id="ideasSection" class="mb-5" style="max-width: 1000px; margin: auto;">
-        <h4 class="section-title mb-5">💡Some Project Idea</h4>
-        <div class="d-flex flex-wrap gap-4 justify-content-center">
+    <div id="ideasSection" class="ideas-section">
+        <h4 class="section-title text-center mb-4">💡 Some Project Ideas</h4>
+
+        <div class="ideas-grid">
             @foreach (var idea in Model.PopularProjects)
             {
-                var ideaId = Guid.NewGuid().ToString();
-                var shortDesc = idea.FullDescription.Length > 100
-                ? idea.FullDescription.Substring(0, 100) + "..."
-                : idea.FullDescription;
-                <div style="width: 300px;">
-                    <div class="card p-3 shadow-sm" id="card-@ideaId">
-                        <h6 class="fw-bold">@idea.Title</h6>
-                        <p id="desc-@ideaId" class="text-muted small mb-2 m-0">
-                            @shortDesc
-                        </p>
-                        <a href="javascript:void(0);" class="text-primary toggle-desc"
-                           data-id="@ideaId"
-                           data-full="@idea.FullDescription"
-                           data-short="@shortDesc"
-                           style="font-size: 0.85rem;">
-                            See More
-                        </a>
+                <a asp-controller="Public"
+                   asp-action="ProjectIdeas"
+                   class="idea-link">
+
+                    <div class="idea-card">
+                        <div class="idea-card-body">
+                            <h6 class="idea-title m-0">
+                                @idea.Title
+                            </h6>
+                        </div>
                     </div>
-                </div>
+
+                </a>
             }
         </div>
     </div>

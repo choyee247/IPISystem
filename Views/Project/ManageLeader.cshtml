@@ -1,0 +1,74 @@
+﻿@using ProjectManagementSystem.DBModels
+@model Project
+
+<h3 class="mb-4" style="color:#8c5dd1;">Manage Leadership - @Model.ProjectName</h3>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success">
+        @TempData["Success"]
+    </div>
+}
+
+<table class="table table-hover">
+    <thead class="thead-light">
+        <tr>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Role</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var member in Model.ProjectMembers.Where(m => m.IsDeleted == false))
+        {
+            <tr>
+                <td>@(member.StudentPk?.StudentName ?? "N/A")</td>
+                <td>@(member.StudentPk?.EmailPk?.EmailAddress ?? "N/A")</td>
+                <td>
+                    <span class="badge"
+                          style="background-color:@(member.Role == "Leader" ? "#8c5dd1" : "#6c757d"); color:white;">
+                        @(member.Role ?? "Member")
+                    </span>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<hr />
+
+<div class="d-flex flex-column flex-md-row gap-3">
+    <form asp-action="TransferLeadership" method="post" class="flex-fill">
+        <input type="hidden" name="projectId" value="@Model.ProjectPkId" />
+        <label>Choose New Leader</label>
+        <select name="newLeaderId" class="form-control mb-2">
+            @foreach (var member in Model.ProjectMembers
+            .Where(m => m.Role != "Leader" && m.IsDeleted == false))
+            {
+                <option value="@member.StudentPkId">
+                    @member.StudentPk.StudentName
+                </option>
+            }
+        </select>
+        <button type="submit" class="btn" style="background-color:#8c5dd1; color:white;">
+            Change Leader Only
+        </button>
+    </form>
+
+    <form asp-action="TransferAndLeave" method="post" class="flex-fill">
+        <input type="hidden" name="projectId" value="@Model.ProjectPkId" />
+        <label>Choose New Leader & Leave Project</label>
+        <select name="newLeaderId" class="form-control mb-2">
+            @foreach (var member in Model.ProjectMembers
+            .Where(m => m.Role != "Leader" && m.IsDeleted == false))
+            {
+                <option value="@member.StudentPkId">
+                    @member.StudentPk.StudentName
+                </option>
+            }
+        </select>
+        <button type="submit" class="btn" style="background-color:#8c5dd1; color:white;">
+            Change Leader & Leave Project
+        </button>
+    </form>
+</div>

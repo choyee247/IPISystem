@@ -1,0 +1,81 @@
+﻿@model ProjectManagementSystem.DBModels.DownloadRequest
+@{
+    Layout = "~/Views/Shared/_PublicLayout.cshtml";
+}
+
+<h4 style="color:#8c5dd1;">Download Request Form</h4>
+
+<style>
+    /* Form container */
+    form {
+        max-width: 600px;
+        margin: 40px auto; /* top/bottom 40px, center horizontally */
+        padding: 20px;
+        border-radius: 12px;
+        background-color: #f9f5ff;
+        box-shadow: 0 4px 12px rgba(140, 93, 209, 0.2);
+        /* Optional: make it responsive */
+        width: 90%; /* form shrinks on small screens */
+    }
+
+    /* Input and textarea focus */
+    input:focus, textarea:focus {
+        border-color: #8c5dd1;
+        box-shadow: 0 0 5px rgba(140, 93, 209, 0.5);
+        outline: none;
+    }
+
+    /* Labels */
+    label {
+        font-weight: 500;
+        color: #4a2f8c;
+    }
+
+    /* Submit button */
+    .btn-custom {
+        background-color: #8c5dd1;
+        color: white;
+        border: none;
+        transition: background-color 0.3s ease;
+    }
+
+        .btn-custom:hover {
+            background-color: #6f45a3;
+            color: white;
+        }
+</style>
+
+<form asp-action="RequestDownload" method="post">
+
+    <input type="hidden" asp-for="ProjectFilePkId" />
+
+    <div class="mb-3">
+        <label asp-for="StudentName">Name</label>
+        <input asp-for="StudentName" class="form-control" required />
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="RollNumber">Roll Number</label>
+        <input asp-for="RollNumber" class="form-control" placeholder="KPTM-00000" required />
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="PhoneNumber">Phone Number</label>
+        <input asp-for="PhoneNumber" class="form-control" required />
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Year">Year</label>
+        <input asp-for="Year" class="form-control" placeholder="Eg. First Year, Section(A)" required />
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Reason">Reason for Download</label>
+        <textarea asp-for="Reason" class="form-control" rows="3" placeholder="Explain why you want to download this file" required></textarea>
+    </div>
+
+    <button type="submit" class="btn btn-custom">
+        Submit Request
+    </button>
+
+</form>

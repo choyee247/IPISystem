@@ -6,127 +6,113 @@
     ViewData["Title"] = "Internship Companies in " + ViewBag.CityName;
     Layout = "~/Views/Shared/_PublicLayout.cshtml";
 
-    var cityName = ViewBag.CityName as string;
-    var totalCompanies = ViewBag.TotalCompanies as int? ?? 0;
+    var cityName = ViewBag.CityName as string ?? "City";
     var cityId = ViewBag.CityId as int? ?? 0;
+    var totalCompanies = ViewBag.TotalCompanies as int? ?? 0;
+    var totalStudents = ViewBag.TotalStudents as int? ?? 0;
 }
 
 <style>
-    .small-dashboard-card {
-        display: inline-flex;
-        align-items: center;
-        background: #c8c6c1; /* warm gray */
-        border-radius: 0.375rem;
-        padding: 0.3rem 0.7rem;
-        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.1);
-        min-width: 100px;
-        user-select: none;
-        margin-bottom: 1rem;
-    }
-
-    .small-dashboard-icon {
-        font-size: 1.3rem;
-        opacity: 0.8;
-        color: #8c5dd1; /* purple */
-        margin-right: 0.4rem;
-        flex-shrink: 0;
-    }
-
-    .small-dashboard-text {
-        display: flex;
-        flex-direction: column;
-        line-height: 1;
-    }
-
-        .small-dashboard-text .label {
-            font-size: 0.75rem;
-            color: #5a5a5a;
-            margin: 0;
-            font-weight: 600;
-        }
-
-        .small-dashboard-text .value {
-            font-size: 1.1rem;
-            font-weight: 700;
-            margin: 0;
-            line-height: 1;
-            color: #3e3e3e;
-        }
-
     .card {
         border: 1px solid #8c5dd1;
         background-color: #e4eefd;
+        transition: 0.3s ease-in-out;
     }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 18px rgba(0,0,0,0.15);
+        }
 
     .card-title {
         color: #8c5dd1;
         font-weight: bold;
     }
 
+    .student-badge {
+        background-color: #8c5dd1;
+        color: white;
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        margin-bottom: 0.5rem;
+        display: inline-block;
+    }
+
     .btn-secondary {
         background-color: #8c5dd1;
         border-color: #8c5dd1;
+        color: white;
     }
 
         .btn-secondary:hover {
             background-color: #7b4fc7;
             border-color: #7b4fc7;
+            color: white;
         }
-
-    .text-muted {
-        color: #6b6b6b !important;
-    }
 
     .pagination .page-item.active .page-link {
         background-color: #8c5dd1;
         border-color: #8c5dd1;
         color: #fff;
     }
-
-    .pagination .page-link:hover {
-        background-color: #c8c6c1;
-        color: #212529;
-    }
 </style>
 
-<div class="d-flex justify-content-between align-items-center flex-wrap mb-3 gap-2">
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
     <h2 class="mb-0">Internship Companies in @cityName</h2>
 
-    <div class="small-dashboard-card" title="Total Companies">
-        <i class="bi bi-building small-dashboard-icon"></i>
-        <div class="small-dashboard-text">
-            <p class="label mb-0">Total Companies</p>
-            <p class="value mb-0">@totalCompanies</p>
-        </div>
+    <div class="student-badge" title="Total Students and Companies">
+        @totalCompanies Companies – @totalStudents Students
     </div>
 </div>
 
 @if (Model != null && Model.Any())
 {
-    <div class="row">
+    <div class="row row-cols-1 row-cols-md-3 g-4">
         @foreach (var company in Model)
         {
-            <div class="col-md-4 mb-4">
+            <div class="col">
                 <div class="card h-100 shadow-sm">
                     @if (!string.IsNullOrEmpty(company.ImageFileName))
                     {
-                        <img src="@Url.Content("~/images/companies/" + company.ImageFileName)" class="card-img-top" alt="@company.CompanyName" style="height: 180px; object-fit: cover;" />
+                        <img src="@Url.Content("~/images/companies/" + company.ImageFileName)"
+                             class="card-img-top"
+                             alt="@company.CompanyName"
+                             style="height:180px; object-fit:cover;" />
                     }
                     else
                     {
-                        <img src="~/images/placeholder-company.png" class="card-img-top" alt="No image" style="height: 180px; object-fit: cover;" />
+                        <img src="~/images/placeholder-company.png"
+                             class="card-img-top"
+                             alt="No image"
+                             style="height:180px; object-fit:cover;" />
                     }
 
-                    <div class="card-body">
+                    <div class="card-body d-flex flex-column">
                         <h5 class="card-title">@company.CompanyName</h5>
-                        <p class="mb-1"><strong>Address:</strong> @company.Address</p>
-                        <p class="mb-1"><strong>Contact:</strong> @company.Contact</p>
-                        <p class="mb-1"><strong>Students:</strong> @company.StudentCount</p>
+
+                        <span class="student-badge">@company.StudentCount Students</span>
+
+                        @if (!string.IsNullOrWhiteSpace(company.Address))
+                        {
+                            <p class="mb-1"><strong>Address:</strong> @company.Address</p>
+                        }
+
+                        @if (!string.IsNullOrWhiteSpace(company.Contact))
+                        {
+                            <p class="mb-1"><strong>Contact:</strong> @company.Contact</p>
+                        }
 
                         @if (!string.IsNullOrWhiteSpace(company.Description))
                         {
                             <p class="card-text mt-2">@company.Description</p>
                         }
+
+                        <a asp-action="CompaniesByCity"
+                           asp-route-id="@company.Company_pkId"
+                           class="btn btn-primary mt-auto d-none">
+                            <!-- Placeholder for possible future action -->
+                        </a>
                     </div>
                 </div>
             </div>

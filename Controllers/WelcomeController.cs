@@ -65,8 +65,9 @@ public class WelcomeController : Controller
         int teacherCount = await _context.Teachers.CountAsync();
 
         // Count projects and companies
-        int projectCount = await _context.Projects.CountAsync();
-        int companyCount = await _context.Companies.CountAsync();
+        int projectCount = await _context.Projects
+               .Where(p => p.Status == "Approved")
+               .CountAsync(); int companyCount = await _context.Companies.CountAsync();
 
         var model = new HomeViewModel
         {

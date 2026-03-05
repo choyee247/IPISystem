@@ -1,8 +1,11 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+
 //using ProjectManagementSystem.Data;
 using ProjectManagementSystem.DBModels;
 using ProjectManagementSystem.Models;
+using ProjectManagementSystem.Services;
 using ProjectManagementSystem.ViewModels;
 
 namespace ProjectManagementSystem.Controllers
@@ -10,27 +13,50 @@ namespace ProjectManagementSystem.Controllers
     public class ProjectApprovalController : Controller
     {
         private readonly PMSDbContext _context;
-
-        public ProjectApprovalController(PMSDbContext context)
+        private readonly IEmailService _emailService;
+        public ProjectApprovalController(PMSDbContext context, IEmailService emailService)
         {
             _context = context;
+            _emailService = emailService;
         }
 
         public async Task<IActionResult> Index(
-          string statusFilter = "all",
-          string searchString = "",
-          DateTime? fromDate = null,
-          DateTime? toDate = null,
-          int pageNumber = 1)
+      string statusFilter = "all",
+      string searchString = "",
+      DateTime? fromDate = null,
+      DateTime? toDate = null,
+      int pageNumber = 1)
         {
             const int pageSize = 15;
+
+            // Get logged-in user info
+            var userRole = HttpContext.Session.GetString("UserRole");
+            var userIdString = HttpContext.Session.GetString("UserId");
+            int userId = 0;
+            if (!string.IsNullOrEmpty(userIdString))
+                userId = int.Parse(userIdString);
 
             var query = _context.Projects
                 .Include(p => p.CompanyPk)
                 .Include(p => p.ProjectTypePk)
-                .Include(p => p.ProjectMembers) 
-                    .ThenInclude(pm => pm.StudentPk) 
-                .Where(p => p.IsDeleted == null || p.IsDeleted == false);
+                .Include(p => p.ProjectMembers)
+                    .ThenInclude(pm => pm.StudentPk)
+                .Where(p => (p.IsDeleted == null || p.IsDeleted == false) && p.Status != "Draft");
+            // Filter by role
+            if (userRole == "Teacher")
+            {
+                // Show only projects supervised by this teacher
+                query = query.Where(p => p.TeacherId == userId);
+            }
+            else if (userRole == "Admin")
+            {
+                // Admin sees all projects
+            }
+            else
+            {
+                // Other roles cannot access
+                return RedirectToAction("Login", "Teacher");
+            }
 
             // Apply search filter
             if (!string.IsNullOrEmpty(searchString))
@@ -38,7 +64,7 @@ namespace ProjectManagementSystem.Controllers
                 query = query.Where(p =>
                     p.ProjectName.Contains(searchString) ||
                     p.CreatedBy.Contains(searchString) ||
-                    p.ProjectMembers.Any(pm =>  
+                    p.ProjectMembers.Any(pm =>
                     pm.StudentPk.StudentName.Contains(searchString))
                 );
             }
@@ -69,11 +95,6 @@ namespace ProjectManagementSystem.Controllers
 
             var model = new ProjectApprovalViewModel
             {
-                //    Projects = await query
-                //.OrderByDescending(p => p.ProjectSubmittedDate)
-                //.Skip((pageNumber - 1) * pageSize)
-                //.Take(pageSize)
-                //.ToListAsync(),
                 Projects = projects,
                 PageNumber = pageNumber,
                 PageSize = pageSize,
@@ -95,37 +116,59 @@ namespace ProjectManagementSystem.Controllers
 
             return View(model);
         }
-
         //[HttpPost]
         //[ValidateAntiForgeryToken]
         //public async Task<IActionResult> Approve([FromBody] int id)
         //{
-        //    var project = await _context.Projects.FindAsync(id);
+        //    var role = HttpContext.Session.GetString("UserRole");
+        //    var userIdStr = HttpContext.Session.GetString("UserId");
+
+        //    // ✅ Allow Teacher OR Admin
+        //    if ((role != "Teacher" && role != "Admin") || string.IsNullOrEmpty(userIdStr))
+        //    {
+        //        return Json(new { success = false, message = "Only teacher or admin can approve." });
+        //    }
+
+        //    int userId = int.Parse(userIdStr);
+
+        //    var project = await _context.Projects
+        //        .Include(p => p.ProjectMembers)
+        //            .ThenInclude(pm => pm.StudentPk)
+        //        .FirstOrDefaultAsync(p => p.ProjectPkId == id);
+
         //    if (project == null)
         //        return Json(new { success = false, message = "Project not found." });
 
         //    project.Status = "Approved";
+        //    project.IsApprovedByTeacher = true;
         //    project.ApprovedDate = DateTime.Now;
+
+        //    project.TeacherId = userId;
         //    project.AdminComment = null;
 
         //    await _context.SaveChangesAsync();
-        //    // ✅ Student Notification
-        //    var leader = project.ProjectMembers.FirstOrDefault(pm => pm.Role == "Leader")?.StudentPk;
+
+        //    var leader = project.ProjectMembers
+        //        .FirstOrDefault(pm => pm.Role == "Leader")?.StudentPk;
+
         //    if (leader != null)
         //    {
         //        var notification = new Notification
         //        {
         //            UserId = leader.StudentPkId,
+        //            TeacherId = userId,
         //            Title = "Project Approved",
-        //            Message = $"Your project '{project.ProjectName}' has been approved by the teacher.",
-        //            NotificationType = "Response",
+        //            Message = $"Your project '{project.ProjectName}' has been approved.",
+        //            NotificationType = "ProjectStatus",
         //            ProjectPkId = project.ProjectPkId,
         //            CreatedAt = DateTime.Now,
         //            IsRead = false,
         //            IsDeleted = false
         //        };
+
         //        _context.Notifications.Add(notification);
         //        await _context.SaveChangesAsync();
+
         //    }
 
         //    return Json(new { success = true });
@@ -134,46 +177,46 @@ namespace ProjectManagementSystem.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Approve([FromBody] int id)
         {
-            // ✅ 1. Check Session Role
             var role = HttpContext.Session.GetString("UserRole");
-            var teacherIdStr = HttpContext.Session.GetString("UserId");
+            var userIdStr = HttpContext.Session.GetString("UserId");
 
-            if (role != "Teacher" || string.IsNullOrEmpty(teacherIdStr))
+            // ✅ Only Teacher or Admin allowed
+            if ((role != "Teacher" && role != "Admin") || string.IsNullOrEmpty(userIdStr))
             {
-                return Json(new { success = false, message = "Only teacher can approve." });
+                return Json(new { success = false, message = "Only teacher or admin can approve." });
             }
 
-            int teacherId = int.Parse(teacherIdStr);
+            int userId = int.Parse(userIdStr);
 
-            // ✅ 2. Load Project
             var project = await _context.Projects
                 .Include(p => p.ProjectMembers)
                     .ThenInclude(pm => pm.StudentPk)
+                        .ThenInclude(s => s.EmailPk)
                 .FirstOrDefaultAsync(p => p.ProjectPkId == id);
 
             if (project == null)
                 return Json(new { success = false, message = "Project not found." });
 
-            // ✅ 3. Update Project Table
+            // ✅ Update Project Status
             project.Status = "Approved";
             project.IsApprovedByTeacher = true;
             project.ApprovedDate = DateTime.Now;
-            project.TeacherId = teacherId;      // ⭐ IMPORTANT
+            project.TeacherId = userId;
             project.AdminComment = null;
 
             await _context.SaveChangesAsync();
 
-            // ✅ 4. Find Leader
+            // ✅ Get Leader
             var leader = project.ProjectMembers
                 .FirstOrDefault(pm => pm.Role == "Leader")?.StudentPk;
 
-            // ✅ 5. Create Notification
             if (leader != null)
             {
+                // 🔔 1️⃣ SYSTEM NOTIFICATION (Always Save)
                 var notification = new Notification
                 {
-                    UserId = leader.StudentPkId,   // Student
-                    TeacherId = teacherId,         // ⭐ Teacher who approved
+                    UserId = leader.StudentPkId,
+                    TeacherId = userId,
                     Title = "Project Approved",
                     Message = $"Your project '{project.ProjectName}' has been approved.",
                     NotificationType = "ProjectStatus",
@@ -185,6 +228,30 @@ namespace ProjectManagementSystem.Controllers
 
                 _context.Notifications.Add(notification);
                 await _context.SaveChangesAsync();
+
+                var teacherName = HttpContext.Session.GetString("UserName") ?? "Your Teacher"; // Teacher name session ကနေယူ
+
+                if (leader.IsEmailSubscribed
+                    && leader.EmailPk != null
+                    && !string.IsNullOrEmpty(leader.EmailPk.EmailAddress))
+                {
+                    var emailBody = $@"
+Hello {leader.StudentName},
+
+Your project '{project.ProjectName}' has been approved by {teacherName}.
+
+Thank you for your effort and congratulations on your project approval!
+
+Best regards,
+Project Management System
+";
+
+                    await _emailService.SendEmailAsync(
+                        leader.EmailPk.EmailAddress,
+                        "Project Approved",
+                        emailBody
+                    );
+                }
             }
 
             return Json(new { success = true });
@@ -192,23 +259,41 @@ namespace ProjectManagementSystem.Controllers
 
         //[HttpPost]
         //[ValidateAntiForgeryToken]
-        //public async Task<IActionResult> Approve([FromBody] int id)
+        //public async Task<IActionResult> Reject([FromBody] RejectModel model)
         //{
+        //    var role = HttpContext.Session.GetString("UserRole");
+        //    var userIdStr = HttpContext.Session.GetString("UserId");
+
+        //    // ✅ Allow Teacher OR Admin
+        //    if ((role != "Teacher" && role != "Admin") || string.IsNullOrEmpty(userIdStr))
+        //    {
+        //        return Json(new { success = false, message = "Only teacher or admin can reject." });
+        //    }
+
+        //    int userId = int.Parse(userIdStr);
+
         //    var project = await _context.Projects
         //        .Include(p => p.ProjectMembers)
         //            .ThenInclude(pm => pm.StudentPk)
-        //        .FirstOrDefaultAsync(p => p.ProjectPkId == id);
+        //        .FirstOrDefaultAsync(p => p.ProjectPkId == model.Id);
 
         //    if (project == null)
         //        return Json(new { success = false, message = "Project not found." });
 
-        //    project.Status = "Approved";
-        //    project.ApprovedDate = DateTime.Now;
-        //    project.AdminComment = null;
+        //    if (string.IsNullOrWhiteSpace(model.Reason))
+        //        return Json(new { success = false, message = "Rejection reason is required." });
+
+        //    project.Status = "Rejected";
+        //    project.IsApprovedByTeacher = false;
+        //    project.RejectedDate = DateTime.Now;
+        //    project.ApprovedDate = null;
+        //    project.AdminComment = model.Reason;
+
+        //    // ✅ Save who rejected (Teacher OR Admin)
+        //    project.TeacherId = userId;
 
         //    await _context.SaveChangesAsync();
 
-        //    // FIND LEADER
         //    var leader = project.ProjectMembers
         //        .FirstOrDefault(pm => pm.Role == "Leader")?.StudentPk;
 
@@ -217,9 +302,10 @@ namespace ProjectManagementSystem.Controllers
         //        var notification = new Notification
         //        {
         //            UserId = leader.StudentPkId,
-        //            Title = "Project Approved",
-        //            Message = $"Your project '{project.ProjectName}' has been approved by the teacher.",
-        //            NotificationType = "Response",
+        //            TeacherId = userId,
+        //            Title = "Project Rejected",
+        //            Message = $"Your project '{project.ProjectName}' has been rejected.\nReason: {model.Reason}",
+        //            NotificationType = "ProjectStatus",
         //            ProjectPkId = project.ProjectPkId,
         //            CreatedAt = DateTime.Now,
         //            IsRead = false,
@@ -237,21 +323,22 @@ namespace ProjectManagementSystem.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Reject([FromBody] RejectModel model)
         {
-            // ✅ 1. Check Teacher Session
             var role = HttpContext.Session.GetString("UserRole");
-            var teacherIdStr = HttpContext.Session.GetString("UserId");
+            var userIdStr = HttpContext.Session.GetString("UserId");
+            var teacherName = HttpContext.Session.GetString("UserName") ?? "Your Teacher";
 
-            if (role != "Teacher" || string.IsNullOrEmpty(teacherIdStr))
+            // ✅ Only Teacher or Admin
+            if ((role != "Teacher" && role != "Admin") || string.IsNullOrEmpty(userIdStr))
             {
-                return Json(new { success = false, message = "Only teacher can reject." });
+                return Json(new { success = false, message = "Only teacher or admin can reject." });
             }
 
-            int teacherId = int.Parse(teacherIdStr);
+            int userId = int.Parse(userIdStr);
 
-            // ✅ 2. Load Project
             var project = await _context.Projects
                 .Include(p => p.ProjectMembers)
                     .ThenInclude(pm => pm.StudentPk)
+                        .ThenInclude(s => s.EmailPk) // 👈 Email navigation include လုပ်ထား
                 .FirstOrDefaultAsync(p => p.ProjectPkId == model.Id);
 
             if (project == null)
@@ -260,27 +347,29 @@ namespace ProjectManagementSystem.Controllers
             if (string.IsNullOrWhiteSpace(model.Reason))
                 return Json(new { success = false, message = "Rejection reason is required." });
 
-            // ✅ 3. Update Project (Rejected)
+            // ✅ Update project status
             project.Status = "Rejected";
             project.IsApprovedByTeacher = false;
             project.RejectedDate = DateTime.Now;
             project.ApprovedDate = null;
             project.AdminComment = model.Reason;
-            project.TeacherId = teacherId;        // ⭐ IMPORTANT
+            project.TeacherId = userId;
 
             await _context.SaveChangesAsync();
 
-            // ✅ 4. Find Leader
-            var leader = project.ProjectMembers
-                .FirstOrDefault(pm => pm.Role == "Leader")?.StudentPk;
+            // ✅ Get leader
+            var leaderMember = project.ProjectMembers
+                .FirstOrDefault(pm => pm.Role == "Leader");
 
-            // ✅ 5. Create Notification
-            if (leader != null)
+            if (leaderMember != null && leaderMember.StudentPk != null)
             {
+                var leader = leaderMember.StudentPk;
+
+                // 🔔 System Notification
                 var notification = new Notification
                 {
-                    UserId = leader.StudentPkId,     // Student
-                    TeacherId = teacherId,           // ⭐ Teacher who rejected
+                    UserId = leader.StudentPkId,
+                    TeacherId = userId,
                     Title = "Project Rejected",
                     Message = $"Your project '{project.ProjectName}' has been rejected.\nReason: {model.Reason}",
                     NotificationType = "ProjectStatus",
@@ -292,94 +381,237 @@ namespace ProjectManagementSystem.Controllers
 
                 _context.Notifications.Add(notification);
                 await _context.SaveChangesAsync();
+
+                // 📧 Email Notification (only if subscribed & Email exists)
+                if (leader.IsEmailSubscribed
+                    && leader.EmailPk != null
+                    && !string.IsNullOrEmpty(leader.EmailPk.EmailAddress))
+                {
+                    var emailBody = $@"
+Hello {leader.StudentName},
+
+Your project '{project.ProjectName}' has been rejected by {teacherName}.
+
+Reason: {model.Reason}
+
+Please review and make the necessary changes.
+
+Thank you,
+Project Management System
+";
+
+                    try
+                    {
+                        await _emailService.SendEmailAsync(
+                            leader.EmailPk.EmailAddress,
+                            "Project Rejected",
+                            emailBody
+                        );
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine("Email sending failed: " + ex.Message);
+                    }
+                }
             }
 
             return Json(new { success = true });
         }
+        [HttpGet]
+        public async Task<IActionResult> Cancel(int id)
+        {
+            var project = await _context.Projects
+                .FirstOrDefaultAsync(p => p.ProjectPkId == id);
 
+            if (project == null) return NotFound();
+
+            return View(project);
+        }
         //[HttpPost]
         //[ValidateAntiForgeryToken]
-        //public async Task<IActionResult> Reject([FromBody] RejectModel model)
+        //public async Task<IActionResult> Cancel(
+        //    int ProjectPkId,
+        //    string Reason,
+        //    List<IFormFile> Files)
         //{
+        //    var role = HttpContext.Session.GetString("UserRole");
+
+        //    if (role != "Teacher" && role != "Admin")
+        //        return Unauthorized();
+
         //    var project = await _context.Projects
-        //        .Include(p => p.ProjectMembers)
-        //            .ThenInclude(pm => pm.StudentPk)
-        //        .FirstOrDefaultAsync(p => p.ProjectPkId == model.Id);
+        //        .FirstOrDefaultAsync(p => p.ProjectPkId == ProjectPkId);
 
-        //    if (project == null)
-        //        return Json(new { success = false, message = "Project not found." });
+        //    if (project == null) return NotFound();
 
-        //    if (string.IsNullOrWhiteSpace(model.Reason))
-        //        return Json(new { success = false, message = "Rejection reason is required." });
-
-        //    project.Status = "Rejected";
-        //    project.AdminComment = model.Reason;
+        //    // ⭐ Change Status
+        //    project.Status = "Cancelled";
+        //    project.AdminComment = Reason;
         //    project.ApprovedDate = null;
+        //    project.RejectedDate = DateTime.Now;
 
         //    await _context.SaveChangesAsync();
 
-        //    // FIND Leader
-        //    var leader = project.ProjectMembers
-        //        .FirstOrDefault(pm => pm.Role == "Leader")?.StudentPk;
-
-        //    if (leader != null)
+        //    // ⭐ Save Attachments
+        //    if (Files != null && Files.Any())
         //    {
-        //        var notification = new Notification
-        //        {
-        //            UserId = leader.StudentPkId,
-        //            Title = "Project Rejected",
-        //            Message = $"Your project '{project.ProjectName}' has been rejected. Reason: {model.Reason}",
-        //            NotificationType = "Response",
-        //            ProjectPkId = project.ProjectPkId,
-        //            CreatedAt = DateTime.Now,
-        //            IsRead = false,
-        //            IsDeleted = false
-        //        };
+        //        var folder = Path.Combine("wwwroot/uploads/cancel");
+        //        Directory.CreateDirectory(folder);
 
-        //        _context.Notifications.Add(notification);
+        //        foreach (var file in Files)
+        //        {
+        //            var fileName = Guid.NewGuid() +
+        //                           Path.GetExtension(file.FileName);
+
+        //            var path = Path.Combine(folder, fileName);
+
+        //            using var stream =
+        //                new FileStream(path, FileMode.Create);
+
+        //            await file.CopyToAsync(stream);
+
+        //            _context.ProjectFiles.Add(new ProjectFile
+        //            {
+        //                ProjectPkId = ProjectPkId,
+        //                FilePath = "/uploads/cancel/" + fileName,
+        //                FileType = "CancelReason",
+        //                FileSize = file.Length,
+        //                UploadedAt = DateTime.Now
+        //            });
+        //        }
+
         //        await _context.SaveChangesAsync();
         //    }
 
-        //    return Json(new { success = true });
+        //    return RedirectToAction("Index");
         //}
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Cancel(
+    int ProjectPkId,
+    string Reason,
+    List<IFormFile> Files)
+        {
+            var role = HttpContext.Session.GetString("UserRole");
 
-        //[HttpPost]
-        //[ValidateAntiForgeryToken]
-        //public async Task<IActionResult> Reject([FromBody] RejectModel model)
-        //{
-        //    var project = await _context.Projects.FindAsync(model.Id);
-        //    if (project == null)
-        //        return Json(new { success = false, message = "Project not found." });
+            if (role != "Teacher" && role != "Admin")
+                return Unauthorized();
 
-        //    if (string.IsNullOrWhiteSpace(model.Reason))
-        //        return Json(new { success = false, message = "Rejection reason is required." });
+            var project = await _context.Projects
+                .Include(p => p.ProjectMembers)
+                    .ThenInclude(pm => pm.StudentPk)
+                        .ThenInclude(s => s.EmailPk) // 👈 Email navigation include
+                .FirstOrDefaultAsync(p => p.ProjectPkId == ProjectPkId);
 
-        //    project.Status = "Rejected";
-        //    project.AdminComment = model.Reason;
-        //    project.ApprovedDate = null;
+            if (project == null)
+                return NotFound();
 
-        //    await _context.SaveChangesAsync();
-        //    // ✅ Student Notification
-        //    var leader = project.ProjectMembers.FirstOrDefault(pm => pm.Role == "Leader")?.StudentPk;
-        //    if (leader != null)
-        //    {
-        //        var notification = new Notification
-        //        {
-        //            UserId = leader.StudentPkId,
-        //            Title = "Project Rejected",
-        //            Message = $"Your project '{project.ProjectName}' has been rejected. Reason: {model.Reason}",
-        //            NotificationType = "Response",
-        //            ProjectPkId = project.ProjectPkId,
-        //            CreatedAt = DateTime.Now,
-        //            IsRead = false,
-        //            IsDeleted = false
-        //        };
-        //        _context.Notifications.Add(notification);
-        //        await _context.SaveChangesAsync();
-        //    }
+            // ⭐ Get TeacherId & Name from Session
+            int? teacherId = HttpContext.Session.GetInt32("TeacherId");
+            string teacherName = HttpContext.Session.GetString("UserName") ?? "Your Teacher";
 
-        //    return Json(new { success = true });
-        //}
+            // ⭐ Update Project Status
+            project.Status = "Cancelled";
+            project.AdminComment = Reason;
+            project.ApprovedDate = null;
+            project.RejectedDate = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+
+            // ⭐ Get ALL project members (including owner)
+            var memberIds = project.ProjectMembers
+                .Select(pm => pm.StudentPk)
+                .Where(s => s != null)
+                .ToList();
+
+            if (!memberIds.Any(s => s.StudentPkId == project.StudentPkId))
+            {
+                var owner = await _context.Students.FindAsync(project.StudentPkId);
+                if (owner != null)
+                    memberIds.Add(owner);
+            }
+
+            foreach (var student in memberIds)
+            {
+                // 🔔 System Notification
+                _context.Notifications.Add(new Notification
+                {
+                    UserId = student.StudentPkId,
+                    TeacherId = teacherId,
+                    Title = "Project Cancelled",
+                    Message = $"Your project \"{project.ProjectName}\" has been cancelled." +
+                              (string.IsNullOrEmpty(Reason) ? "" : $" Reason: {Reason}"),
+                    NotificationType = "ProjectStatus",
+                    ProjectPkId = project.ProjectPkId,
+                    CreatedAt = DateTime.Now,
+                    IsRead = false,
+                    IsDeleted = false
+                });
+
+                // 📧 Email Notification (only if subscribed)
+                if (student.IsEmailSubscribed
+                    && student.EmailPk != null
+                    && !string.IsNullOrEmpty(student.EmailPk.EmailAddress))
+                {
+                    var emailBody = $@"
+Hello {student.StudentName},
+
+Your project '{project.ProjectName}' has been cancelled by {teacherName}.
+{(string.IsNullOrEmpty(Reason) ? "" : $"Reason: {Reason}\n")}
+
+Please review your project and make any necessary improvements. We appreciate your effort and dedication.
+
+Thank you for your understanding.
+
+Best regards,
+Project Management System
+";
+                    try
+                    {
+                        await _emailService.SendEmailAsync(
+                            student.EmailPk.EmailAddress,
+                            "Project Cancelled",
+                            emailBody
+                        );
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine("Email sending failed: " + ex.Message);
+                    }
+                }
+            }
+
+            await _context.SaveChangesAsync();
+
+            // ⭐ Save Attachments
+            if (Files != null && Files.Any())
+            {
+                var folder = Path.Combine("wwwroot/uploads/cancel");
+                Directory.CreateDirectory(folder);
+
+                foreach (var file in Files)
+                {
+                    var fileName = Guid.NewGuid() + Path.GetExtension(file.FileName);
+                    var path = Path.Combine(folder, fileName);
+
+                    using var stream = new FileStream(path, FileMode.Create);
+                    await file.CopyToAsync(stream);
+
+                    _context.ProjectFiles.Add(new ProjectFile
+                    {
+                        ProjectPkId = ProjectPkId,
+                        FilePath = "/uploads/cancel/" + fileName,
+                        FileType = "CancelReason",
+                        FileSize = file.Length,
+                        UploadedAt = DateTime.UtcNow
+                    });
+                }
+
+                await _context.SaveChangesAsync();
+            }
+
+            return RedirectToAction("Index");
+        }
 
         public async Task<IActionResult> Details(int id)
         {

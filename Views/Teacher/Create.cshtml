@@ -2,7 +2,10 @@
 @{
     Layout = "_TeacherLayout";
 }
-
+@{
+    var departments = ViewBag.Departments as List<ProjectManagementSystem.DBModels.StudentDepartment> ?? new List<ProjectManagementSystem.DBModels.StudentDepartment>();
+    var academicYears = ViewBag.AcademicYears as List<ProjectManagementSystem.DBModels.AcademicYear> ?? new List<ProjectManagementSystem.DBModels.AcademicYear>();
+}
 <div class="container py-5">
     <div class="row justify-content-center">
         <div class="col-lg-6 col-md-8">
@@ -25,7 +28,7 @@
 
                         <!-- Email -->
                         <div class="form-floating mb-4">
-                            <input asp-for="Email" class="form-control" placeholder="Email" />
+                            <input asp-for="Email" type="email" class="form-control" placeholder="Email" />
                             <label asp-for="Email">Email</label>
                             <span asp-validation-for="Email" class="text-danger small"></span>
                         </div>
@@ -45,14 +48,40 @@
                                 <option value="Teacher">Teacher</option>
                                 <option value="Admin">Admin</option>
                             </select>
+                            <span asp-validation-for="Role" class="text-danger small"></span>
+                        </div>
+
+                        <!-- Department -->
+                        <!-- Department Dropdown -->
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">Department</label>
+                            <select asp-for="DepartmentPkId" class="form-select form-select-lg rounded-3">
+                                <option value="">-- Select Department --</option>
+                                @foreach (var d in departments)
+                                {
+                                    <option value="@d.DepartmentPkId">@d.DepartmentName</option>
+                                }
+                            </select>
+                        </div>
+
+                        <!-- Academic Year Dropdown -->
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">Academic Year</label>
+                            <select asp-for="AcademicYearPkId" class="form-select form-select-lg rounded-3">
+                                <option value="">-- Select Academic Year --</option>
+                                @foreach (var ay in academicYears)
+                                {
+                                    <option value="@ay.AcademicYearPkId">@ay.YearRange</option>
+                                }
+                            </select>
                         </div>
 
                         <!-- Buttons -->
                         <div class="d-flex justify-content-between mt-4">
                             <a asp-action="Index" asp-controller="Teacher" class="btn btn-light btn-lg rounded-pill px-4">
-                                Cancel
+                                <i class="bi bi-x-circle me-1"></i> Cancel
                             </a>
-                            <button type="submit" class="btn btn-lg rounded-pill px-5" style="background-color: #8C5DD1; color: #fff; border: none;">
+                            <button type="submit" class="btn btn-lg rounded-pill px-5 btn-purple">
                                 <i class="bi bi-save me-1"></i> Save Teacher
                             </button>
                         </div>
@@ -84,4 +113,17 @@
         background-color: #6b3fa0 !important;
         color: #fff !important;
     }
+
+    .btn-purple {
+        background-color: #8C5DD1 !important;
+        color: #fff !important;
+        border: none;
+        transition: background-color 0.3s ease, transform 0.2s ease;
+    }
+
+        .btn-purple:hover {
+            background-color: #6b3fa0 !important;
+            color: #fff !important;
+            transform: translateY(-2px);
+        }
 </style>

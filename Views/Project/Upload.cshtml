@@ -3,120 +3,135 @@
     ViewData["Title"] = "Upload Project";
     Layout = "_Layout";
 }
+
 <div>
     <partial name="_ProgressBarPartial" />
 </div>
+
 <div class="container my-5" style="max-width: 700px;">
-    <h4 class="text-primary mb-3">Upload Project to Teacher</h4>
-
-    <form asp-action="Upload" method="post" onsubmit="return confirm('Are you sure you want to upload the project?');">
-        @Html.AntiForgeryToken()
-        <input type="hidden" asp-for="ProjectPkId" />
-
-        <div class="mb-3">
-            <label class="form-label">Project Name</label>
-            <input class="form-control" value="@Model.ProjectName" readonly />
+    <div class="card shadow-sm rounded">
+        <div class="card-header text-white" style="background-color: #8c5dd1;">
+            <h4 class="mb-0">Upload Project to Teacher</h4>
         </div>
+        <div class="card-body">
+            <form asp-action="Upload" method="post" enctype="multipart/form-data"
+                  onsubmit="return confirm('Are you sure you want to upload the project?');">
+                @Html.AntiForgeryToken()
+                <input type="hidden" asp-for="ProjectPkId" />
 
-        <div class="mb-3">
-            <label class="form-label">Supervisor</label>
-            <input class="form-control" value="@Model.SupervisorName" readonly />
-        </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Project Name</label>
+                    <input class="form-control" value="@Model.ProjectName" readonly />
+                </div>
 
-        <!-- Team Members Section with Card Style -->
-        <div class="mb-3">
-            <label class="form-label">Team Members</label>
-            @if (Model.ProjectMembers != null && Model.ProjectMembers.Any())
-            {
-                <div class="row" id="teamMembersContainer">
-                    @foreach (var member in Model.ProjectMembers)
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Supervisor</label>
+                    <input class="form-control" value="@Model.SupervisorName" readonly />
+                </div>
+
+                <!-- Team Members Section -->
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Team Members</label>
+                    @if (Model.ProjectMembers != null && Model.ProjectMembers.Any())
                     {
-                        <div class="col-md-6 mb-3">
-                            <div class="team-member-card">
-                                <div class="member-avatar">
-                                    @member.StudentPk?.StudentName?[0]
-                                </div>
-                                <div class="member-info">
-                                    <h6>@member.StudentPk?.StudentName</h6>
-                                    <p class="text-muted small mb-1">@member.StudentPk.EmailPk?.RollNumber</p> <!-- ✅ FIXED LINE -->
-                                    <div class="d-flex align-items-center mb-2">
-                                        <span class="badge @(member.Role == "Leader" ? "bg-purple" : "bg-secondary") me-2">
-                                            @member.Role
-                                        </span>
-                                        <span class="text-muted small">
-                                            @member.StudentPk?.DepartmentPk?.DepartmentName
-                                        </span>
+                        <div class="row g-3" id="teamMembersContainer">
+                            @foreach (var member in Model.ProjectMembers)
+                            {
+                                <div class="col-md-6">
+                                    <div class="team-member-card">
+                                        <div class="member-avatar">
+                                            @member.StudentPk?.StudentName?[0]
+                                        </div>
+                                        <div class="member-info">
+                                            <h6>@member.StudentPk?.StudentName</h6>
+                                            <p class="text-muted small mb-1">@member.StudentPk?.EmailPk?.RollNumber</p>
+                                            <div class="d-flex align-items-center">
+                                                <span class="badge @(member.Role == "Leader" ? "bg-primary" : "bg-secondary") me-2">
+                                                    @member.Role
+                                                </span>
+                                                <span class="text-muted small">
+                                                    @member.StudentPk?.DepartmentPk?.DepartmentName
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div class="member-actions ms-2">
+                                            <a href="mailto:@member.StudentPk?.EmailPk" class="btn btn-sm btn-outline-primary" title="Email">
+                                                <i class="fas fa-envelope"></i>
+                                            </a>
+                                        </div>
                                     </div>
                                 </div>
-                                <div class="member-actions">
-                                    <a href="mailto:@member.StudentPk?.EmailPk" class="btn btn-sm btn-outline-purple me-1" title="Email">
-                                        <i class="fas fa-envelope"></i>
-                                    </a>
-                                </div>
-                            </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-4 text-muted">
+                            <i class="fas fa-users fa-2x mb-2"></i>
+                            <h5>No Team Members</h5>
+                            <p>No members assigned to this project</p>
                         </div>
                     }
                 </div>
-            }
-            else
-            {
-                <div class="text-center py-4">
-                    <div class="empty-state-icon">
-                        <i class="fas fa-users"></i>
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Project Type</label>
+                        <input class="form-control" value="@Model.ProjectTypePk?.TypeName" readonly />
                     </div>
-                    <h4 class="mt-4">No Team Members</h4>
-                    <p class="text-muted mb-4">No members assigned to this project</p>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Language</label>
+                        <input class="form-control" value="@Model.LanguagePk?.LanguageName" readonly />
+                    </div>
                 </div>
-            }
-        </div>
 
-        <div class="mb-3">
-            <label class="form-label">Project Type</label>
-            <input class="form-control" value="@Model.ProjectTypePk?.TypeName" readonly />
-        </div>
+                <div class="row g-3 mt-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Framework</label>
+                        <input class="form-control" value="@Model.FrameworkPk?.FrameworkName" readonly />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Company</label>
+                        <input class="form-control" value="@Model.CompanyPk?.CompanyName" readonly />
+                    </div>
+                </div>
 
-        <div class="mb-3">
-            <label class="form-label">Language</label>
-            <input class="form-control" value="@Model.LanguagePk?.LanguageName" readonly />
-        </div>
+                <div class="mb-3 mt-3">
+                    <label class="form-label fw-bold">Description</label>
+                    <textarea class="form-control" rows="4" readonly>@Model.Description</textarea>
+                </div>
 
-        <div class="mb-3">
-            <label class="form-label">Framework</label>
-            <input class="form-control" value="@Model.FrameworkPk?.FrameworkName" readonly />
-        </div>
-
-        <div class="mb-3">
-            <label class="form-label">Company</label>
-            <input class="form-control" value="@Model.CompanyPk?.CompanyName" readonly />
-        </div>
-
-        <div class="mb-3">
-            <label class="form-label">Description</label>
-            <textarea class="form-control" rows="4" readonly>@Model.Description</textarea>
-        </div>
-
-        <div class="mb-3">
-            <label class="form-label">Existing Files</label>
-            @if (Model.ProjectFiles != null && Model.ProjectFiles.Any())
-            {
-                <ul class="list-group">
-                    @foreach (var file in Model.ProjectFiles)
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Existing Files</label>
+                    @if (Model.ProjectFiles != null && Model.ProjectFiles.Any())
                     {
-                        <li class="list-group-item">
-                            <a href="@file.FilePath" target="_blank">@System.IO.Path.GetFileName(file.FilePath)</a>
-                        </li>
+                        <ul class="list-group">
+                            @foreach (var file in Model.ProjectFiles)
+                            {
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <a href="@file.FilePath" target="_blank">
+                                        @System.IO.Path.GetFileName(file.FilePath)
+                                    </a>
+                                    <span class="text-muted small">@((file.FileSize ?? 0) / 1024) KB</span>
+                                </li>
+                            }
+                        </ul>
                     }
-                </ul>
-            }
-            else
-            {
-                <p class="text-muted">No files uploaded yet.</p>
-            }
-        </div>
+                    else
+                    {
+                        <p class="text-muted">No files uploaded yet.</p>
+                    }
+                </div>
 
-        <button type="submit" class="btn btn-success">Submit to Teacher</button>
-        <a asp-action="Index" class="btn btn-secondary">Cancel</a>
-    </form>
+                <div class="d-flex justify-content-end gap-2 mt-4">
+                    <button type="submit" class="btn btn-primary" style="background-color: #8c5dd1; border: none;">
+                        Submit to Teacher
+                    </button>
+                    <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>
 
 <style>
@@ -125,13 +140,14 @@
         min-height: 100vh;
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
+
     .team-member-card {
         display: flex;
         align-items: center;
-        padding: 1rem;
+        padding: 0.75rem 1rem;
         background: white;
         border-radius: 8px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
         height: 100%;
     }
 
@@ -139,40 +155,41 @@
         width: 40px;
         height: 40px;
         border-radius: 50%;
-        background-color: #6c757d;
+        background-color: #8c5dd1;
         color: white;
         display: flex;
         align-items: center;
         justify-content: center;
-        margin-right: 1rem;
         font-weight: bold;
+        margin-right: 1rem;
+        font-size: 1.1rem;
     }
 
-    .member-info {
-        flex: 1;
+    .member-info h6 {
+        margin-bottom: 0.25rem;
+        font-size: 0.9rem;
     }
 
-        .member-info h6 {
-            margin-bottom: 0.25rem;
-            font-size: 0.9rem;
-        }
-
-    .bg-purple {
-        background-color: #6f42c1 !important;
+    .bg-primary {
+        background-color: #8c5dd1 !important;
     }
 
-    .btn-outline-purple {
-        color: #6f42c1;
-        border-color: #6f42c1;
+    .btn-outline-primary {
+        color: #8c5dd1;
+        border-color: #8c5dd1;
     }
 
-        .btn-outline-purple:hover {
+        .btn-outline-primary:hover {
             color: white;
-            background-color: #6f42c1;
+            background-color: #8c5dd1;
         }
 
     .empty-state-icon {
         font-size: 3rem;
         color: #dee2e6;
+    }
+
+    ul.list-group li a {
+        text-decoration: none;
     }
 </style>

@@ -44,10 +44,25 @@
                         <input asp-for="ProjectName" class="form-control" style="border-radius: 0.5rem;" required />
                         <span asp-validation-for="ProjectName" class="text-danger small"></span>
                     </div>
-                    <div class="col-md-6">
+                    @* <div class="col-md-6">
                         <label asp-for="SupervisorName" class="form-label required"></label>
                         <input asp-for="SupervisorName" class="form-control" style="border-radius: 0.5rem;" required />
                         <span asp-validation-for="SupervisorName" class="text-danger small"></span>
+                    </div> *@
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold required">
+                            Supervisor Teacher
+                        </label>
+
+                        <!-- display only -->
+                        <input type="text"
+                               class="form-control"
+                               value="@ViewBag.SupervisorName"
+                               readonly
+                               style="border-radius: 0.5rem;" />
+
+                        <!-- real value for DB -->
+                        <input type="hidden" asp-for="TeacherId" />
                     </div>
                 </div>
 
@@ -105,12 +120,22 @@
                     </div>
 
                     <div class="col-md-6">
-                        <label asp-for="CompanyPkId" class="form-label">Company</label>
-                        <select asp-for="CompanyPkId" id="CompanyDropdown" class="form-select" asp-items="ViewBag.Companies" style="border-radius: 0.5rem;">
-                            <option value="">-- Select Company --</option>
-                            <option value="0">+ Create New Company</option>
-                        </select>
+                        <label class="form-label">Company</label>
+                        <div class="input-group">
+                            <!-- readonly company name -->
+                            <input type="text" class="form-control" value="@ViewBag.CompanyName" readonly />
+
+                            <!-- info icon -->
+                            <span class="input-group-text" id="companyInfoIcon" style="cursor: pointer; background-color: #8c5dd1; color: white;">
+                                <i class="fas fa-info-circle"></i>
+                            </span>
+                        </div>
+
+                        <!-- hidden field for CompanyPkId -->
+                        <input type="hidden" asp-for="CompanyPkId" />
                     </div>
+
+
                     @* <div class="col-md-6">
                         <label asp-for="Company_pkId" class="form-label">Company</label>
                         <div class="input-group">
@@ -173,7 +198,8 @@
                 <h6 class="mb-3 pb-2 border-bottom" style="color: #8c5dd1;">
                     <i class="fas fa-file-upload me-2"></i>Project Files
                 </h6>
-                <div class="file-upload-area p-4 text-center" style="background-color: white; border: 2px dashed #d1c4e9; border-radius: 0.5rem;">
+                <div class="file-upload-area p-4 text-center"
+                     style="background-color: white; border: 2px dashed #d1c4e9; border-radius: 0.5rem;">
                     <i class="fas fa-cloud-upload-alt mb-3" style="font-size: 2rem; color: #8c5dd1;"></i>
                     <p class="mb-2">Drag & drop files here or click to browse</p>
                     <input type="file" name="projectFiles" multiple class="form-control d-none" id="fileInput" />
@@ -181,7 +207,7 @@
                         <i class="fas fa-folder-open me-2"></i>Select Files
                     </label>
                     <div id="fileList" class="mt-3 small text-muted"></div>
-                    <small class="form-text text-muted">Max 10 files, 5MB each (PDF, DOCX, ZIP, RAR)</small>
+                    <small class="form-text text-muted">Max 10 files, 100MB total (PDF, DOCX, ZIP, RAR)</small>
                 </div>
             </div>
 
@@ -470,6 +496,18 @@
     @* <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script> *@
     <script src="~/lib/sweetalert2/sweetalert2.min.js"></script>
     <script>
+
+
+             document.getElementById('companyInfoIcon').addEventListener('click', function() {
+            const infoBox = document.getElementById('companyInfo');
+            if (infoBox.style.display === 'none' || infoBox.style.display === '') {
+                infoBox.style.display = 'block';
+            } else {
+                infoBox.style.display = 'none';
+            }
+        });
+
+
         $(function () {
             // Framework dropdown population based on language
             $('#LanguageDropdown').change(function () {
@@ -655,5 +693,44 @@
             }
         });
         //Date????
+
+
+
+                const fileInput = document.getElementById('fileInput');
+        const fileList = document.getElementById('fileList');
+        const maxFiles = 10;
+        const maxSizeMB = 100;
+
+        fileInput.addEventListener('change', function () {
+            const files = Array.from(this.files);
+            let totalSize = 0;
+            fileList.innerHTML = '';
+
+            if (files.length > maxFiles) {
+                alert(`You can upload a maximum of ${maxFiles} files.`);
+                fileInput.value = '';
+                return;
+            }
+
+            for (let file of files) {
+                const sizeMB = file.size / (1024 * 1024);
+                totalSize += sizeMB;
+                if (sizeMB > maxSizeMB) {
+                    alert(`File "${file.name}" is too large! Maximum allowed size is ${maxSizeMB}MB.`);
+                    fileInput.value = '';
+                    return;
+                }
+                const li = document.createElement('div');
+                li.textContent = `${file.name} (${sizeMB.toFixed(2)} MB)`;
+                fileList.appendChild(li);
+            }
+
+            if (totalSize > maxSizeMB) {
+                alert(`Total file size exceeds ${maxSizeMB}MB!`);
+                fileInput.value = '';
+                fileList.innerHTML = '';
+                return;
+            }
+        });
     </script>
 }

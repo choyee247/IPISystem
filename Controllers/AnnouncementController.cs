@@ -468,7 +468,7 @@ namespace ProjectManagementSystem.Controllers
                     ExpiryDate = a.ExpiryDate,
                     BlocksSubmissions = (bool)a.BlocksSubmissions,
                     FilePath = a.FilePath,
-                    AdminActivityLogId = a.AdminActivityLogId
+                    //AdminActivityLogId = a.AdminActivityLogId
                 })
                 .ToList();
 

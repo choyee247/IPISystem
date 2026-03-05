@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace ProjectManagementSystem.ViewComponents
 {
-    public class NotificationViewComponent : ViewComponent 
+    public class NotificationViewComponent : ViewComponent
     {
         private readonly PMSDbContext _context;
 
@@ -15,55 +15,42 @@ namespace ProjectManagementSystem.ViewComponents
         {
             _context = context;
         }
+
         public async Task<IViewComponentResult> InvokeAsync()
         {
-            // Get logged-in teacher id from session
             var userIdStr = HttpContext.Session.GetString("UserId");
             if (string.IsNullOrEmpty(userIdStr))
                 return View(new List<NotificationViewModel>());
 
             int teacherId = int.Parse(userIdStr);
 
-            var notifications = await _context.Notifications
+            // Fetch notifications for teacher's projects
+            var notificationsQuery = await _context.Notifications
                 .Include(n => n.ProjectPk)
-                .Where(n => n.UserId == teacherId && n.TeacherId == teacherId)  // ✅ Teacher-only filter
-                .Where(n => n.NotificationType == "ProjectSubmitted" && n.IsRead == false)
+                .Where(n => n.NotificationType == "ProjectSubmitted"
+                            && (n.IsReadByTeacher == false || n.IsReadByTeacher == null)
+                            && n.ProjectPk.TeacherId == teacherId)
                 .OrderByDescending(n => n.CreatedAt)
-                .Take(2)
+                .ToListAsync(); // bring to memory
+
+            // Group by ProjectId to avoid duplicates per project
+            var notifications = notificationsQuery
+                .GroupBy(n => n.ProjectPkId)
+                .Select(g => g.OrderByDescending(n => n.CreatedAt).First())
+                .Take(4)
                 .Select(n => new NotificationViewModel
                 {
                     Id = n.NotificationPkId,
-                    Message = n.Message,
-                    CreatedAt = (DateTime)n.CreatedAt,
+                    Message = n.Message ?? "",
+                    CreatedAt = n.CreatedAt ?? System.DateTime.Now,
                     ProjectId = n.ProjectPkId ?? 0,
                     ProjectName = n.ProjectPk != null ? n.ProjectPk.ProjectName : "No Project",
-                    IsRead = n.IsRead,
+                    IsReadByTeacher = n.IsReadByTeacher ?? false,
+                    IsDeletedByTeacher = n.IsDeletedByTeacher ?? false
                 })
-                .ToListAsync();
+                .ToList();
 
             return View(notifications);
         }
-
-        //public async Task<IViewComponentResult> InvokeAsync()
-        //{
-        //    var notifications = await _context.Notifications
-        //        .Include(n => n.ProjectPk)
-        //        .Where(n => n.IsRead==false)
-        //        .Where(n => n.NotificationType == "ProjectSubmitted" && n.IsRead == false)
-        //        .OrderByDescending(n => n.CreatedAt)
-        //        .Take(2)
-        //        .Select(n => new NotificationViewModel
-        //        {
-        //            Id = n.NotificationPkId,
-        //            Message = n.Message,
-        //            CreatedAt = (DateTime)n.CreatedAt, 
-        //            ProjectId = n.ProjectPkId ?? 0,         
-        //            ProjectName = n.ProjectPk != null ? n.ProjectPk.ProjectName : "No Project",
-        //            IsRead = n.IsRead,
-        //        })
-        //        .ToListAsync();
-
-        //    return View(notifications);
-        //}
     }
 }

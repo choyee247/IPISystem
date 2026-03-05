@@ -1,0 +1,107 @@
+﻿@using ProjectManagementSystem.DBModels
+@model Project
+@{
+    ViewData["Title"] = "Cancel Project";
+    Layout = "~/Views/Shared/_TeacherLayout.cshtml";
+}
+
+<style>
+    .cancel-container {
+        min-height: 85vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #f5f0ff, #ffffff);
+    }
+
+    .cancel-card {
+        width: 100%;
+        max-width: 600px;
+        border: none;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(140, 93, 209, 0.2);
+        overflow: hidden;
+    }
+
+    .cancel-header {
+        background-color: #8c5dd1;
+        color: white;
+        padding: 20px;
+        text-align: center;
+        font-size: 20px;
+        font-weight: 600;
+    }
+
+    .form-control:focus {
+        border-color: #8c5dd1;
+        box-shadow: 0 0 0 0.2rem rgba(140, 93, 209, 0.25);
+    }
+
+    .btn-cancel {
+        background-color: #8c5dd1;
+        color: white;
+        border-radius: 8px;
+        padding: 10px 20px;
+        transition: 0.3s ease;
+    }
+
+        .btn-cancel:hover {
+            background-color: #7447c1;
+            color: white;
+        }
+
+    .btn-outline-secondary {
+        border-radius: 8px;
+    }
+</style>
+
+<div class="cancel-container">
+    <div class="card cancel-card">
+
+        <div class="cancel-header">
+            Cancel Project
+        </div>
+
+        <div class="card-body p-4">
+
+            <form asp-action="Cancel"
+                  method="post"
+                  enctype="multipart/form-data">
+
+                <input type="hidden"
+                       name="ProjectPkId"
+                       value="@Model.ProjectPkId" />
+
+                <div class="mb-4">
+                    <label class="form-label fw-semibold">Reason for Cancellation</label>
+                    <textarea name="Reason"
+                              class="form-control"
+                              rows="4"
+                              placeholder="Please provide a reason..."
+                              required></textarea>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label fw-semibold">Attach Files (Optional)</label>
+                    <input type="file"
+                           name="Files"
+                           multiple
+                           class="form-control" />
+                </div>
+
+                <div class="d-flex justify-content-between">
+                    <a asp-action="Index" class="btn btn-outline-secondary">
+                        Back
+                    </a>
+
+                    <button type="submit"
+                            class="btn btn-cancel">
+                        Confirm Cancel
+                    </button>
+                </div>
+
+            </form>
+        </div>
+
+    </div>
+</div>

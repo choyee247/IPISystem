@@ -31,11 +31,15 @@ public partial class Student
 
     public string? ProfilePhotoUrl { get; set; }
 
+    public int? SupervisorTeacherId { get; set; }
+
+    public bool IsEmailSubscribed { get; set; }
+
     public virtual AcademicYear AcademicYearPk { get; set; } = null!;
 
-    public virtual ICollection<AuditLog> AuditLogs { get; set; } = new List<AuditLog>();
-
     public virtual StudentDepartment DepartmentPk { get; set; } = null!;
+
+    public virtual ICollection<DownloadRequest> DownloadRequests { get; set; } = new List<DownloadRequest>();
 
     public virtual Email EmailPk { get; set; } = null!;
 
@@ -50,4 +54,10 @@ public partial class Student
     public virtual ICollection<Project> ProjectStudentPks { get; set; } = new List<Project>();
 
     public virtual ICollection<Project> ProjectSubmittedByStudentPks { get; set; } = new List<Project>();
+
+    public virtual ICollection<StudentCompany> StudentCompanies { get; set; } = new List<StudentCompany>();
+
+    public virtual Teacher? SupervisorTeacher { get; set; }
+
+    public virtual ICollection<TeacherStudent> TeacherStudents { get; set; } = new List<TeacherStudent>();
 }

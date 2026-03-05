@@ -1,0 +1,318 @@
+﻿@model ProjectManagementSystem.Models.TeacherDetailViewModel
+@{
+    Layout = "_TeacherLayout";
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-9">
+
+            <div class="card modern-card shadow">
+
+                <!-- Header -->
+                <div class="card-header modern-header text-center">
+                    <h3 class="mb-0 fw-bold">@Model.FullName</h3>
+                    <small class="opacity-75">Teacher Details</small>
+                </div>
+
+                <div class="card-body p-5">
+
+                    <!-- Teacher Info -->
+                    <div class="section-box">
+                        <h5 class="section-title">Teacher Information</h5>
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label>Email</label>
+                                <div class="info-box">@Model.Email</div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label>Role</label>
+                                <div class="info-box">@Model.Role</div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label>Department</label>
+                                <div class="info-box">@Model.DepartmentName</div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label>Academic Year</label>
+                                <div class="info-box">@Model.AcademicYear</div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <!-- Assigned Students -->
+                    <div class="section-box mt-4">
+                        <h5 class="section-title">Assigned Students</h5>
+
+                        @if (Model.AssignedStudents.Any())
+                        {
+                            <ul class="list-group modern-list">
+                                @foreach (var s in Model.AssignedStudents)
+                                {
+                                    <li class="list-group-item">
+                                        <i class="bx bx-user me-2"></i>
+                                        @s.StudentName
+                                    </li>
+                                }
+                            </ul>
+                        }
+                        else
+                        {
+                            <div class="alert alert-light border">
+                                No students assigned
+                            </div>
+                        }
+                    </div>
+
+                    <!-- Student Project Roles -->
+                    <div class="section-box mt-4">
+                        <h5 class="section-title">Student Project Roles</h5>
+
+                        @if (Model.StudentProjectRoles.Any())
+                        {
+                            <div class="table-responsive">
+                                <table class="table modern-table align-middle">
+                                    <thead>
+                                        <tr>
+                                            <th>Student</th>
+                                            <th>Project</th>
+                                            <th class="text-center">Role</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var item in Model.StudentProjectRoles)
+                                        {
+                                            <tr>
+                                                <td>@item.StudentName</td>
+                                                <td>@item.ProjectName</td>
+                                                <td class="text-center">
+
+                                                    @if (item.Role == "Leader")
+                                                    {
+                                                        <span class="badge badge-leader">
+                                                            Leader
+                                                        </span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="badge badge-member">
+                                                            Member
+                                                        </span>
+                                                    }
+
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="alert alert-light border">
+                                No projects found
+                            </div>
+                        }
+                    </div>
+
+                    <!-- Companies -->
+                    <div class="section-box mt-4">
+                        <h5 class="section-title">Assigned Companies</h5>
+
+                        @if (Model.Companies.Any())
+                        {
+                            <ul class="list-group modern-list">
+                                @foreach (var c in Model.Companies)
+                                {
+                                    <li class="list-group-item">
+                                        <i class="bx bx-buildings me-2"></i>
+                                        @c.CompanyName
+                                    </li>
+                                }
+                            </ul>
+                        }
+                        else
+                        {
+                            <div class="alert alert-light border">
+                                No companies assigned
+                            </div>
+                        }
+                    </div>
+
+                    <!-- Student Company Assignment -->
+                    <div class="section-box mt-4">
+                        <h5 class="section-title">Student Company Assignment</h5>
+
+                        @if (Model.StudentCompanyAssignments.Any())
+                        {
+                            <table class="table modern-table">
+                                <thead>
+                                    <tr>
+                                        <th>Student</th>
+                                        <th>Company</th>
+                                        <th width="120">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var item in Model.StudentCompanyAssignments)
+                                    {
+                                        <tr>
+                                            <td>@item.StudentName</td>
+
+                                            <td>
+                                                @if (!string.IsNullOrEmpty(item.CompanyName))
+                                                {
+                                                    <span class="badge badge-company">
+                                                        @item.CompanyName
+                                                    </span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-secondary">
+                                                        Not Assigned
+                                                    </span>
+                                                }
+                                            </td>
+
+                                            <td>
+                                                <a asp-action="AssignCompany"
+                                                   asp-route-studentId="@item.StudentId"
+                                                   asp-route-teacherId="@Model.TeacherId"
+                                                   class="btn btn-sm btn-purple">
+                                                    Assign
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        }
+                    </div>
+
+                    <!-- Buttons -->
+                    <div class="text-end mt-4">
+
+                        <a asp-action="Index"
+                           class="btn btn-outline-secondary rounded-pill px-4">
+                            Back
+                        </a>
+
+                        <a asp-action="AssignStudents"
+                           asp-route-teacherId="@Model.TeacherId"
+                           class="btn btn-purple rounded-pill px-4">
+                            Assign Students
+                        </a>
+
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<style>
+
+    :root {
+        --main: #8C5DD1;
+        --main-dark: #6f46b5;
+        --soft: #f4effc;
+    }
+
+    /* Card */
+
+    .modern-card {
+        border: none;
+        border-radius: 20px;
+        overflow: hidden;
+    }
+
+    /* Header */
+
+    .modern-header {
+        background: linear-gradient(135deg,#8C5DD1,#6f46b5);
+        color: white;
+        padding: 25px;
+    }
+
+    /* Sections */
+
+    .section-box {
+        background: #faf9ff;
+        padding: 25px;
+        border-radius: 12px;
+        border: 1px solid #eee;
+    }
+
+    .section-title {
+        font-weight: 600;
+        margin-bottom: 20px;
+        color: #444;
+    }
+
+    /* Info Box */
+
+    .info-box {
+        background: white;
+        border: 1px solid #eee;
+        padding: 10px 12px;
+        border-radius: 8px;
+    }
+
+    /* Tables */
+
+    .modern-table thead {
+        background: var(--main);
+        color: white;
+    }
+
+    .modern-table {
+        border-radius: 10px;
+        overflow: hidden;
+    }
+
+    /* Badges */
+
+    .badge-leader {
+        background: #28a745;
+    }
+
+    .badge-member {
+        background: var(--main);
+    }
+
+    .badge-company {
+        background: #8C5DD1;
+    }
+
+    /* Buttons */
+
+    .btn-purple {
+        background: var(--main);
+        color: white;
+        border: none;
+    }
+
+        .btn-purple:hover {
+            background: var(--main-dark);
+            color: white;
+        }
+
+    /* Lists */
+
+    .modern-list .list-group-item {
+        border: none;
+        border-bottom: 1px solid #eee;
+    }
+
+        .modern-list .list-group-item i {
+            color: var(--main);
+        }
+
+</style>

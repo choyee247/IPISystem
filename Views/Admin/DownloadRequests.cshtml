@@ -1,0 +1,183 @@
+﻿@model List<ProjectManagementSystem.DBModels.DownloadRequest>
+@{
+    Layout = "_TeacherLayout";
+}
+
+<style>
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    /* Table container with horizontal scroll */
+    .table-card {
+        padding: 20px;
+        overflow-x: auto; /* allow horizontal scroll */
+    }
+
+    table {
+        width: 100%;
+        min-width: 900px; /* ensure scroll if screen too small */
+        border-collapse: separate;
+        border-spacing: 0 10px;
+    }
+
+    thead tr {
+        background-color: #8c5dd1;
+        color: white;
+        border-radius: 12px;
+    }
+
+    thead th {
+        padding: 12px 15px;
+        text-align: left;
+        white-space: nowrap; /* prevent header text wrap */
+    }
+
+    tbody tr {
+        background-color: white;
+        transition: transform 0.2s, box-shadow 0.2s;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(140, 93, 209, 0.08);
+    }
+
+        tbody tr:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(140, 93, 209, 0.2);
+        }
+
+    tbody td {
+        padding: 12px 15px;
+        vertical-align: middle;
+        white-space: nowrap; /* prevent cell wrap */
+    }
+
+    /* Badges */
+    .badge-approved {
+        background-color: #8c5dd1;
+        color: white;
+        border-radius: 12px;
+        padding: 4px 10px;
+        font-size: 0.85rem;
+        font-weight: 500;
+    }
+
+    .badge-blocked {
+        background-color: #ff4d4d;
+        color: white;
+        border-radius: 12px;
+        padding: 4px 10px;
+        font-size: 0.85rem;
+        font-weight: 500;
+    }
+
+    .badge-pending {
+        background-color: #ffe599;
+        color: #8c5dd1;
+        border-radius: 12px;
+        padding: 4px 10px;
+        font-size: 0.85rem;
+        font-weight: 500;
+    }
+
+    /* Buttons */
+    .btn-approve, .btn-block {
+        border-radius: 8px;
+        padding: 6px 12px;
+        font-size: 0.85rem;
+        font-weight: 500;
+        border: none;
+        transition: background-color 0.3s;
+        white-space: nowrap;
+    }
+
+    .btn-approve {
+        background-color: #8c5dd1;
+        color: white;
+    }
+
+        .btn-approve:hover {
+            background-color: #6f45a3;
+        }
+
+    .btn-block {
+        background-color: #ff4d4d;
+        color: white;
+    }
+
+        .btn-block:hover {
+            background-color: #cc3a3a;
+        }
+
+    /* Mobile card layout with scroll fallback */
+    @@media (max-width: 768px) {
+        .table-card
+
+    {
+        overflow-x: auto;
+    }
+
+    table {
+        min-width: 900px; /* keep scrollable */
+    }
+
+    }
+</style>
+
+<div class="table-card">
+    <h3 style="color:#8c5dd1; margin-bottom:15px;">Pending Download Requests</h3> <!-- Table Title -->
+    <table>
+        <thead>
+            <tr>
+                <th>No.</th>
+                <th>File</th>
+                <th>Project</th>
+                <th>Company</th>
+                <th>Student Name</th>
+                <th>Roll Number</th>
+                <th>Year</th>
+                <th>Reason</th>
+                <th>Status</th>
+                <th>Download Count</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            @{
+                int rowNo = 1;
+            }
+            @foreach (var r in Model)
+            {
+                <tr>
+                    <td>@rowNo</td>
+                    <td>@r.ProjectFilePk.FilePath</td>
+                    <td>@r.ProjectFilePk.ProjectPk.ProjectName</td>
+                    <td>@r.ProjectFilePk.ProjectPk.CompanyPk?.CompanyName</td>
+                    <td>@r.StudentName</td>
+                    <td>@r.RollNumber</td>
+                    <td>@r.Year</td>
+                    <td>@r.Reason</td>
+                    <td>
+                        @if (r.IsBlocked == true)
+                        {
+                            <span class="badge badge-blocked">Blocked</span>
+                        }
+                        else if (r.IsApproved == true)
+                        {
+                            <span class="badge badge-approved">Approved</span>
+                        }
+                        else
+                        {
+                            <span class="badge badge-pending">Pending</span>
+                        }
+                    </td>
+                    <td>@(r.DownloadTransactions?.Count() ?? 0) times</td>
+                    <td>
+                        <a asp-action="ApproveRequest" asp-route-id="@r.DownloadRequestPkId" class="btn btn-approve btn-sm">Approve</a>
+                        <a asp-action="BlockRequest" asp-route-id="@r.DownloadRequestPkId" class="btn btn-block btn-sm">Block</a>
+                    </td>
+                </tr>
+                rowNo++;
+            }
+        </tbody>
+    </table>
+</div>

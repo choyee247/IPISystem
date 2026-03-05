@@ -454,7 +454,11 @@
                     data-name="@Model.ProjectName">
                 <i class="fas fa-check"></i> Approve Project
             </button>
-
+              <a asp-action="Cancel"
+       asp-route-id="@Model.ProjectPkId"
+       class="btn btn-warning">
+        Request Revision
+    </a>
             <button type="button" class="btn-reject"
                     data-id="@Model.ProjectPkId"
                     data-name="@Model.ProjectName">

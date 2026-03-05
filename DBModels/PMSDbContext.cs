@@ -17,29 +17,15 @@ public partial class PMSDbContext : DbContext
 
     public virtual DbSet<AcademicYear> AcademicYears { get; set; }
 
-    public virtual DbSet<AdminActivityLog> AdminActivityLogs { get; set; }
-
     public virtual DbSet<Announcement> Announcements { get; set; }
-
-    public virtual DbSet<AspNetRole> AspNetRoles { get; set; }
-
-    public virtual DbSet<AspNetRoleClaim> AspNetRoleClaims { get; set; }
-
-    public virtual DbSet<AspNetUser> AspNetUsers { get; set; }
-
-    public virtual DbSet<AspNetUserClaim> AspNetUserClaims { get; set; }
-
-    public virtual DbSet<AspNetUserLogin> AspNetUserLogins { get; set; }
-
-    public virtual DbSet<AspNetUserRole> AspNetUserRoles { get; set; }
-
-    public virtual DbSet<AspNetUserToken> AspNetUserTokens { get; set; }
-
-    public virtual DbSet<AuditLog> AuditLogs { get; set; }
 
     public virtual DbSet<City> Cities { get; set; }
 
     public virtual DbSet<Company> Companies { get; set; }
+
+    public virtual DbSet<DownloadRequest> DownloadRequests { get; set; }
+
+    public virtual DbSet<DownloadTransaction> DownloadTransactions { get; set; }
 
     public virtual DbSet<Email> Emails { get; set; }
 
@@ -65,12 +51,18 @@ public partial class PMSDbContext : DbContext
 
     public virtual DbSet<Student> Students { get; set; }
 
+    public virtual DbSet<StudentCompany> StudentCompanies { get; set; }
+
     public virtual DbSet<StudentDepartment> StudentDepartments { get; set; }
 
     public virtual DbSet<Teacher> Teachers { get; set; }
 
+    public virtual DbSet<TeacherCompany> TeacherCompanies { get; set; }
+
+    public virtual DbSet<TeacherStudent> TeacherStudents { get; set; }
+
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
+//#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
         => optionsBuilder.UseSqlServer("Server=203.81.89.218; Database=InternPMS; User Id=internadmin; Password=intern@dmin123;Trust Server Certificate=true");
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -91,79 +83,6 @@ public partial class PMSDbContext : DbContext
             entity.Property(e => e.Message).HasMaxLength(1000);
             entity.Property(e => e.StartDate).HasColumnType("datetime");
             entity.Property(e => e.Title).HasMaxLength(200);
-
-            entity.HasOne(d => d.AdminActivityLog).WithMany(p => p.Announcements)
-                .HasForeignKey(d => d.AdminActivityLogId)
-                .OnDelete(DeleteBehavior.SetNull);
-        });
-
-        modelBuilder.Entity<AspNetRole>(entity =>
-        {
-            entity.Property(e => e.Name).HasMaxLength(256);
-            entity.Property(e => e.NormalizedName).HasMaxLength(256);
-        });
-
-        modelBuilder.Entity<AspNetRoleClaim>(entity =>
-        {
-            entity.Property(e => e.RoleId).HasMaxLength(450);
-
-            entity.HasOne(d => d.Role).WithMany(p => p.AspNetRoleClaims).HasForeignKey(d => d.RoleId);
-        });
-
-        modelBuilder.Entity<AspNetUser>(entity =>
-        {
-            entity.Property(e => e.Email).HasMaxLength(256);
-            entity.Property(e => e.FullName).HasMaxLength(100);
-            entity.Property(e => e.IsUsingDefaultPassword).HasDefaultValue(true);
-            entity.Property(e => e.NormalizedEmail).HasMaxLength(256);
-            entity.Property(e => e.NormalizedUserName).HasMaxLength(256);
-            entity.Property(e => e.UserName).HasMaxLength(256);
-        });
-
-        modelBuilder.Entity<AspNetUserClaim>(entity =>
-        {
-            entity.Property(e => e.UserId).HasMaxLength(450);
-
-            entity.HasOne(d => d.User).WithMany(p => p.AspNetUserClaims).HasForeignKey(d => d.UserId);
-        });
-
-        modelBuilder.Entity<AspNetUserLogin>(entity =>
-        {
-            entity.HasKey(e => new { e.LoginProvider, e.ProviderKey });
-
-            entity.Property(e => e.UserId).HasMaxLength(450);
-
-            entity.HasOne(d => d.User).WithMany(p => p.AspNetUserLogins).HasForeignKey(d => d.UserId);
-        });
-
-        modelBuilder.Entity<AspNetUserRole>(entity =>
-        {
-            entity.Property(e => e.RoleId).HasMaxLength(450);
-            entity.Property(e => e.UserId).HasMaxLength(450);
-
-            entity.HasOne(d => d.Role).WithMany(p => p.AspNetUserRoles).HasForeignKey(d => d.RoleId);
-
-            entity.HasOne(d => d.User).WithMany(p => p.AspNetUserRoles).HasForeignKey(d => d.UserId);
-        });
-
-        modelBuilder.Entity<AspNetUserToken>(entity =>
-        {
-            entity.HasKey(e => new { e.UserId, e.LoginProvider, e.Name });
-
-            entity.HasOne(d => d.User).WithMany(p => p.AspNetUserTokens).HasForeignKey(d => d.UserId);
-        });
-
-        modelBuilder.Entity<AuditLog>(entity =>
-        {
-            entity.HasKey(e => e.LogPkId);
-
-            entity.Property(e => e.LogPkId).HasColumnName("Log_pkId");
-            entity.Property(e => e.Action).HasMaxLength(50);
-            entity.Property(e => e.PerformedBy).HasMaxLength(100);
-            entity.Property(e => e.StudentName).HasMaxLength(100);
-            entity.Property(e => e.StudentPkId).HasColumnName("Student_pkId");
-
-            entity.HasOne(d => d.StudentPk).WithMany(p => p.AuditLogs).HasForeignKey(d => d.StudentPkId);
         });
 
         modelBuilder.Entity<City>(entity =>
@@ -189,6 +108,51 @@ public partial class PMSDbContext : DbContext
             entity.Property(e => e.Incharge).HasMaxLength(100);
 
             entity.HasOne(d => d.CityPk).WithMany(p => p.Companies).HasForeignKey(d => d.CityPkId);
+
+            entity.HasOne(d => d.Teacher).WithMany(p => p.Companies)
+                .HasForeignKey(d => d.TeacherId)
+                .HasConstraintName("FK_Companies_Teachers");
+        });
+
+        modelBuilder.Entity<DownloadRequest>(entity =>
+        {
+            entity.HasKey(e => e.DownloadRequestPkId).HasName("PK__Download__317AD5A92E146706");
+
+            entity.Property(e => e.ApprovedDate).HasColumnType("datetime");
+            entity.Property(e => e.PhoneNumber).HasMaxLength(20);
+            entity.Property(e => e.RequestDate)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime");
+            entity.Property(e => e.RollNumber).HasMaxLength(50);
+            entity.Property(e => e.StudentName).HasMaxLength(100);
+            entity.Property(e => e.Year).HasMaxLength(50);
+
+            entity.HasOne(d => d.ApprovedByTeacher).WithMany(p => p.DownloadRequests)
+                .HasForeignKey(d => d.ApprovedByTeacherId)
+                .HasConstraintName("FK_DownloadRequests_Teachers");
+
+            entity.HasOne(d => d.ProjectFilePk).WithMany(p => p.DownloadRequests)
+                .HasForeignKey(d => d.ProjectFilePkId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_DownloadRequests_ProjectFiles");
+
+            entity.HasOne(d => d.StudentPk).WithMany(p => p.DownloadRequests)
+                .HasForeignKey(d => d.StudentPkId)
+                .HasConstraintName("FK_DownloadRequests_Students");
+        });
+
+        modelBuilder.Entity<DownloadTransaction>(entity =>
+        {
+            entity.HasKey(e => e.DownloadTransactionPkId).HasName("PK__Download__3E53D7C48FCD763A");
+
+            entity.Property(e => e.DownloadDate)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime");
+            entity.Property(e => e.IpAddress).HasMaxLength(50);
+
+            entity.HasOne(d => d.DownloadRequestPk).WithMany(p => p.DownloadTransactions)
+                .HasForeignKey(d => d.DownloadRequestPkId)
+                .HasConstraintName("FK_DownloadTransactions_DownloadRequests");
         });
 
         modelBuilder.Entity<Email>(entity =>
@@ -201,6 +165,8 @@ public partial class PMSDbContext : DbContext
             entity.Property(e => e.CreatedDate).HasDefaultValueSql("(sysdatetimeoffset())");
             entity.Property(e => e.EmailAddress).HasMaxLength(50);
             entity.Property(e => e.RollNumber).HasMaxLength(50);
+
+            entity.HasOne(d => d.AssignedTeacher).WithMany(p => p.Emails).HasForeignKey(d => d.AssignedTeacherId);
         });
 
         modelBuilder.Entity<Framework>(entity =>
@@ -294,6 +260,7 @@ public partial class PMSDbContext : DbContext
             entity.HasKey(e => e.ProjectPkId);
 
             entity.Property(e => e.ProjectPkId).HasColumnName("Project_pkId");
+            entity.Property(e => e.AcademicYearPkId).HasColumnName("AcademicYear_pkId");
             entity.Property(e => e.AdminComment).HasMaxLength(500);
             entity.Property(e => e.CompanyPkId).HasColumnName("Company_pkId");
             entity.Property(e => e.CreatedBy).HasMaxLength(100);
@@ -312,6 +279,10 @@ public partial class PMSDbContext : DbContext
             entity.Property(e => e.StudentPkId).HasColumnName("Student_pkId");
             entity.Property(e => e.SubmittedByStudentPkId).HasColumnName("SubmittedByStudent_pkId");
             entity.Property(e => e.SupervisorName).HasMaxLength(50);
+
+            entity.HasOne(d => d.AcademicYearPk).WithMany(p => p.Projects)
+                .HasForeignKey(d => d.AcademicYearPkId)
+                .HasConstraintName("FK_Projects_AcademicYears");
 
             entity.HasOne(d => d.CompanyPk).WithMany(p => p.Projects)
                 .HasForeignKey(d => d.CompanyPkId)
@@ -388,6 +359,7 @@ public partial class PMSDbContext : DbContext
             entity.Property(e => e.CreatedBy).HasMaxLength(50);
             entity.Property(e => e.DepartmentPkId).HasColumnName("Department_pkID");
             entity.Property(e => e.EmailPkId).HasColumnName("Email_PkId");
+            entity.Property(e => e.IsEmailSubscribed).HasDefaultValue(true);
             entity.Property(e => e.NrcPkId).HasColumnName("NRC_pkId");
             entity.Property(e => e.Nrcnumber).HasColumnName("NRCNumber");
             entity.Property(e => e.NrctypePkId).HasColumnName("NRCType_pkId");
@@ -409,6 +381,38 @@ public partial class PMSDbContext : DbContext
             entity.HasOne(d => d.NrctypePk).WithMany(p => p.Students)
                 .HasForeignKey(d => d.NrctypePkId)
                 .OnDelete(DeleteBehavior.ClientSetNull);
+
+            entity.HasOne(d => d.SupervisorTeacher).WithMany(p => p.Students)
+                .HasForeignKey(d => d.SupervisorTeacherId)
+                .OnDelete(DeleteBehavior.SetNull)
+                .HasConstraintName("FK_Students_SupervisorTeacher");
+        });
+
+        modelBuilder.Entity<StudentCompany>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK__StudentC__3214EC07A51F0513");
+
+            entity.ToTable("StudentCompany");
+
+            entity.Property(e => e.CreatedDate)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime");
+            entity.Property(e => e.IsActive).HasDefaultValue(true);
+
+            entity.HasOne(d => d.Company).WithMany(p => p.StudentCompanies)
+                .HasForeignKey(d => d.CompanyId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_StudentCompany_Companies");
+
+            entity.HasOne(d => d.Student).WithMany(p => p.StudentCompanies)
+                .HasForeignKey(d => d.StudentId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_StudentCompany_Students");
+
+            entity.HasOne(d => d.Teacher).WithMany(p => p.StudentCompanies)
+                .HasForeignKey(d => d.TeacherId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_StudentCompany_Teachers");
         });
 
         modelBuilder.Entity<StudentDepartment>(entity =>
@@ -435,9 +439,64 @@ public partial class PMSDbContext : DbContext
                 .HasMaxLength(20)
                 .HasDefaultValue("Teacher");
 
+            entity.HasOne(d => d.AcademicYearPk).WithMany(p => p.Teachers)
+                .HasForeignKey(d => d.AcademicYearPkId)
+                .HasConstraintName("FK_Teachers_AcademicYears");
+
             entity.HasOne(d => d.DepartmentPk).WithMany(p => p.Teachers)
                 .HasForeignKey(d => d.DepartmentPkId)
                 .HasConstraintName("FK_Teachers_StudentDepartments");
+        });
+
+        modelBuilder.Entity<TeacherCompany>(entity =>
+        {
+            entity.HasKey(e => e.TeacherCompanyId).HasName("PK__TeacherC__91BD19678559EEBC");
+
+            entity.ToTable("TeacherCompany");
+
+            entity.HasIndex(e => new { e.TeacherId, e.CompanyPkId }, "UQ_TeacherCompany").IsUnique();
+
+            entity.Property(e => e.AssignedDate)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime");
+            entity.Property(e => e.IsActive).HasDefaultValue(true);
+
+            entity.HasOne(d => d.CompanyPk).WithMany(p => p.TeacherCompanies)
+                .HasForeignKey(d => d.CompanyPkId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_TeacherCompany_Company");
+
+            entity.HasOne(d => d.Teacher).WithMany(p => p.TeacherCompanies)
+                .HasForeignKey(d => d.TeacherId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_TeacherCompany_Teacher");
+        });
+
+        modelBuilder.Entity<TeacherStudent>(entity =>
+        {
+            entity.HasKey(e => e.TeacherStudentPkId).HasName("PK__TeacherS__2F38BA5A25DD3F6D");
+
+            entity.ToTable("TeacherStudent");
+
+            entity.Property(e => e.AssignedDate)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime");
+            entity.Property(e => e.IsActive).HasDefaultValue(true);
+
+            entity.HasOne(d => d.AcademicYearPk).WithMany(p => p.TeacherStudents)
+                .HasForeignKey(d => d.AcademicYearPkId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_TeacherStudent_AcademicYear");
+
+            entity.HasOne(d => d.StudentPk).WithMany(p => p.TeacherStudents)
+                .HasForeignKey(d => d.StudentPkId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_TeacherStudent_Student");
+
+            entity.HasOne(d => d.Teacher).WithMany(p => p.TeacherStudents)
+                .HasForeignKey(d => d.TeacherId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_TeacherStudent_Teacher");
         });
 
         OnModelCreatingPartial(modelBuilder);

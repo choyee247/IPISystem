@@ -29,6 +29,14 @@ public partial class Notification
 
     public int? TeacherId { get; set; }
 
+    public bool? IsReadByTeacher { get; set; }
+
+    public bool? IsReadByAdmin { get; set; }
+
+    public bool? IsDeletedByTeacher { get; set; }
+
+    public bool? IsDeletedByAdmin { get; set; }
+
     public virtual Announcement? Announcement { get; set; }
 
     public virtual Project? ProjectPk { get; set; }

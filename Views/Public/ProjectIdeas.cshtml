@@ -1,64 +1,28 @@
 ﻿@model ProjectManagementSystem.ViewModels.ProjectIdeasViewModel
 @using Microsoft.AspNetCore.Mvc.Rendering
+@using ProjectManagementSystem.DBModels
 
 @{
     ViewData["Title"] = "Student Projects";
     Layout = "~/Views/Shared/_PublicLayout.cshtml";
 }
+@{
+    var requestStatuses = ViewBag.RequestStatuses as Dictionary<int, DownloadRequest>;
+    var projectRequest = ViewBag.ProjectRequest as DownloadRequest;
+}
 
-<style>   
-    .project-card {
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
-        cursor: pointer;
-        border-radius: 0.5rem;
-        background-color: #e4eefd; /* soft blue */
-        border: 1px solid #8c5dd1; /* purple */
-        box-shadow: 0 0.125rem 0.25rem rgb(0 0 0 / 0.07);
+<style>
+    /* --- General Page & Typography --- */
+    body {
+        font-family: "Segoe UI", sans-serif;
+        background-color: #f9f8ff;
     }
 
-        .project-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 30px rgba(140, 93, 209, 0.3);
-            z-index: 5;
-        }
-
-    .file-list li {
-        list-style: none;
-        margin-bottom: 6px;
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        font-size: 0.9rem;
+    h2 {
+        color: #4b0082;
     }
 
-    .file-icon {
-        font-size: 1.1rem;
-        color: #8c5dd1;
-        flex-shrink: 0;
-    }
-
-    .pagination .page-item.active .page-link {
-        background-color: #8c5dd1;
-        border-color: #8c5dd1;
-        color: #fff;
-    }
-
-    .pagination .page-link:hover {
-        background-color: #c8c6c1;
-        color: #212529;
-    }
-
-    .filter-select {
-        max-width: 320px;
-        border-color: #8c5dd1;
-        color: #8c5dd1;
-    }
-
-        .filter-select:focus {
-            border-color: #8c5dd1;
-            box-shadow: 0 0 0 0.2rem rgba(140, 93, 209, 0.25);
-        }
-
+    /* --- Header Stats --- */
     .header-flex {
         display: flex;
         flex-wrap: wrap;
@@ -71,12 +35,11 @@
     .small-dashboard-card {
         display: inline-flex;
         align-items: center;
-        background: #c8c6c1;
-        border-radius: 0.375rem;
-        padding: 0.3rem 0.7rem;
-        box-shadow: 0 0.125rem 0.25rem rgb(0 0 0 / 0.1);
-        min-width: 140px;
-        user-select: none;
+        background: #f3e9ff;
+        border-radius: 0.5rem;
+        padding: 0.4rem 0.8rem;
+        box-shadow: 0 2px 6px rgba(140, 93, 209, 0.15);
+        min-width: 150px;
         gap: 0.5rem;
         font-weight: 600;
         color: #4b0082;
@@ -84,36 +47,30 @@
     }
 
     .small-dashboard-icon {
-        font-size: 1.4rem;
-        opacity: 0.8;
-        color: #8c5dd1;
-        flex-shrink: 0;
-    }
-
-    .card-title {
-        font-size: 1.25rem;
+        font-size: 1.5rem;
         color: #8c5dd1;
     }
 
-    .card-subtitle {
-        font-size: 0.9rem;
-        color: #6b46c1;
+    /* --- Filters & Search --- */
+    .filter-select {
+        max-width: 320px;
+        border-color: #8c5dd1;
+        color: #8c5dd1;
     }
 
-    .card-text {
-        font-size: 0.95rem;
-        color: #1e293b;
+    .filter-select:focus {
+        border-color: #8c5dd1;
+        box-shadow: 0 0 0 0.2rem rgba(140, 93, 209, 0.25);
     }
 
-    .badge.bg-info {
-        background-color: #d5cfff !important;
-        color: #5a3fa3 !important;
-        font-weight: 600;
+    #searchInput {
+        border: 1px solid #8c5dd1;
+        border-radius: 0.375rem;
+        padding: 0.375rem 0.75rem;
     }
 
-    /* Search suggestion dropdown */
     #searchSuggestions {
-        background-color: white;
+        background-color: #fff;
         border: 1px solid #ccc;
         max-height: 200px;
         overflow-y: auto;
@@ -121,51 +78,146 @@
         position: absolute;
         z-index: 1050;
         width: 100%;
+        border-radius: 0 0 0.375rem 0.375rem;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
     }
-     ul.pagination {
-            display: flex;
-            flex-wrap: wrap;
-            list-style-type: none;
-            padding-left: 0;
-            margin: 0;
+
+    /* --- Project Cards --- */
+    .project-card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        cursor: pointer;
+        border-radius: 0.75rem;
+        background-color: #f8f6ff;
+        border: 1px solid #8c5dd1;
+        box-shadow: 0 4px 8px rgba(140, 93, 209, 0.1);
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        height: 100%;
+    }
+
+    .project-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 16px 40px rgba(140, 93, 209, 0.3);
+        z-index: 5;
+    }
+
+    .card-body {
+        padding: 1rem;
+    }
+
+    .card-title {
+        font-size: 1.3rem;
+        color: #8c5dd1;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+
+    .card-subtitle {
+        font-size: 0.95rem;
+        color: #6b46c1;
+        margin-bottom: 0.5rem;
+    }
+
+    .card-text {
+        font-size: 0.9rem;
+        color: #1e293b;
+        margin-bottom: 0.25rem;
+    }
+
+    .badge.bg-info {
+        background-color: #e6d8ff !important;
+        color: #5a3fa3 !important;
+        font-weight: 600;
+        font-size: 0.85rem;
+    }
+
+    .btn-primary, .btn-success, .btn-warning, .btn-outline-secondary {
+        border-radius: 0.375rem;
+    }
+
+    /* --- File List --- */
+    .file-list li {
+        list-style: none;
+        margin-bottom: 6px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.9rem;
+    }
+
+    .file-icon {
+        font-size: 1.1rem;
+        color: #8c5dd1;
+        flex-shrink: 0;
+    }
+
+    /* --- Pagination --- */
+    ul.pagination {
+        display: flex;
+        flex-wrap: wrap;
+        list-style-type: none;
+        padding-left: 0;
+        margin: 0;
+        gap: 6px;
+    }
+
+    ul.pagination li a,
+    ul.pagination li span {
+        display: block;
+        padding: 0.4rem 0.8rem;
+        color: #8c5dd1;
+        text-decoration: none;
+        border: 1px solid #8c5dd1;
+        border-radius: 0.375rem;
+        transition: all 0.2s ease;
+    }
+
+    ul.pagination li a:hover:not(.disabled) {
+        background-color: #8c5dd1;
+        color: white;
+        border-color: #8c5dd1;
+    }
+
+    ul.pagination li.active span {
+        background-color: #8c5dd1;
+        color: white;
+        border-color: #8c5dd1;
+    }
+
+    ul.pagination li.disabled span {
+        color: #a6a6a6;
+        border-color: #e0e0e0;
+    }
+
+    /* Responsive Grid */
+    @@media (min-width: 992px) {
+        .project-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
         }
+    }
 
-            ul.pagination li {
-                margin: 3px;
-            }
+    @@media (min-width: 768px) and (max-width: 991px) {
+        .project-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+        }
+    }
 
-                ul.pagination li a,
-                ul.pagination li span {
-                    display: block;
-                    padding: 0.375rem 0.75rem;
-                    color: #8c5dd1;
-                    text-decoration: none;
-                    border: 1px solid #8c5dd1;
-                    border-radius: 0.25rem;
-                    transition: background-color 0.2s, color 0.2s;
-                }
-
-                    ul.pagination li a:hover:not(.disabled) {
-                        background-color: #8c5dd1;
-                        color: white;
-                        border-color: #8c5dd1;
-                    }
-
-                ul.pagination li.active span {
-                    background-color: #8c5dd1;
-                    color: white;
-                    border-color: #8c5dd1;
-                }
-
-                ul.pagination li.disabled span {
-                    color: #6c757d;
-                    border-color: #dee2e6;
-                }
+    @@media (max-width: 767px) {
+        .project-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+    }
 </style>
 
 <div class="header-flex">
-    <h2 class="mb-0">@ViewData["Title"]</h2>
-
+    <h2>@ViewData["Title"]</h2>
     <div class="small-dashboard-card" title="Total Projects">
         <i class="bi bi-journal-code small-dashboard-icon"></i>
         <span>Total Projects: @Model.TotalProjects</span>
@@ -175,12 +227,21 @@
 <form method="get" asp-action="ProjectIdeas" id="filterForm" class="mb-4" autocomplete="off">
     <div class="row g-2 align-items-center position-relative">
         <div class="col-auto">
+            <select id="academicYearDropdown" name="academicYearId" class="form-select filter-select" onchange="submitFilterForm()">
+                <option value="">-- Filter by Academic Year --</option>
+                @foreach (var ay in Model.AcademicYears)
+                {
+                    <option value="@ay.Value" >@ay.Text</option>
+                }
+            </select>
+        </div>
+
+        <div class="col-auto">
             <select id="projectTypeDropdown" name="projectTypeId" class="form-select filter-select" onchange="loadLanguages()">
                 <option value="">-- Filter by Project Type --</option>
                 @foreach (var type in Model.ProjectTypes)
                 {
-                    var isSelected = type.Value == Model.SelectedProjectTypeId?.ToString();
-                    <option value="@type.Value" selected="@(isSelected ? "selected" : null)">@type.Text</option>
+                    <option value="@type.Value">@type.Text</option>
                 }
             </select>
         </div>
@@ -188,10 +249,9 @@
         <div class="col-auto">
             <select id="languageDropdown" name="languageId" class="form-select filter-select" onchange="submitFilterForm()">
                 <option value="">-- Filter by Language --</option>
-                @foreach (var type in Model.Languages)
+                @foreach (var lang in Model.Languages)
                 {
-                    var isSelected = type.Value == Model.SelectedLanguageId?.ToString();
-                    <option value="@type.Value" selected="@(isSelected ? "selected" : null)">@type.Text</option>
+                    <option value="@lang.Value">@lang.Text</option>
                 }
             </select>
         </div>
@@ -224,47 +284,60 @@
 }
 else
 {
-    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+    <div class="project-grid">
         @foreach (var project in Model.Projects)
         {
-            <div class="col">
-                <div class="card project-card h-100 border-primary shadow-sm">
-                    <div class="card-body d-flex flex-column">
-                        <h5 class="card-title fw-bold">@project.ProjectName</h5>
-                        <h6 class="card-subtitle mb-2">Supervisor: @project.SupervisorName</h6>
-                        <p class="card-text mb-2">
-                            <span class="badge bg-info text-dark">Type: @project.ProjectTypePk?.TypeName</span>
-                        </p>
-                        <p class="card-text mb-2">
-                            <span class="badge bg-info text-dark">Type: @project.LanguagePk.LanguageName</span>
-                        </p>
-                        @* <p class="card-text flex-grow-1 text-truncate" style="max-height: 4.5rem; overflow: hidden;">
-                            Description: @project.Description
-                        </p> *@
+            <div class="project-card">
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title">@project.ProjectName</h5>
+                    <h6 class="card-subtitle mb-2">Student: @project.StudentPk?.StudentName</h6>
 
-                        @if (project.ProjectFiles != null && project.ProjectFiles.Any())
-                        {
-                            <div class="mt-3">
-                                <strong>Files:</strong>
-                                <ul class="file-list ps-0 mt-1">
-                                    @foreach (var file in project.ProjectFiles)
-                                    {
-                                        <li>
-                                            <i class="bi bi-file-earmark-text file-icon"></i>
-                                            <a href="@file.FilePath" target="_blank" class="text-decoration-none">
-                                                @System.IO.Path.GetFileName(file.FilePath)
-                                            </a>
-                                            <small class="text-muted">(@file.FileType, @(file.FileSize / 1024) KB)</small>
-                                        </li>
-                                    }
-                                </ul>
-                            </div>
-                        }
-                        else
-                        {
-                            <p class="text-muted fst-italic mt-3">No files uploaded.</p>
-                        }
-                    </div>
+                    <p class="card-text mb-1"><span class="badge bg-info">Supervisor: @project.SupervisorName</span></p>
+                    <p class="card-text mb-1"><span class="badge bg-info">Academic Year: @project.StudentPk.AcademicYearPk.YearRange</span></p>
+                    <p class="card-text mb-1"><span class="badge bg-info">Project Type: @project.ProjectTypePk?.TypeName</span></p>
+                    <p class="card-text mb-1"><span class="badge bg-info">Language: @project.LanguagePk.LanguageName</span></p>
+                    <p class="card-text mb-1"><span class="badge bg-info">Company: @project.CompanyPk?.CompanyName</span></p>
+
+                    @if (project.ProjectFiles != null && project.ProjectFiles.Any())
+                    {
+                        <div class="mt-3">
+                            @if (ViewBag.ProjectRequestStatuses != null &&
+                           ViewBag.ProjectRequestStatuses.ContainsKey(project.ProjectPkId))
+                            {
+                                var req = ViewBag.ProjectRequestStatuses[project.ProjectPkId];
+
+                                if (req.IsBlocked)
+                                {
+                                    <span class="badge bg-danger">Blocked</span>
+                                }
+                                else if (req.IsApproved == true)
+                                {
+                                    <a asp-controller="Public"
+                                       asp-action="DownloadProject"
+                                       asp-route-requestId="@req.DownloadRequestPkId"
+                                       class="btn btn-success btn-sm">
+                                        Download
+                                    </a>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-warning text-dark">Pending</span>
+                                }
+                            }
+                            else
+                            {
+                                <a asp-action="RequestDownload"
+                                   asp-route-projectId="@project.ProjectPkId"
+                                   class="btn btn-warning btn-sm">
+                                    Request Download
+                                </a>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-muted fst-italic mt-3">No files uploaded.</p>
+                    }
                 </div>
             </div>
         }
@@ -276,35 +349,20 @@ else
     <nav aria-label="Page navigation" class="mt-4">
         <ul class="pagination justify-content-center flex-wrap gap-2">
             <li class="page-item @(Model.CurrentPage == 1 ? "disabled" : "")">
-                <a class="page-link"
-                   asp-action="ProjectIdeas"
-                   asp-route-projectTypeId="@Model.SelectedProjectTypeId"
-                   asp-route-languageId="@Model.SelectedLanguageId"
-                   asp-route-searchTerm="@Model.SearchTerm"
-                   asp-route-page="@(Model.CurrentPage - 1)">
-                    &laquo; 
+                <a class="page-link" asp-action="ProjectIdeas" asp-route-projectTypeId="@Model.SelectedProjectTypeId" asp-route-languageId="@Model.SelectedLanguageId" asp-route-searchTerm="@Model.SearchTerm" asp-route-page="@(Model.CurrentPage - 1)">
+                    &laquo;
                 </a>
             </li>
 
             @for (int i = 1; i <= Model.TotalPages; i++)
             {
                 <li class="page-item @(i == Model.CurrentPage ? "active" : "")" aria-current="@(i == Model.CurrentPage ? "page" : null)">
-                    <a class="page-link"
-                       asp-action="ProjectIdeas"
-                       asp-route-projectTypeId="@Model.SelectedProjectTypeId"
-                       asp-route-languageId="@Model.SelectedLanguageId"
-                       asp-route-searchTerm="@Model.SearchTerm"
-                       asp-route-page="@i">@i</a>
+                    <a class="page-link" asp-action="ProjectIdeas" asp-route-projectTypeId="@Model.SelectedProjectTypeId" asp-route-languageId="@Model.SelectedLanguageId" asp-route-searchTerm="@Model.SearchTerm" asp-route-page="@i">@i</a>
                 </li>
             }
 
             <li class="page-item @(Model.CurrentPage == Model.TotalPages ? "disabled" : "")">
-                <a class="page-link"
-                   asp-action="ProjectIdeas"
-                   asp-route-projectTypeId="@Model.SelectedProjectTypeId"
-                   asp-route-languageId="@Model.SelectedLanguageId"
-                   asp-route-searchTerm="@Model.SearchTerm"
-                   asp-route-page="@(Model.CurrentPage + 1)">
+                <a class="page-link" asp-action="ProjectIdeas" asp-route-projectTypeId="@Model.SelectedProjectTypeId" asp-route-languageId="@Model.SelectedLanguageId" asp-route-searchTerm="@Model.SearchTerm" asp-route-page="@(Model.CurrentPage + 1)">
                      &raquo;
                 </a>
             </li>
@@ -334,35 +392,26 @@ else
                         option.text = lang.text;
                         languageDropdown.appendChild(option);
                     });
-
-                    submitFilterForm(); // auto-submit
+                    submitFilterForm();
                 })
-                .catch(error => {
-                    console.error('Failed to load languages:', error);
-                });
+                .catch(error => console.error('Failed to load languages:', error));
         }
 
         function submitFilterForm() {
             document.getElementById("filterForm").submit();
         }
 
-        // Search suggestion logic
         const searchInput = document.getElementById("searchInput");
         const suggestionsBox = document.getElementById("searchSuggestions");
 
         searchInput.addEventListener("input", function () {
             const term = this.value.trim();
-
-            if (term.length < 2) {
-                suggestionsBox.innerHTML = "";
-                return;
-            }
+            if (term.length < 2) { suggestionsBox.innerHTML = ""; return; }
 
             fetch(`/Public/SearchSuggestions?term=${encodeURIComponent(term)}`)
                 .then(response => response.json())
                 .then(data => {
                     suggestionsBox.innerHTML = "";
-
                     data.forEach(item => {
                         const option = document.createElement("a");
                         option.classList.add("list-group-item", "list-group-item-action");
@@ -377,10 +426,7 @@ else
                         suggestionsBox.appendChild(option);
                     });
                 })
-                .catch(err => {
-                    console.error("Autocomplete failed:", err);
-                    suggestionsBox.innerHTML = "";
-                });
+                .catch(err => { console.error("Autocomplete failed:", err); suggestionsBox.innerHTML = ""; });
         });
 
         document.addEventListener("click", function (e) {
