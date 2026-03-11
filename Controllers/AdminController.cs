@@ -37,8 +37,31 @@ namespace ProjectManagementSystem.Controllers
 
         //    return View(model);
         //}
-        
-        public IActionResult Dashboard()
+
+        //public IActionResult Dashboard()
+        //{
+        //    // Only admin can access
+        //    var role = HttpContext.Session.GetString("UserRole");
+        //    if (role != "Admin")
+        //        return RedirectToAction("Login", "Admin");
+
+        //    ViewBag.Layout = "~/Views/Shared/_AdminLayout.cshtml";
+        //    ViewBag.FullName = HttpContext.Session.GetString("FullName") ?? "Admin";
+
+        //    var model = new AdminDashboardViewModel
+        //    {
+        //        TotalTeachers = _context.Teachers.Count(),
+        //        TotalProjects = _context.Projects.Count(),
+        //        RecentTeachers = _context.Teachers
+        //            .OrderByDescending(t => t.Id)
+        //            .Take(5)
+        //            .ToList()
+        //    };
+
+        //    return View(model);
+        //}
+
+        public IActionResult Dashboard(int? AcademicYearPkId)
         {
             // Only admin can access
             var role = HttpContext.Session.GetString("UserRole");
@@ -48,14 +71,69 @@ namespace ProjectManagementSystem.Controllers
             ViewBag.Layout = "~/Views/Shared/_AdminLayout.cshtml";
             ViewBag.FullName = HttpContext.Session.GetString("FullName") ?? "Admin";
 
+            // Queries
+            var teachersQuery = _context.Teachers.AsQueryable();
+            var studentsQuery = _context.Students.AsQueryable();
+            var projectsQuery = _context.Projects.AsQueryable();
+            var announcementsQuery = _context.Announcements.AsQueryable();
+
+            // Filter by AcademicYearPkId
+            if (AcademicYearPkId.HasValue)
+            {
+                teachersQuery = teachersQuery.Where(t => t.AcademicYearPkId == AcademicYearPkId.Value);
+                studentsQuery = studentsQuery.Where(s => s.AcademicYearPkId == AcademicYearPkId.Value);
+                projectsQuery = projectsQuery.Where(p => p.AcademicYearPkId == AcademicYearPkId.Value);
+            }
+
             var model = new AdminDashboardViewModel
             {
-                TotalTeachers = _context.Teachers.Count(),
-                TotalProjects = _context.Projects.Count(),
-                RecentTeachers = _context.Teachers
+                // Metrics
+                TotalTeachers = teachersQuery.Count(),
+                TotalStudents = studentsQuery.Count(),
+                TotalProjects = projectsQuery.Count(),
+                TotalAnnouncements = announcementsQuery.Count(),
+
+                // Recent items
+                RecentTeachers = teachersQuery
                     .OrderByDescending(t => t.Id)
                     .Take(5)
-                    .ToList()
+                     .Select(t => new TeacherViewModel
+                     {
+                         Id = t.Id,
+                         FullName = t.FullName,
+                         Email = t.Email,
+                         DepartmentName = t.DepartmentPk.DepartmentName ?? "",
+                         AcademicYearPkId = t.AcademicYearPkId,
+                         AcademicYearPk = t.AcademicYearPk,
+                         IsActive = t.IsActive
+                     })
+                    .ToList(),
+
+                RecentStudents = studentsQuery
+                    .OrderByDescending(s => s.StudentPkId)
+                    .Take(5)
+                     .Select(s => new StudentViewModel
+                     {
+                         Id = s.StudentPkId,
+                         FullName = s.StudentName,
+                         Email = s.EmailPk.EmailAddress,
+                         AcademicYearPkId = s.AcademicYearPkId,
+                         AcademicYearPk = s.AcademicYearPk,
+                         ProjectCount = _context.Projects.Count(p => p.StudentPkId == s.StudentPkId)
+                     })
+                    .ToList(),
+
+                RecentAnnouncements = announcementsQuery
+                    .OrderByDescending(a => a.AnnouncementId)
+                    .Take(5)
+                    .ToList(),
+
+                // Academic Years dropdown
+                AcademicYears = _context.AcademicYears
+                    .OrderByDescending(y => y.YearRange)
+                    .ToList(),
+
+                SelectedYearPkId = AcademicYearPkId
             };
 
             return View(model);

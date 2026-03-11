@@ -9,11 +9,11 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace ProjectManagementSystem.Controllers
 {
-    public class LanguageController : Controller
+    public class LanguageController : BaseStudentController
     {
         private readonly PMSDbContext _context;
 
-        public LanguageController(PMSDbContext context)
+        public LanguageController(PMSDbContext context) : base(context)
         {
             _context = context;
         }

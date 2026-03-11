@@ -7,11 +7,11 @@ using System.Threading.Tasks;
 
 namespace ProjectManagementSystem.Controllers
 {
-    public class NotificationsController : Controller
+    public class NotificationsController : BaseStudentController
     {
         private readonly PMSDbContext _context;
 
-        public NotificationsController(PMSDbContext context)
+        public NotificationsController(PMSDbContext context) : base(context) 
         {
             _context = context;
         }

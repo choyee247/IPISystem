@@ -21,6 +21,8 @@ public partial class Teacher
 
     public int? AcademicYearPkId { get; set; }
 
+    public bool IsActive { get; set; }
+
     public virtual AcademicYear? AcademicYearPk { get; set; }
 
     public virtual ICollection<Company> Companies { get; set; } = new List<Company>();

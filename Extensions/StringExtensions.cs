@@ -1,5 +1,4 @@
 ﻿
-    // Extensions/StringExtensions.cs
     namespace ProjectManagementSystem.Extensions
     {
         public static class StringExtensions

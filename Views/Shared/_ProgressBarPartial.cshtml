@@ -1,5 +1,18 @@
-﻿@{
+﻿@using ProjectManagementSystem.Extensions
+@{
     var currentStep = Context.Session.GetInt32("CurrentStep") ?? 1;
+    var completedSteps = Context.Session.GetObjectFromJson<List<int>>("CompletedSteps") ?? new List<int>();
+    var projectId = Context.Session.GetInt32("ProjectId");
+    string projectUrl;
+
+    if (projectId.HasValue && projectId.Value > 0)
+    {
+        projectUrl = Url.Action("Edit", "Project", new { id = projectId.Value });
+    }
+    else
+    {
+        projectUrl = Url.Action("Create", "Project");
+    }
 }
 
 <style>
@@ -183,15 +196,17 @@
 
         @foreach (var step in new[]{
         new { Step=1, Name="Login", Icon="fas fa-sign-in-alt", Url=Url.Action("Login","StudentLogin"), Tooltip="Student Login" },
-        new { Step=2, Name="Profile", Icon="fas fa-id-card", Url=Url.Action("Create","Student"), Tooltip="Create Student Profile" },
-        new { Step=3, Name="Project", Icon="fas fa-tasks", Url=Url.Action("Create","Project"), Tooltip="Create Project" },
-        new { Step=4, Name="Team", Icon="fas fa-users", Url=Url.Action("AddMember","Project"), Tooltip="Add Team Members" },
-        new { Step=5, Name="Submission", Icon="fas fa-file-upload", Url=Url.Action("Index","Project"), Tooltip="Submit Project" },
-        new { Step=6, Name="Logout", Icon="fas fa-sign-out-alt", Url=Url.Action("Logout","StudentLogin"), Tooltip="Logout" }
+        new { Step=2, Name="Profile", Icon="fas fa-id-card", Url=Url.Action("ProfileStep","Student"), Tooltip="Create Student Profile" },
+        new { Step=3, Name="Project", Icon="fas fa-tasks", Url=projectUrl, Tooltip="Create or Edit Project" },
+        new { Step=4, Name="Team", Icon="fas fa-users",
+        Url=Url.Action("AddMember","Project", new { projectId = projectId }),
+        Tooltip="Add Team Members" },
+        new { Step=5, Name="Submission", Icon="fas fa-file-upload", Url=Url.Action("Index","Project"), Tooltip="Submit Project" }
+        //new { Step=6, Name="Logout", Icon="fas fa-sign-out-alt", Url=Url.Action("Logout","StudentLogin"), Tooltip="Logout" }
         })
         {
             var isActive = step.Step == currentStep;
-            var isCompleted = step.Step < currentStep;
+            var isCompleted = completedSteps.Contains(step.Step); // ✅ Completed step check
             <div class="step-item @(isCompleted ? "completed" : "") @(isActive ? "active" : "")">
                 <a href="@step.Url">
                     <div class="step-indicator">

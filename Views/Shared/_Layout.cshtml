@@ -7,6 +7,7 @@
     var email = Context.Session.GetString("EmailAddress");
     var studentName = Context.Session.GetString("StudentName");
     var initials = !string.IsNullOrEmpty(studentName) ? studentName.Substring(0, 2).ToUpper() : "ST";
+    var layoutModel = ViewData["LayoutModel"] as LayoutViewModel;
 }
 <!DOCTYPE html>
 <html lang="en">
@@ -629,10 +630,10 @@
                   
                 </div>
             </li>
-            @if (ViewBag.IsLeader != null && ViewBag.IsLeader == true && ViewBag.LeaderProjectId != null)
+            @if (layoutModel != null && layoutModel.IsLeader && layoutModel.LeaderProjectId != null)
             {
                 <li>
-                    <a asp-controller="Project" asp-action="ManageLeader" asp-route-projectId="@ViewBag.LeaderProjectId">
+                    <a asp-controller="Project" asp-action="ManageLeader" asp-route-projectId="@layoutModel.LeaderProjectId">
                         <i class="fas fa-user-shield"></i>
                         <span>Change Role</span>
                     </a>

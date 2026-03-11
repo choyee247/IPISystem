@@ -5,11 +5,11 @@ using ProjectManagementSystem.Models;
 
 namespace ProjectManagementSystem.Controllers
 {
-    public class ProjectTypeController : Controller
+    public class ProjectTypeController : BaseStudentController
     {
         private readonly PMSDbContext _context;
 
-        public ProjectTypeController(PMSDbContext context)
+        public ProjectTypeController(PMSDbContext context) : base(context)
         {
             _context = context;
         }

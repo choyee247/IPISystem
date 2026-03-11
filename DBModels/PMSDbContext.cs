@@ -434,6 +434,7 @@ public partial class PMSDbContext : DbContext
                 .HasColumnType("datetime");
             entity.Property(e => e.Email).HasMaxLength(100);
             entity.Property(e => e.FullName).HasMaxLength(100);
+            entity.Property(e => e.IsActive).HasDefaultValue(true);
             entity.Property(e => e.PasswordHash).HasMaxLength(200);
             entity.Property(e => e.Role)
                 .HasMaxLength(20)

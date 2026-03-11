@@ -216,7 +216,17 @@ Account Team"
                         HttpContext.Session.SetString("EmailAddress", emailRecord.EmailAddress);
                     }
                 }
+                var completedSteps = HttpContext.Session.GetObjectFromJson<List<int>>("CompletedSteps") ?? new List<int>();
+
+                // Step 1 = OTP verification step
+                if (!completedSteps.Contains(1))
+                {
+                    completedSteps.Add(1);
+                    HttpContext.Session.SetObjectAsJson("CompletedSteps", completedSteps);
+                }
+
                 HttpContext.Session.SetInt32("CurrentStep", 2);
+
                 return RedirectToAction("ChooseRole");
             }
 

@@ -58,9 +58,11 @@
                     <td>@s.DepartmentName</td>
                     <td>@s.AcademicYear</td>
                     <td>
-                        @if (s.HasProject)
+                        @if (s.ProjectCount > 0)
                         {
-                            <span class="badge bg-success">Yes</span>
+                            <span class="badge bg-success" title="@string.Join(", ", s.ProjectTitles)">
+                                @s.ProjectCount Project@(s.ProjectCount > 0 ? "s" : "")
+                            </span>
                         }
                         else
                         {

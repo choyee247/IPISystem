@@ -73,7 +73,7 @@ app.UseStatusCodePagesWithReExecute("/Home/Error/{0}");
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Welcome}/{action=Index}/{id?}");
-    //pattern: "{controller=StudentLogin}/{action=Login}/{id?}");
+    //pattern: "{controller=Admin}/{action=Login}/{id?}");
 
 
 app.Run();

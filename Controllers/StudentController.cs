@@ -22,10 +22,10 @@ namespace ProjectManagementSystem.Controllers
 
         }
         public async Task<IActionResult> Index(
-      int? yearId,
-      string searchString = "",
-      int page = 1,
-      int pageSize = 20)
+    int? yearId,
+    string searchString = "",
+    int page = 1,
+    int pageSize = 20)
         {
             // 1️⃣ Logged-in user
             var userRole = HttpContext.Session.GetString("UserRole");
@@ -78,7 +78,7 @@ namespace ProjectManagementSystem.Controllers
 
             studentsQuery = studentsQuery.OrderBy(s => s.StudentName);
 
-            // 7️⃣ Project info
+            // 7️⃣ Project info WITHOUT ProjectTitles subquery
             var studentsWithProjects = await studentsQuery
                 .Select(s => new StudentWithProjectViewModel
                 {
@@ -89,17 +89,42 @@ namespace ProjectManagementSystem.Controllers
                     DepartmentName = s.DepartmentPk.DepartmentName,
                     AcademicYear = s.AcademicYearPk.YearRange,
                     HasProject =
-                    _context.Projects.Any(p =>
-                        (p.StudentPkId == s.StudentPkId) &&
-                        (p.IsDeleted == null || p.IsDeleted == false)
+                        _context.Projects.Any(p =>
+                            p.StudentPkId == s.StudentPkId &&
+                            (p.IsDeleted == null || p.IsDeleted == false))
+                        ||
+                        _context.ProjectMembers.Any(pm =>
+                            pm.StudentPkId == s.StudentPkId &&
+                            pm.IsDeleted == false),
+
+                    ProjectCount =
+                    _context.Projects
+                        .Where(p => p.StudentPkId == s.StudentPkId && (p.IsDeleted == null || p.IsDeleted == false))
+                        .Select(p => p.ProjectPkId)
+                    .Union(
+                        _context.ProjectMembers
+                            .Where(pm => pm.StudentPkId == s.StudentPkId && pm.IsDeleted == false)
+                            .Select(pm => pm.ProjectPkId)
                     )
-                    ||
-                    _context.ProjectMembers.Any(pm =>
-                        pm.StudentPkId == s.StudentPkId &&
-                        pm.IsDeleted == false
-                    )
-                                })
+                    .Count()
+                })
                 .ToPagedListAsync(page, pageSize);
+
+            // 8️⃣ Populate ProjectTitles separately (client-side)
+            foreach (var student in studentsWithProjects)
+            {
+                var ownProjects = await _context.Projects
+                    .Where(p => p.StudentPkId == student.StudentPkId && (p.IsDeleted == null || p.IsDeleted==false))
+                    .Select(p => p.ProjectName!)
+                    .ToListAsync();
+
+                var memberProjects = await _context.ProjectMembers
+                    .Where(pm => pm.StudentPkId == student.StudentPkId && pm.IsDeleted==false)
+                    .Select(pm => pm.ProjectPk.ProjectName!)
+                    .ToListAsync();
+
+                student.ProjectTitles = ownProjects.Union(memberProjects).ToList();
+            }
 
             ViewBag.SearchString = searchString;
 
@@ -282,12 +307,31 @@ namespace ProjectManagementSystem.Controllers
 
             HttpContext.Session.SetInt32("StudentPkId", model.Student.StudentPkId);
 
+            var completedSteps = HttpContext.Session.GetObjectFromJson<List<int>>("CompletedSteps") ?? new List<int>();
+
+            if (!completedSteps.Contains(2))
+            {
+                completedSteps.Add(2);
+            }
+
+            HttpContext.Session.SetObjectAsJson("CompletedSteps", completedSteps);
+            HttpContext.Session.SetInt32("CurrentStep", 3);
+
+
             if (!string.IsNullOrEmpty(nextAction) && nextAction == "CreateProject")
             {
                 return RedirectToAction("Create", "Project");
             }
-            HttpContext.Session.SetInt32("CurrentStep", 3);
+            // Step completion logic
+            //var completedSteps = HttpContext.Session.GetObjectFromJson<List<int>>("CompletedSteps") ?? new List<int>();
+            //if (!completedSteps.Contains(2)) // Step 2 = Profile creation
+            //{
+            //    completedSteps.Add(2);
+            //    HttpContext.Session.SetObjectAsJson("CompletedSteps", completedSteps);
+            //}
 
+            //// Move to next step
+            //HttpContext.Session.SetInt32("CurrentStep", 3); // Step 3 = Project creation
             return RedirectToAction("Dashboard", "Student");
         }
 
@@ -314,6 +358,41 @@ namespace ProjectManagementSystem.Controllers
                 .ToList();
 
             return Json(townships);
+        }
+        private void SetCompletedStepsFromDB()
+        {
+            var studentId = HttpContext.Session.GetInt32("StudentPkId");
+            if (studentId == null) return;
+
+            var completedSteps = new List<int>();
+
+            // Step 1: Login always completed
+            completedSteps.Add(1);
+
+            // Step 2: Profile exists?
+            var student = _context.Students.FirstOrDefault(s => s.StudentPkId == studentId && s.IsDeleted == false);
+            if (student != null) completedSteps.Add(2);
+
+            // Step 3: Project exists?
+            var project = _context.Projects.FirstOrDefault(p => p.StudentPkId == studentId && p.IsDeleted == false);
+            if (project != null) completedSteps.Add(3);
+
+            // Step 4: Team exists?
+            if (project != null)
+            {
+                var hasTeam = _context.ProjectMembers.Any(pm => pm.ProjectPkId == project.ProjectPkId && pm.IsDeleted == false);
+                if (hasTeam) completedSteps.Add(4);
+            }
+
+            // Step 5: Submission – optional, e.g., all projects submitted
+            // if (_context.Projects.Any(p => p.StudentPkId == studentId && p.Status == "Submitted")) completedSteps.Add(5);
+
+            HttpContext.Session.SetObjectAsJson("CompletedSteps", completedSteps);
+
+            // CurrentStep = first incomplete step
+            var currentStep = Enumerable.Range(1, 5).Except(completedSteps).FirstOrDefault();
+            if (currentStep == 0) currentStep = 5; // All completed → last step active
+            HttpContext.Session.SetInt32("CurrentStep", currentStep);
         }
         public async Task<IActionResult> Edit(int id)
         {
@@ -430,7 +509,25 @@ namespace ProjectManagementSystem.Controllers
                 return BadRequest($"An error occurred: {ex.Message}");
             }
         }
+        public IActionResult ProfileStep()
+        {
+            var rollNumber = HttpContext.Session.GetString("RollNumber");
 
+            if (string.IsNullOrEmpty(rollNumber))
+            {
+                return RedirectToAction("Login", "StudentLogin");
+            }
+
+            var student = _context.Students
+                .FirstOrDefault(s => s.EmailPk.RollNumber == rollNumber);
+
+            if (student == null)
+            {
+                return RedirectToAction("Create");
+            }
+
+            return RedirectToAction("Edit", new { id = student.StudentPkId });
+        }
         public async Task<IActionResult> Dashboard()
         {
            
@@ -465,8 +562,9 @@ namespace ProjectManagementSystem.Controllers
 
                 return RedirectToAction("Login", "StudentLogin");
                 }
+            SetCompletedStepsFromDB();
 
-                var projects = await _context.Projects
+            var projects = await _context.Projects
                     .Where(p => p.SubmittedByStudentPkId == studentId ||
                                p.ProjectMembers.Any(pm => pm.StudentPkId == studentId && pm.IsDeleted == false))
                     .Include(p => p.ProjectTypePk)

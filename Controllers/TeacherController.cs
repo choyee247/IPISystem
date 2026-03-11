@@ -36,57 +36,143 @@ namespace ProjectManagementSystem.Controllers
 
             int teacherId = int.Parse(HttpContext.Session.GetString("UserId")!);
 
-            // Assigned Students Count
-            var assignedStudentsCount = await _context.TeacherStudents
-                .CountAsync(ts => ts.TeacherId == teacherId && ts.IsActive);
+            var model = new TeacherDashboardViewModel();
 
-            // Projects Under Supervision Count
-            var projectsCount = await _context.Projects
-                .CountAsync(p => p.TeacherId == teacherId && (p.IsDeleted == null || p.IsDeleted == false));
+            model.TeacherName = HttpContext.Session.GetString("UserName");
 
-            // Companies Assigned to Teacher Count
-            var companiesCount = await _context.TeacherCompanies
-                .CountAsync(tc => tc.TeacherId == teacherId);
+            model.TotalStudents = await _context.TeacherStudents
+                .CountAsync(x => x.TeacherId == teacherId && x.IsActive);
 
+            model.TotalProjects = await _context.Projects
+                .CountAsync(x => x.TeacherId == teacherId);
+
+            model.TotalCompanies = await _context.TeacherCompanies
+                .CountAsync(x => x.TeacherId == teacherId);
+
+            model.RecentProjects = await _context.Projects
+                .Include(p => p.StudentPk)
+                .Include(p => p.ProjectMembers)
+                .Include(p => p.CompanyPk)
+                .Where(p => p.TeacherId == teacherId)
+                .OrderByDescending(p => p.ProjectPkId)
+                .Take(5)
+                .Select(p => new DBModels.RecentProjectVM
+                {
+                    Id = p.ProjectPkId,
+                    Title = p.ProjectName,
+                    MembersCount = p.ProjectMembers.Count(),
+                    //StudentName = p.StudentPk.StudentName,
+                    CompanyName = p.CompanyPk.CompanyName,
+                    //Progress = p.Progress,
+                    Status = p.Status
+                })
+                .ToListAsync();
+            model.AssignedStudents = await _context.TeacherStudents
+                .Include(ts => ts.StudentPk)
+                .Include(ts => ts.AcademicYearPk)
+                .Include(ts => ts.StudentPk.ProjectStudentPks)
+                .Where(ts => ts.TeacherId == teacherId && ts.IsActive)
+                .Select(ts => new AssignedStudentVM
+                {
+                    Id = ts.StudentPk.StudentPkId,
+                    Name = ts.StudentPk.StudentName,
+                    Email = ts.StudentPk.EmailPk.EmailAddress,
+                    RollNumber =ts.StudentPk.EmailPk.RollNumber, 
+                    YearRange=ts.AcademicYearPk.YearRange,
+                    //ProjectTitle = ts.StudentPk.ProjectStudentPks.FirstOrDefault().ProjectName,
+                    CompanyName = ts.StudentPk.ProjectStudentPks.FirstOrDefault().CompanyPk.CompanyName
+                    //LastActive = ts.StudentPk.CreatedBy.ToString("dd MMM yyyy")
+                })
+                .Take(5)
+                .ToListAsync();
+            model.Companies = await _context.TeacherCompanies
+                .Include(tc => tc.CompanyPk)
+                    .ThenInclude(c => c.Projects)
+                .Where(tc => tc.TeacherId == teacherId)
+                .Select(tc => new CompanyVM
+                {
+                    Id = tc.CompanyPk.CompanyPkId,
+                    Name = tc.CompanyPk.CompanyName,
+                    ProjectsCount = tc.CompanyPk.Projects.Count(),
+                    StudentsCount = tc.CompanyPk.Projects
+                        .SelectMany(p => p.ProjectMembers)
+                        .Count()
+                })
+                .Take(5)
+                .ToListAsync();
             ViewBag.FullName = HttpContext.Session.GetString("UserName") ?? "Teacher";
-            ViewBag.AssignedStudentsCount = assignedStudentsCount;
-            ViewBag.ProjectsCount = projectsCount;
-            ViewBag.CompaniesCount = companiesCount;
 
-            return View();
+            return View(model);
         }
-
         // ---------------------- INDEX ----------------------
         [HttpGet]
-        public async Task<IActionResult> Index(int page = 1)
+        public async Task<IActionResult> Index(
+      string searchTerm,
+      string roleFilter,
+      int? academicYearId,
+      int page = 1)
         {
             if (!IsLoggedIn())
                 return RedirectToAction("Login", "Teacher");
 
-            int pageSize = 3; // teachers per page
+            int pageSize = 3;
 
-            // Include Department & AcademicYear, and get assigned students count
             var query = _context.Teachers
                 .Include(t => t.DepartmentPk)
                 .Include(t => t.AcademicYearPk)
+                .AsQueryable();
+
+            // 🔎 Search
+            if (!string.IsNullOrEmpty(searchTerm))
+            {
+                query = query.Where(t =>
+                    t.FullName.Contains(searchTerm) ||
+                    t.Email.Contains(searchTerm));
+            }
+
+            // 🎭 Role filter
+            if (!string.IsNullOrEmpty(roleFilter) && roleFilter != "all")
+            {
+                query = query.Where(t => t.Role == roleFilter);
+            }
+
+            // 📅 Academic Year filter
+            if (academicYearId.HasValue)
+            {
+                query = query.Where(t => t.AcademicYearPkId == academicYearId);
+            }
+
+            // Teacher + Assigned Student Count
+            var teachersQuery = query
                 .Select(t => new
                 {
                     Teacher = t,
                     AssignedStudentsCount = _context.TeacherStudents
-                                                .Where(ts => ts.TeacherId == t.Id && ts.IsActive)
-                                                .Count()
+                        .Where(ts => ts.TeacherId == t.Id && ts.IsActive)
+                        .Count()
                 })
                 .OrderBy(t => t.Teacher.FullName);
 
-            int totalTeachers = await query.CountAsync();
+            int totalTeachers = await teachersQuery.CountAsync();
 
-            var teachersWithCount = await query
+            var teachersWithCount = await teachersQuery
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
                 .ToListAsync();
 
+            // Academic Year dropdown
+            ViewBag.AcademicYears = new SelectList(
+                await _context.AcademicYears.ToListAsync(),
+                "AcademicYearPkId",
+                "YearRange",
+                academicYearId
+            );
+
             ViewBag.CurrentPage = page;
             ViewBag.TotalPages = (int)Math.Ceiling(totalTeachers / (double)pageSize);
+
+            ViewBag.SearchTerm = searchTerm;
+            ViewBag.RoleFilter = roleFilter;
 
             return View(teachersWithCount.Select(x => new
             {

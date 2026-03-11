@@ -47,7 +47,8 @@
 
 <form asp-action="RequestDownload" method="post">
 
-    <input type="hidden" asp-for="ProjectFilePkId" />
+@*     <input type="hidden" asp-for="ProjectFilePkId" /> *@
+    <input type="hidden" asp-for="ProjectFilePkId" value="@Model.ProjectFilePkId" />
 
     <div class="mb-3">
         <label asp-for="StudentName">Name</label>

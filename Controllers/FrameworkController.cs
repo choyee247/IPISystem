@@ -7,11 +7,11 @@ using System.Linq;
 using System.Threading.Tasks;
 using X.PagedList;
 
-public class FrameworkController : Controller
+public class FrameworkController : BaseStudentController
 {
     private readonly PMSDbContext _context;
 
-    public FrameworkController(PMSDbContext context)
+    public FrameworkController(PMSDbContext context) : base(context)
     {
         _context = context;
     }

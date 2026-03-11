@@ -339,6 +339,16 @@ Project Management System
                 //}
             }
 
+            // Step 5 POST action (Project submission)
+            var completedSteps = HttpContext.Session.GetObjectFromJson<List<int>>("CompletedSteps") ?? new List<int>();
+
+            if (!completedSteps.Contains(5)) // Step 5 = Submission
+            {
+                completedSteps.Add(5);
+                HttpContext.Session.SetObjectAsJson("CompletedSteps", completedSteps);
+            }
+
+            // Move to next step = Step 6 (Logout)
             HttpContext.Session.SetInt32("CurrentStep", 6);
             TempData["Success"] = "Project submitted successfully and sent to teacher.";
             return RedirectToAction(nameof(Index));
@@ -491,24 +501,35 @@ Project Management System
 
             return View(project);
         }
-   
         [HttpGet]
-        public IActionResult AddMember(int projectId)
+        public IActionResult AddMember(int? projectId)
         {
             var rollNumber = HttpContext.Session.GetString("RollNumber");
             if (string.IsNullOrEmpty(rollNumber))
             {
                 return RedirectToAction("Login", "StudentLogin");
             }
+
+            if (projectId == null)
+            {
+                projectId = HttpContext.Session.GetInt32("ProjectId");
+            }
+
+            if (projectId == null)
+            {
+                //TempData["Error"] = "ProjectId not found.";
+                return RedirectToAction("Dashboard", "Student");
+            }
+
             HttpContext.Session.SetInt32("CurrentStep", 4);
+
             try
             {
-               
                 var project = _context.Projects
                     .Include(p => p.ProjectTypePk)
                     .Include(p => p.LanguagePk)
                     .Include(p => p.FrameworkPk)
-                    .FirstOrDefault(p => p.ProjectPkId == projectId);
+                    .FirstOrDefault(p => p.ProjectPkId == projectId.Value);
 
                 if (project == null)
                 {
@@ -518,7 +539,7 @@ Project Management System
 
                 var model = new AddMemberViewModel
                 {
-                    ProjectId = projectId,
+                    ProjectId = project.ProjectPkId,
                     ProjectName = project.ProjectName,
                     ProjectType = project.ProjectTypePk,
                     Language = project.LanguagePk,
@@ -529,7 +550,6 @@ Project Management System
             }
             catch (Exception ex)
             {
-                // Log the error
                 _logger.LogError(ex, "Error loading AddMember page");
                 TempData["Error"] = "An error occurred while loading the page.";
                 return RedirectToAction("Dashboard", "Student");
@@ -546,7 +566,17 @@ Project Management System
                 return RedirectToAction("Login", "StudentLogin");
             }
 
-            HttpContext.Session.SetInt32("CurrentStep", 5);
+            // Step 4 POST action (Team/Project Members added)
+            var completedSteps = HttpContext.Session.GetObjectFromJson<List<int>>("CompletedSteps") ?? new List<int>();
+
+            if (!completedSteps.Contains(4)) // Step 4 = Team creation/add members
+            {
+                completedSteps.Add(4);
+                HttpContext.Session.SetObjectAsJson("CompletedSteps", completedSteps);
+            }
+
+            // Move to next step
+            HttpContext.Session.SetInt32("CurrentStep", 5); // Step 5 = Submission
 
             // Find student by RollNumber and EmailAddress
             var student = await _context.Students
@@ -862,6 +892,7 @@ Project Management System
 
             _context.ProjectMembers.Add(projectMember);
             await _context.SaveChangesAsync();
+            HttpContext.Session.SetInt32("ProjectId", project.ProjectPkId);
 
             // 7️⃣ Save project files
             if (projectFiles != null && projectFiles.Any())
@@ -894,8 +925,18 @@ Project Management System
 
             // 8️⃣ Done
             TempData["Success"] = "Project created successfully.";
-            HttpContext.Session.SetInt32("CurrentStep", 4);
-            return RedirectToAction("Dashboard", "Student");
+            // Step 3 POST action (Project creation complete)
+            var completedSteps = HttpContext.Session.GetObjectFromJson<List<int>>("CompletedSteps") ?? new List<int>();
+
+            if (!completedSteps.Contains(3)) // Step 3 = Project creation
+            {
+                completedSteps.Add(3);
+                HttpContext.Session.SetObjectAsJson("CompletedSteps", completedSteps);
+            }
+
+            // Move to next step
+            HttpContext.Session.SetInt32("CurrentStep", 4); // Step 4 = Team creation/add members
+            return RedirectToAction("AddMember", "Project", new { projectId = project.ProjectPkId });
         }
 
 

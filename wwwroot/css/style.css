@@ -13,9 +13,11 @@ html {
 }
 
 body {
-    font-family: "Segoe UI", sans-serif;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #e4eefd);
     color: #333;
     line-height: 1.5;
+    min-height: 100vh;
     overflow-x: hidden;
 }
 
@@ -268,7 +270,7 @@ body.loaded .hero-image {
 
     .section h2 {
         font-size: 2.5rem;
-        color: #6c63ff;
+        /*color: #6c63ff;*/
         margin-bottom: 1rem;
         text-align: center;
     }
@@ -580,8 +582,9 @@ body.loaded .hero-image {
 #footer-alt {
     position: relative;
     /*color: #fff;*/
-    margin-top: 4rem;
-    background-color: #b39ddb}
+    /*margin-top: 4rem;*/
+    background-color: #f4f7ff;
+}
 
 .footer-overlay {
     position: absolute;
@@ -632,7 +635,7 @@ body.loaded .hero-image {
 }
 
 .footer-cats a {
-    color: #fff;
+    /*color: #fff;*/
     opacity: 0.9;
     transition: opacity 0.2s;
 }

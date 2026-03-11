@@ -1,37 +1,1016 @@
-﻿@{
+﻿@model ProjectManagementSystem.DBModels.TeacherDashboardViewModel
+@{
     Layout = "_TeacherLayout";
+    ViewData["Title"] = "Teacher Dashboard";
+    ViewData["PageTitle"] = "Teacher Overview";
+    ViewData["Breadcrumb"] = "Home / Teacher Dashboard";
 }
 
-<div class="container py-4">
-    <h2 class="fw-bold">Teacher Dashboard</h2>
-    <p>Welcome, @ViewBag.FullName 👋</p>
+<!-- Modern Teacher Dashboard Design -->
+<div class="dashboard-container">
 
-    <div class="row mt-4">
-        <div class="col-md-4">
-            <div class="card shadow-sm rounded-4 p-3 text-center">
-                <h6 class="fw-semibold">Assigned Students</h6>
-                <h3 class="fw-bold" style="color:#8C5DD1;">
-                    @ViewBag.AssignedStudentsCount
-                </h3>
+    <!-- Header Section with Gradient -->
+    <div class="dashboard-header mb-4">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <div class="welcome-section">
+                    <h1 class="display-6 fw-bold text-purple">
+                        <i class="bi bi-person-workspace me-2"></i>Teacher Dashboard
+                    </h1>
+                   @*  <div class="welcome-message mt-2">
+                        <span class="badge bg-soft-purple px-3 py-2">
+                            <i class="bi bi-calendar-check me-2"></i>
+                            @DateTime.Now.ToString("dddd, MMMM dd, yyyy")
+                        </span>
+                    </div> *@
+                </div>
             </div>
-        </div>
-
-        <div class="col-md-4">
-            <div class="card shadow-sm rounded-4 p-3 text-center">
-                <h6 class="fw-semibold">Projects Under Supervision</h6>
-                <h3 class="fw-bold text-success">
-                    @ViewBag.ProjectsCount
-                </h3>
-            </div>
-        </div>
-
-        <div class="col-md-4">
-            <div class="card shadow-sm rounded-4 p-3 text-center">
-                <h6 class="fw-semibold">Companies Assigned</h6>
-                <h3 class="fw-bold" style="color:#8C5DD1;">
-                    @ViewBag.CompaniesCount
-                </h3>
+            <div class="col-md-4">
+                <div class="teacher-profile-card float-md-end">
+                    <div class="d-flex align-items-center">
+                        <div class="profile-avatar bg-gradient-purple">
+                            @ViewBag.FullName?.Substring(0, 1)
+                        </div>
+                        <div class="ms-3">
+                            <h6 class="mb-0 fw-bold">Welcome back,</h6>
+                            <p class="mb-0 text-purple fw-semibold">@ViewBag.FullName</p>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
-</div>
+
+    <!-- Quick Stats Banner -->
+    <div class="stats-banner mb-4">
+        <div class="row g-3">
+            <div class="col-md-4">
+                <div class="stat-card modern-card h-100">
+                    <div class="stat-icon-wrapper bg-soft-purple">
+                        <i class="bi bi-people-fill text-purple"></i>
+                    </div>
+                    <div class="stat-content">
+                        <span class="stat-label">Assigned Students</span>
+                        <h3 class="stat-value">@Model.TotalStudents</h3>
+                       @*  <div class="stat-progress">
+                            <div class="progress" style="height: 5px;">
+                                <div class="progress-bar bg-purple" style="width: 75%"></div>
+                            </div>
+                            <small class="text-muted">75% of capacity</small>
+                        </div> *@
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stat-card modern-card h-100">
+                    <div class="stat-icon-wrapper bg-soft-purple">
+                        <i class="bbi bi-arrow-up-short text-purple"></i>
+                    </div>
+                    <div class="stat-content">
+                        <span class="stat-label">Projects Under Supervision</span>
+                        <h3 class="stat-value">@Model.TotalProjects</h3>
+                        @* <div class="stat-progress">
+                            <div class="progress" style="height: 5px;">
+                                <div class="progress-bar bg-purple" style="width: 60%"></div>
+                            </div>
+                            <small class="text-muted">60% active</small>
+                        </div> *@
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stat-card modern-card h-100">
+                    <div class="stat-icon-wrapper bg-soft-purple">
+                        <i class="bi bi-building-fill text-purple"></i>
+                    </div>
+                    <div class="stat-content">
+                        <span class="stat-label">Companies Assigned</span>
+                        <h3 class="stat-value">@Model.TotalCompanies</h3>
+                        @* <div class="stat-progress">
+                            <div class="progress" style="height: 5px;">
+                                <div class="progress-bar bg-purple" style="width: 45%"></div>
+                            </div>
+                            <small class="text-muted">45% partnered</small>
+                        </div> *@
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Dashboard Content -->
+    <div class="row g-4">
+        <!-- Left Column - Projects & Students -->
+        <div class="col-lg-8">
+            <!-- Recent Projects Section -->
+            <div class="glass-card mb-4">
+                <div class="card-header bg-transparent border-0 pt-4 px-4">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="bi bi-folder-symlink-fill text-purple me-2"></i>
+                            Recent Projects Under Supervision
+                        </h5>
+                        <a asp-controller="ProjectApproval" asp-action="Index" class="btn btn-sm btn-outline-purple">
+                            View All <i class="bi bi-arrow-right ms-1"></i>
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table modern-table mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Project</th>
+                                    <th>Project Member</th>
+                                    <th>Company</th>
+                                    @* <th>Progress</th> *@
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (Model.RecentProjects != null && Model.RecentProjects.Count > 0)
+                                {
+                                    foreach (var project in Model.RecentProjects)
+                                    {
+                                        <tr>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    @* <div class="project-icon bg-soft-purple me-2">
+                                                        <i class="bi bi-folder-text text-purple"></i>
+                                                    </div> *@
+                                                    <div>
+                                                        <h6 class="mb-0">@project.Title</h6>
+                                                        <small class="text-muted">ID: @project.Id</small>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-light text-dark">
+                                                    @project.MembersCount Students
+                                                </span>
+                                            </td>
+                                           @*  <td>
+                                                <div class="d-flex align-items-center">
+                                                    <div class="avatar-circle bg-soft-purple text-purple me-2">
+                                                        @project.StudentName?.Substring(0, 1)
+                                                    </div>
+                                                    <span>@project.StudentName</span>
+                                                </div>
+                                            </td> *@
+                                            <td>
+                                                <span class="badge bg-soft-purple">@project.CompanyName</span>
+                                            </td>
+                                            @* <td>
+                                                <div class="progress-info">
+                                                    <div class="progress" style="height: 6px; width: 100px;">
+                                                        <div class="progress-bar bg-purple" style="width: @project.Progress%"></div>
+                                                    </div>
+                                                    <small class="ms-2">@project.Progress%</small>
+                                                </div>
+                                            </td> *@
+                                            <td>
+                                                @if (project.Status == "Completed")
+                                                {
+                                                    <span class="status-badge completed">
+                                                        <i class="bi bi-check-circle-fill me-1"></i>Completed
+                                                    </span>
+                                                }
+                                                else if (project.Status == "In Progress")
+                                                {
+                                                    <span class="status-badge in-progress">
+                                                        <i class="bi bi-arrow-repeat me-1"></i>In Progress
+                                                    </span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="status-badge pending">
+                                                        <i class="bi bi-clock-fill me-1"></i>Pending
+                                                    </span>
+                                                }
+                                            </td>
+                                            <td>
+                                                <div class="action-buttons">
+                                                    <a asp-controller="ProjectApproval"
+                                                       asp-action="Details"
+                                                       asp-route-id="@project.Id"
+                                                       class="btn btn-sm btn-icon text-purple"
+                                                       title="View">
+                                                        <i class="bi bi-eye-fill"></i>
+                                                    </a>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr>
+                                        <td colspan="6" class="text-center py-4">
+                                            <div class="empty-state">
+                                                <i class="bi bi-folder-x display-4 text-muted"></i>
+                                                <p class="text-muted mt-2">No projects found</p>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Assigned Students Section -->
+            <div class="glass-card">
+                <div class="card-header bg-transparent border-0 pt-4 px-4">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="bi bi-people-fill text-purple me-2"></i>
+                            My Assigned Students
+                        </h5>
+                        <div class="header-actions">
+                            <span class="badge bg-soft-purple me-2">@Model.TotalStudents Total</span>
+                            <a asp-controller ="Student" asp-action="Index" class="btn btn-sm btn-outline-purple">
+                                View All <i class="bi bi-arrow-right ms-1"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table modern-table mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Student</th>
+                                    <th>Email</th>
+                                    <th>Roll Number</th>
+                                    <th>Academic Year</th>
+                                    <th>Company</th>
+                                    @* <th>Last Active</th> *@
+                                    @* <th>Status</th> *@
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (Model.AssignedStudents != null && Model.AssignedStudents.Count > 0)
+                                {
+                                    foreach (var student in Model.AssignedStudents)
+                                    {
+                                        <tr>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                   @*  <div class="avatar-circle bg-gradient-purple text-white me-2">
+                                                        @student.Name?.Substring(0, 1)
+                                                    </div> *@
+                                                    <div>
+                                                        <h6 class="mb-0">@student.Name</h6>
+                                                        <small class="text-muted">ID: @student.Id</small>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>@student.Email</td>
+                                            <td>@student.RollNumber</td>
+                                            <td>@student.YearRange</td>
+                                            @* <td>
+                                                <span class="badge bg-soft-purple">@student.ProjectTitle</span>
+                                            </td> *@
+                                            <td>
+                                                <span class="badge bg-light text-dark">@student.CompanyName</span>
+                                            </td>
+                                            @* <td>
+                                                <small class="text-muted">
+                                                    <i class="bi bi-clock-history me-1"></i>
+                                                    @student.LastActive
+                                                </small>
+                                            </td> *@
+                                            @* <td>
+                                                <span class="status-badge active">
+                                                    <i class="bi bi-check-circle-fill me-1"></i>Active
+                                                </span>
+                                            </td> *@
+                                            <td>
+                                                <div class="action-buttons">
+                                                    <a asp-controller="Student"
+                                                       asp-action="Detail"
+                                                       asp-route-id="@student.Id"
+                                                       class="btn btn-sm btn-icon text-purple"
+                                                       title="View">
+                                                        <i class="bi bi-eye-fill"></i>
+                                                    </a>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr>
+                                        <td colspan="6" class="text-center py-4">
+                                            <div class="empty-state">
+                                                <i class="bi bi-person-x display-4 text-muted"></i>
+                                                <p class="text-muted mt-2">No students assigned</p>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column - Stats & Activities -->
+        <div class="col-lg-4">
+            <!-- Performance Overview Card -->
+            <div class="glass-card mb-4">
+                <div class="card-header bg-transparent border-0 pt-4 px-4">
+                    <h5 class="mb-0">
+                        <i class="bi bi-graph-up-arrow text-purple me-2"></i>
+                        Performance Overview
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="performance-chart mb-3">
+                        <canvas id="performanceChart" height="200"></canvas>
+                    </div>
+                    <div class="performance-stats">
+                        <div class="stat-row d-flex justify-content-between mb-2">
+                            <span class="text-muted">Completion Rate</span>
+                            <span class="fw-bold text-purple">78%</span>
+                        </div>
+                        <div class="stat-row d-flex justify-content-between mb-2">
+                            <span class="text-muted">On-time Submissions</span>
+                            <span class="fw-bold text-success">85%</span>
+                        </div>
+                        <div class="stat-row d-flex justify-content-between">
+                            <span class="text-muted">Average Grade</span>
+                            <span class="fw-bold" style="color: #8c5dd1;">A-</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Upcoming Deadlines -->
+            @* <div class="glass-card mb-4">
+                <div class="card-header bg-transparent border-0 pt-4 px-4">
+                    <h5 class="mb-0">
+                        <i class="bi bi-calendar-event-fill text-purple me-2"></i>
+                        Upcoming Deadlines
+                    </h5>
+                </div>
+                <div class="card-body">
+                    @if (ViewBag.Deadlines != null && ViewBag.Deadlines.Count > 0)
+                    {
+                        <div class="deadline-list">
+                            @foreach (var deadline in ViewBag.Deadlines)
+                            {
+                                <div class="deadline-item">
+                                    <div class="deadline-date">
+                                        <span class="day">@deadline.Day</span>
+                                        <span class="month">@deadline.Month</span>
+                                    </div>
+                                    <div class="deadline-info">
+                                        <h6 class="mb-1">@deadline.Title</h6>
+                                        <small class="text-muted">
+                                            <i class="bi bi-person me-1"></i>@deadline.StudentName
+                                        </small>
+                                    </div>
+                                    <div class="deadline-badge">
+                                        <span class="badge bg-soft-purple">@deadline.DaysLeft days left</span>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="empty-state py-3">
+                            <i class="bi bi-calendar-check display-4 text-muted"></i>
+                            <p class="text-muted mt-2">No upcoming deadlines</p>
+                        </div>
+                    }
+                </div>
+            </div> *@
+
+            <!-- Companies Assigned -->
+            <div class="glass-card mb-4">
+                <div class="card-header bg-transparent border-0 pt-4 px-4">
+                    <h5 class="mb-0">
+                        <i class="bi bi-building-fill text-purple me-2"></i>
+                        Partner Companies
+                    </h5>
+                </div>
+                <div class="card-body">
+                    @if (Model.Companies != null && Model.Companies.Count > 0)
+                    {
+                        <div class="company-list">
+                            @foreach (var company in Model.Companies)
+                            {
+                                <div class="company-item">
+                                    <div class="company-logo bg-soft-purple">
+                                        <i class="bi bi-building text-purple"></i>
+                                    </div>
+                                    <div class="company-info">
+                                        <h6 class="mb-0">@company.Name</h6>
+                                        <small class="text-muted">@company.ProjectsCount projects</small>
+                                    </div>
+                                    <div class="company-status">
+                                        <span class="badge bg-soft-purple">@company.StudentsCount students</span>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="empty-state py-3">
+                            <i class="bi bi-building display-4 text-muted"></i>
+                            <p class="text-muted mt-2">No companies assigned</p>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+           @*  <div class="glass-card">
+                <div class="card-header bg-transparent border-0 pt-4 px-4">
+                    <h5 class="mb-0">
+                        <i class="bi bi-lightning-charge-fill text-purple me-2"></i>
+                        Quick Actions
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="quick-actions-grid">
+                        <a href="#" class="quick-action-item">
+                            <div class="quick-action-icon bg-soft-purple">
+                                <i class="bi bi-plus-circle-fill text-purple"></i>
+                            </div>
+                            <span>Add Project</span>
+                        </a>
+                        <a href="#" class="quick-action-item">
+                            <div class="quick-action-icon bg-soft-purple">
+                                <i class="bi bi-chat-fill text-purple"></i>
+                            </div>
+                            <span>Message</span>
+                        </a>
+                        <a href="#" class="quick-action-item">
+                            <div class="quick-action-icon bg-soft-purple">
+                                <i class="bi bi-file-text-fill text-purple"></i>
+                            </div>
+                            <span>Review</span>
+                        </a>
+                        <a href="#" class="quick-action-item">
+                            <div class="quick-action-icon bg-soft-purple">
+                                <i class="bi bi-calendar-plus-fill text-purple"></i>
+                            </div>
+                            <span>Schedule</span>
+                        </a>
+                        <a href="#" class="quick-action-item">
+                            <div class="quick-action-icon bg-soft-purple">
+                                <i class="bi bi-file-earmark-pdf-fill text-purple"></i>
+                            </div>
+                            <span>Report</span>
+                        </a>
+                        <a href="#" class="quick-action-item">
+                            <div class="quick-action-icon bg-soft-purple">
+                                <i class="bi bi-gear-fill text-purple"></i>
+                            </div>
+                            <span>Settings</span>
+                        </a>
+                    </div>
+                </div>
+            </div> *@
+        </div>
+    </div>
+
+    <!-- Recent Activity Timeline -->
+  @*   <div class="row mt-4">
+        <div class="col-12">
+            <div class="glass-card">
+                <div class="card-header bg-transparent border-0 pt-4 px-4">
+                    <h5 class="mb-0">
+                        <i class="bi bi-activity text-purple me-2"></i>
+                        Recent Activity
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="timeline">
+                        @if (ViewBag.RecentActivities != null && ViewBag.RecentActivities.Count > 0)
+                        {
+                            @foreach (var activity in ViewBag.RecentActivities)
+                            {
+                                <div class="timeline-item">
+                                    <div class="timeline-marker bg-purple"></div>
+                                    <div class="timeline-content">
+                                        <div class="d-flex justify-content-between">
+                                            <h6 class="mb-1">@activity.Description</h6>
+                                            <small class="text-muted">@activity.Time</small>
+                                        </div>
+                                        <small class="text-muted">
+                                            <i class="bi bi-person me-1"></i>@activity.StudentName
+                                        </small>
+                                    </div>
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <div class="text-center py-3">
+                                <p class="text-muted">No recent activities</p>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div> *@
+
+<!-- Modern CSS Styles -->
+<style>
+    :root {
+        --primary-purple: #8c5dd1;
+        --primary-purple-light: rgba(140, 93, 209, 0.1);
+        --primary-purple-soft: rgba(140, 50, 200, 0.5);
+        --primary-purple-dark: #6b3fa0;
+        --gradient-purple: linear-gradient(135deg, #8c5dd1 0%, #a77be0 100%);
+    }
+
+    /* Global Styles */
+    .dashboard-container {
+        padding: 1.5rem;
+        background: linear-gradient(135deg, #f6f9fc 0%, #ffffff 100%);
+        min-height: 100vh;
+    }
+
+    /* Text Colors */
+    .text-purple {
+        color: var(--primary-purple) !important;
+    }
+
+    .bg-purple {
+        background: var(--primary-purple) !important;
+    }
+
+    .bg-soft-purple {
+        background: var(--primary-purple-soft) !important;
+    }
+
+    .bg-gradient-purple {
+        background: var(--gradient-purple) !important;
+    }
+
+    /* Dashboard Header */
+    .dashboard-header {
+        background: white;
+        border-radius: 20px;
+        padding: 1.5rem 2rem;
+        box-shadow: 0 8px 25px rgba(140, 93, 209, 0.08);
+        border: 1px solid rgba(140, 93, 209, 0.1);
+    }
+
+    .teacher-profile-card {
+        background: var(--primary-purple-light);
+        padding: 1rem 1.5rem;
+        border-radius: 15px;
+        border: 1px solid rgba(140, 93, 209, 0.2);
+    }
+
+    .profile-avatar {
+        width: 50px;
+        height: 50px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: white;
+    }
+
+    /* Modern Cards */
+    .modern-card {
+        background: white;
+        border-radius: 20px;
+        padding: 1.5rem;
+        box-shadow: 0 8px 25px rgba(140, 93, 209, 0.08);
+        border: 1px solid rgba(140, 93, 209, 0.1);
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+        .modern-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(140, 93, 209, 0.15);
+        }
+
+    .stat-card {
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+    }
+
+    .stat-icon-wrapper {
+        width: 70px;
+        height: 70px;
+        border-radius: 18px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+    }
+
+    .stat-content {
+        flex: 1;
+    }
+
+    .stat-label {
+        font-size: 0.9rem;
+        color: #6c757d;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .stat-value {
+        font-size: 2.2rem;
+        font-weight: 700;
+        color: #2d3748;
+        margin: 0;
+        line-height: 1.2;
+    }
+
+    .stat-progress {
+        margin-top: 0.5rem;
+    }
+
+    /* Glass Card */
+    .glass-card {
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 8px 30px rgba(140, 93, 209, 0.08);
+        border: 1px solid rgba(140, 93, 209, 0.1);
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+
+        .glass-card:hover {
+            box-shadow: 0 12px 40px rgba(140, 93, 209, 0.12);
+        }
+
+    /* Modern Table */
+    .modern-table {
+        margin-bottom: 0;
+    }
+
+        .modern-table thead th {
+            background: var(--primary-purple-light);
+            color: var(--primary-purple);
+            font-weight: 600;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 2px solid var(--primary-purple);
+            padding: 1rem;
+        }
+
+        .modern-table tbody td {
+            padding: 1rem;
+            vertical-align: middle;
+            border-bottom: 1px solid rgba(140, 93, 209, 0.1);
+        }
+
+        .modern-table tbody tr:hover {
+            background: rgba(140, 93, 209, 0.02);
+        }
+
+    /* Avatar */
+    .avatar-circle {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+
+    .project-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+    }
+
+    /* Status Badges */
+    .status-badge {
+        padding: 0.35rem 1rem;
+        border-radius: 50px;
+        font-size: 0.8rem;
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+    }
+
+        .status-badge.active {
+            background: rgba(40, 167, 69, 0.1);
+            color: #28a745;
+        }
+
+        .status-badge.completed {
+            background: rgba(40, 167, 69, 0.1);
+            color: #28a745;
+        }
+
+        .status-badge.in-progress {
+            background: rgba(140, 93, 209, 0.1);
+            color: var(--primary-purple);
+        }
+
+        .status-badge.pending {
+            background: rgba(255, 193, 7, 0.1);
+            color: #ffc107;
+        }
+
+    /* Buttons */
+    .btn-outline-purple {
+        color: var(--primary-purple);
+        border: 1px solid var(--primary-purple);
+        border-radius: 50px;
+        padding: 0.35rem 1.2rem;
+        transition: all 0.3s;
+    }
+
+        .btn-outline-purple:hover {
+            background: var(--primary-purple);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(140, 93, 209, 0.3);
+        }
+
+    .btn-icon {
+        width: 32px;
+        height: 32px;
+        padding: 0;
+        border-radius: 8px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: transparent;
+        border: none;
+        transition: all 0.3s;
+    }
+
+        .btn-icon:hover {
+            background: var(--primary-purple-light);
+        }
+
+    /* Action Buttons */
+    .action-buttons {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    /* Deadline List */
+    .deadline-list {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .deadline-item {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 0.75rem;
+        background: rgba(140, 93, 209, 0.02);
+        border-radius: 12px;
+        transition: all 0.3s;
+    }
+
+        .deadline-item:hover {
+            background: white;
+            box-shadow: 0 5px 15px rgba(140, 93, 209, 0.1);
+        }
+
+    .deadline-date {
+        text-align: center;
+        min-width: 50px;
+    }
+
+        .deadline-date .day {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--primary-purple);
+            display: block;
+            line-height: 1;
+        }
+
+        .deadline-date .month {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            color: #6c757d;
+        }
+
+    .deadline-info {
+        flex: 1;
+    }
+
+    /* Company List */
+    .company-list {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .company-item {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 0.75rem;
+        background: rgba(140, 93, 209, 0.02);
+        border-radius: 12px;
+        transition: all 0.3s;
+    }
+
+        .company-item:hover {
+            background: white;
+            box-shadow: 0 5px 15px rgba(140, 93, 209, 0.1);
+        }
+
+    .company-logo {
+        width: 45px;
+        height: 45px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.3rem;
+    }
+
+    .company-info {
+        flex: 1;
+    }
+
+    /* Quick Actions Grid */
+    .quick-actions-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1rem;
+    }
+
+    .quick-action-item {
+        text-align: center;
+        text-decoration: none;
+        color: #495057;
+        transition: all 0.3s;
+        padding: 1rem 0.5rem;
+        border-radius: 12px;
+    }
+
+        .quick-action-item:hover {
+            background: var(--primary-purple-light);
+            transform: translateY(-3px);
+            text-decoration: none;
+            color: var(--primary-purple);
+        }
+
+    .quick-action-icon {
+        width: 50px;
+        height: 50px;
+        margin: 0 auto 0.5rem;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.3rem;
+    }
+
+    /* Timeline */
+    .timeline {
+        position: relative;
+        padding-left: 2rem;
+    }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 7px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: var(--primary-purple-light);
+        }
+
+    .timeline-item {
+        position: relative;
+        padding-bottom: 1.5rem;
+    }
+
+    .timeline-marker {
+        position: absolute;
+        left: -2rem;
+        top: 0.25rem;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        border: 2px solid white;
+        box-shadow: 0 0 0 2px var(--primary-purple-light);
+    }
+
+    .timeline-content {
+        background: rgba(140, 93, 209, 0.02);
+        padding: 1rem;
+        border-radius: 12px;
+        margin-left: 0.5rem;
+    }
+
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 2rem;
+    }
+
+    /* Progress Bar */
+    .progress-bar.bg-purple {
+        background: var(--gradient-purple) !important;
+    }
+
+    /* Responsive */
+    @@media (max-width: 768px) {
+        .dashboard-container {
+            padding: 1rem;
+        }
+
+        .quick-actions-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .stat-card {
+            flex-direction: column;
+            text-align: center;
+        }
+    }
+
+    /* Animations */
+    @@keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .modern-card, .glass-card {
+        animation: fadeInUp 0.5s ease;
+    }
+</style>
+
+<!-- Chart.js Script -->
+<script src="~/js/chart3.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Performance Chart
+        const ctx = document.getElementById('performanceChart')?.getContext('2d');
+        if (ctx) {
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Completed', 'In Progress', 'Pending'],
+                    datasets: [{
+                        data: [45, 35, 20],
+                        backgroundColor: [
+                            '#8c5dd1',
+                            '#b794f4',
+                            '#d6bcfa'
+                        ],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '70%',
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                usePointStyle: true,
+                                pointStyle: 'circle'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    });
+</script>

@@ -1,7 +1,8 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Filters;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Mvc.Filters;
+using Microsoft.AspNetCore.Mvc;
 using ProjectManagementSystem.DBModels;
+using ProjectManagementSystem.Models;
+using Microsoft.EntityFrameworkCore;
 
 public class BaseStudentController : Controller
 {
@@ -20,15 +21,23 @@ public class BaseStudentController : Controller
 
         if (studentId != null)
         {
-            var isLeader = await _context.ProjectMembers
-                .AnyAsync(pm =>
-                    pm.StudentPkId == studentId &&
-                    pm.Role.ToLower() == "leader" &&
-                    pm.IsDeleted == false);
+            // Get the first project where student is leader
+            var leaderProject = await _context.ProjectMembers
+                .Where(pm => pm.StudentPkId == studentId &&
+                             pm.Role.ToLower() == "leader" &&
+                             pm.IsDeleted == false)
+                .Select(pm => pm.ProjectPkId)
+                .FirstOrDefaultAsync();
 
-            ViewBag.IsLeader = isLeader;
+            var layoutModel = new LayoutViewModel
+            {
+                IsLeader = leaderProject != 0,
+                LeaderProjectId = leaderProject != 0 ? (int?)leaderProject : null
+            };
+
+            ViewData["LayoutModel"] = layoutModel; 
         }
 
-        await next(); // continue pipeline
+        await next();
     }
 }

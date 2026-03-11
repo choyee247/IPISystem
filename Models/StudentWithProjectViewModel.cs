@@ -11,5 +11,8 @@
         public string DepartmentName { get; set; } = null!;
         public string AcademicYear { get; set; } = null!;
         public bool HasProject { get; set; }
+
+        public int ProjectCount { get; set; }
+        public List<string> ProjectTitles { get; set; } = new List<string>();
     }
 }
