@@ -178,19 +178,16 @@ namespace ProjectManagementSystem.Controllers.Public
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> RequestDownload(DownloadRequest model)
         {
-            // Validate ProjectFilePkId
             if (model.ProjectFilePkId == 0)
                 return BadRequest("Invalid file.");
 
-            // Optionally, check file exists
             var fileExists = await _context.ProjectFiles
                 .AnyAsync(f => f.ProjectFilePkId == model.ProjectFilePkId);
 
             if (!fileExists)
                 return NotFound("File does not exist.");
 
-            // Fill other fields
-            model.StudentPkId = null; // For anonymous request
+            model.StudentPkId = null;
             model.RequestDate = DateTime.Now;
             model.IsApproved = null;
             model.IsBlocked = false;
@@ -229,8 +226,7 @@ namespace ProjectManagementSystem.Controllers.Public
             {
                 foreach (var file in projectFiles)
                 {
-                    var fullPath = Path.Combine(_env.WebRootPath,
-                        file.FilePath.TrimStart('/'));
+                    var fullPath = Path.Combine(_env.WebRootPath, "uploads", "projects", Path.GetFileName(file.FilePath));
 
                     if (System.IO.File.Exists(fullPath))
                     {

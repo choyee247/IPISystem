@@ -600,8 +600,8 @@ Project Management System
                     _context.ProjectFiles.Add(new ProjectFile
                     {
                         ProjectPkId = ProjectPkId,
-                        FilePath = "/uploads/cancel/" + fileName,
-                        FileType = "CancelReason",
+                        FilePath =  fileName,
+                        FileType = "Cancel",
                         FileSize = file.Length,
                         UploadedAt = DateTime.UtcNow
                     });

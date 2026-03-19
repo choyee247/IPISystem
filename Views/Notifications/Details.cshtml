@@ -25,9 +25,15 @@
         <strong>Start Date:</strong> @Model.AnnouncementStartDate?.ToString("dd MMM yyyy") <br />
         <strong>Expiry Date:</strong> @Model.AnnouncementExpiryDate?.ToString("dd MMM yyyy") <br />
         <strong>Blocks Submissions:</strong> @(Model.AnnouncementBlocksSubmissions == true ? "Yes" : "No") <br />
-        @if (!string.IsNullOrEmpty(Model.AnnouncementFilePath))
+       @*  @if (!string.IsNullOrEmpty(Model.AnnouncementFilePath))
         {
             <strong>File:</strong> <a href="@Url.Content(Model.AnnouncementFilePath)" target="_blank">Download</a>
+        } *@
+        @if (!string.IsNullOrEmpty(Model.AnnouncementFilePath))
+        {
+            <a href="@Url.Content(Model.AnnouncementFilePath)" target="_blank" download>
+                Download
+            </a>
         }
     </p>
 }

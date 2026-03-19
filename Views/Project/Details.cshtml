@@ -236,8 +236,15 @@
             <ul class="list-group">
                 @foreach (var file in Model.ProjectFiles)
                 {
+                    var folder = file.FileType == "Cancel" ? "cancel" : "projects";
+
                     <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <a href="@file.FilePath" target="_blank">Download @file.FileType file</a>
+                        <a href="@Url.Content($"~/uploads/{folder}/" + System.IO.Path.GetFileName(file.FilePath))"
+                           target="_blank">
+
+                            Download @file.FileType file
+
+                        </a>
                     </li>
                 }
             </ul>

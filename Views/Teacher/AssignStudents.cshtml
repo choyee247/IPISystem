@@ -24,7 +24,15 @@
                     <form asp-action="AssignStudents" asp-controller="Teacher" method="post">
                         @Html.AntiForgeryToken()
                         <input type="hidden" asp-for="TeacherId" />
-
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Academic Year</label>
+                            <select asp-for="SelectedAcademicYearId"
+                                    asp-items="Model.AcademicYears"
+                                    class="form-select"
+                                    onchange="filterByYear(this)">
+                                <option value="">-- Select Academic Year --</option>
+                            </select>
+                        </div>
                         <table class="table table-bordered">
                             <thead class="table-light">
                                 <tr>
@@ -83,3 +91,11 @@
         vertical-align: middle;
     }
 </style>
+<script>
+    function filterByYear(select) {
+        var yearId = select.value;
+        var teacherId = '@Model.TeacherId';
+
+        window.location.href = '/Teacher/AssignStudents?teacherId=' + teacherId + '&academicYearId=' + yearId;
+    }
+</script>

@@ -222,13 +222,23 @@
                             @a.Message
                         </p>
 
-                        @if (!string.IsNullOrEmpty(a.FilePath))
+                       @*  @if (!string.IsNullOrEmpty(a.FilePath))
                         {
                             <a href="@a.FilePath"
                                target="_blank"
                                class="btn btn-sm"
                                style="border:1px solid #8c5dd1; color:#8c5dd1; font-size:12px;">
-                                📎 Attachment
+                                📎 Download
+                            </a>
+                        } *@
+                        @if (!string.IsNullOrEmpty(a.FilePath))
+                        {
+                            <a href="@Url.Content("~/uploads/announcements/" + System.IO.Path.GetFileName(a.FilePath))"
+                               target="_blank"
+                               class="btn btn-sm"
+                               style="border:1px solid #8c5dd1; color:#8c5dd1; font-size:12px;">
+
+                                📎 Download
                             </a>
                         }
                     </div>
@@ -351,7 +361,7 @@
                       @*   <div class="avatar-profile">
                             @Model.Student.StudentName[0]
                         </div> *@
-                        <div class="avatar-profile text-center mb-3">
+                      @*   <div class="avatar-profile text-center mb-3">
                             <img src="@(
                                     !string.IsNullOrEmpty(Model.Student.ProfilePhotoUrl)
                                     ? Url.Content(Model.Student.ProfilePhotoUrl)
@@ -360,8 +370,16 @@
                                  alt="@Model.Student.StudentName"
                                  class="rounded-circle shadow"
                                  style="width:120px; height:120px; object-fit:cover;" />
-                        </div>
+                        </div> *@
 
+                        <div class="avatar-profile text-center mb-3">
+                            <img src="@(string.IsNullOrEmpty(Model.Student.ProfilePhotoUrl)
+           ? Url.Content("~/uploads/students/default-avatar.png")
+           : Url.Content("/uploads/students/" + Model.Student.ProfilePhotoUrl))"
+                                 alt="Profile"
+                                 class="rounded-circle shadow"
+                                 style="width:120px; height:120px; object-fit:cover;" />
+                        </div>
 
                         <h4 class="mt-3 mb-1 fw-bold">@Model.Student.StudentName</h4>
                         <p class="text-muted mb-3">@Model.Student.DepartmentPk?.DepartmentName</p>
@@ -518,71 +536,61 @@
                                                         <i class="fas fa-ellipsis-h"></i>
                                                     </button>
                                                     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="projectActions">
+                                                        <!-- Always show Details -->
                                                         <li>
-                                                            <a class="dropdown-item" asp-action="Details" asp-controller="Project"
-                                                               asp-route-id="@project.ProjectPkId">
+                                                            <a class="dropdown-item" asp-controller="Project" asp-action="Details" asp-route-id="@project.ProjectPkId">
                                                                 <i class="fas fa-eye me-2"></i>View Details
                                                             </a>
                                                         </li>
+
+                                                        @* Only Leaders can Edit/Upload/Add Member *@
                                                         @if (IsProjectLeader(project, Model.Student))
                                                         {
-                                                            <li>
-                                                                <a class="dropdown-item" asp-action="AddMember" asp-controller="Project"
-                                                                   asp-route-projectId="@project.ProjectPkId">
-                                                                    <i class="fas fa-user-plus me-2"></i>Add Member
-                                                                </a>
-                                                            </li>
-                                                            <li>
-                                                                <a class="dropdown-item" asp-action="Upload" asp-controller="Project"
-                                                                   asp-route-id="@project.ProjectPkId">
-                                                                    <i class="fas fa-upload me-2"></i>Submit Project
-                                                                </a>
-                                                            </li>
+                                                            @* Draft or Cancelled → Edit *@
+                                                            @if (project.Status == "Draft" || project.Status == "Cancelled")
+                                                            {
+                                                                <li>
+                                                                    <a class="dropdown-item" asp-action="Edit" asp-controller="Project" asp-route-id="@project.ProjectPkId">
+                                                                        <i class="fas fa-edit me-2"></i>Edit Project
+                                                                    </a>
+                                                                </li>
+
+                                                                <li>
+                                                                    <a class="dropdown-item" asp-action="Upload" asp-controller="Project" asp-route-id="@project.ProjectPkId">
+                                                                        <i class="fas fa-upload me-2"></i>Submit Project
+                                                                    </a>
+                                                                </li>
+
+                                                                <li>
+                                                                    <a class="dropdown-item" asp-action="AddMember" asp-controller="Project" asp-route-projectId="@project.ProjectPkId">
+                                                                        <i class="fas fa-user-plus me-2"></i>Add Member
+                                                                    </a>
+                                                                </li>
+                                                            }
+
+                                                            @* Rejected → Fix & Resubmit *@
+                                                           @*  @if (project.Status == "Rejected" || project.Status == "Cancelled")
+                                                            {
+                                                                <li>
+                                                                    <a class="dropdown-item text-warning" asp-action="Edit" asp-route-id="@project.ProjectPkId">
+                                                                        <i class="fas fa-redo me-2"></i>Fix & Resubmit
+                                                                    </a>
+                                                                </li>
+                                                            } *@
                                                         }
-                                                        @if (project.Status == "Draft" && IsProjectLeader(project, Model.Student))
+                                                        @if (IsProjectLeader(project, Model.Student))
                                                         {
-                                                            <li>
-                                                                <a class="dropdown-item" asp-action="Edit" asp-controller="Project"
-                                                                   asp-route-id="@project.ProjectPkId">
-                                                                    <i class="fas fa-edit me-2"></i>Edit Project
-                                                                </a>
-                                                            </li>
-                                                            <li>
-                                                                <form asp-action="ConfirmDelete" asp-route-id="@project.ProjectPkId" method="post"
-                                                                      onsubmit="return confirm('Are you sure you want to delete this project?');">
-                                                                    <button type="submit" class="dropdown-item text-danger">
-                                                                        <i class="fas fa-trash-alt me-2"></i>Delete
-                                                                    </button>
-                                                                </form>
-                                                            </li>
-                                                            @* <li>
-                                                                <a class="dropdown-item text-danger" asp-action="Delete" asp-controller="Project"
-                                                                   asp-route-id="@project.Project_pkId">
+                                                        <li><hr class="dropdown-divider"></li>
+
+                                                        <!-- Delete available for all statuses -->
+                                                        <li>
+                                                            <form asp-action="ConfirmDelete" asp-controller="Project" asp-route-id="@project.ProjectPkId" method="post"
+                                                                  onsubmit="return confirm('Are you sure you want to delete this project?');">
+                                                                <button type="submit" class="dropdown-item text-danger">
                                                                     <i class="fas fa-trash-alt me-2"></i>Delete
-                                                                </a>
-                                                            </li> *@
-                                                        }
-                                                        @if ( project.Status == "Rejected" && IsProjectLeader(project, Model.Student))
-                                                        {
-                                                            <li>
-                                                                <a class="dropdown-item text-warning" asp-action="Edit" asp-controller="Project"
-                                                                   asp-route-id="@project.ProjectPkId">
-                                                                    <i class="fas fa-redo me-2"></i>
-                                                                    @(project.Status == "Rejected" ? "Fix & Resubmit" : "Revise Project")
-                                                                </a>
-                                                            </li>
-                                                        }
-                                                        @if (project.Status == "Cancelled" && IsProjectLeader(project, Model.Student))
-                                                        {
-                                                            <li>
-                                                                <a class="dropdown-item text-warning"
-                                                                   asp-action="Edit"
-                                                                   asp-controller="Project"
-                                                                   asp-route-id="@project.ProjectPkId">
-                                                                    <i class="fas fa-redo me-2"></i>
-                                                                    Fix & Resubmit
-                                                                </a>
-                                                            </li>
+                                                                </button>
+                                                            </form>
+                                                        </li>
                                                         }
                                                     </ul>
                                                 </div>
@@ -659,9 +667,11 @@
                                         <div class="team-member-card p-3 bg-white rounded">
                                             <div class="d-flex align-items-center">
                                                 <div class="member-avatar me-3">
-                                                    <img src="@Url.Content(!string.IsNullOrEmpty(member.StudentPk?.ProfilePhotoUrl)
-                                            ? member.StudentPk.ProfilePhotoUrl
-                                            : "~/uploads/students/default-avatar.png")"
+                                                    <img src="@Url.Content(
+                                                            !string.IsNullOrEmpty(member.StudentPk?.ProfilePhotoUrl)
+                                                                ? "/uploads/students/" + member.StudentPk.ProfilePhotoUrl
+                                                                : "~/uploads/students/default-avatar.png"
+                                                        )"
                                                          alt="@member.StudentPk?.StudentName"
                                                          class="rounded-circle shadow"
                                                          style="width:50px; height:50px; object-fit:cover;" />

@@ -1,4 +1,4 @@
-﻿@model X.PagedList.IPagedList<ProjectManagementSystem.DBModels.Project>
+﻿@model X.PagedList.IPagedList<ProjectManagementSystem.Models.ProjectIndexViewModel>
 
 @{
     ViewData["Title"] = "Project List";
@@ -52,7 +52,7 @@
                     <div class="card shadow-sm h-100" style="border: 1px solid #e0e0e0; border-radius: 10px; overflow: hidden;">
                         <div class="card-header" style="background-color: @lightPurple; border-bottom: 2px solid @primaryColor;">
                             <h5 class="card-title mb-0" style="color: @primaryColor; font-weight: 600;">
-                                <i class="bi bi-kanban me-2"></i>@project.ProjectName
+                                <i class="bi bi-kanban me-2"></i>@project.Project.ProjectName
                             </h5>
                         </div>
 
@@ -62,28 +62,28 @@
                                     <span style="color: @darkPurple; font-weight: 500;">
                                         <i class="bi bi-person-badge me-1"></i>Supervisor:
                                     </span>
-                                    @project.SupervisorName
+                                    @project.Project.SupervisorName
                                 </p>
 
                                 <p class="card-text mb-1">
                                     <span style="color: @darkPurple; font-weight: 500;">
                                         <i class="bi bi-tag me-1"></i>Type:
                                     </span>
-                                    @project.ProjectTypePk?.TypeName
+                                    @project.Project.ProjectTypePk?.TypeName
                                 </p>
 
                                 <p class="card-text mb-1">
                                     <span style="color: @darkPurple; font-weight: 500;">
                                         <i class="bi bi-code-square me-1"></i>Tech:
                                     </span>
-                                    @project.LanguagePk?.LanguageName / @project.FrameworkPk?.FrameworkName
+                                    @project.Project.LanguagePk?.LanguageName / @project.Project.FrameworkPk?.FrameworkName
                                 </p>
 
                                 <p class="card-text mb-1">
                                     <span style="color: @darkPurple; font-weight: 500;">
                                         <i class="bi bi-building me-1"></i>Company:
                                     </span>
-                                    @project.CompanyPk?.CompanyName
+                                    @project.Project.CompanyPk?.CompanyName
                                 </p>
                             </div>
 
@@ -95,7 +95,7 @@
                                 </p>
                                 <ul class="list-unstyled ps-3">
                                     @{
-                                        var leader = project.ProjectMembers?
+                                        var leader = project.Project.ProjectMembers?
                                         .FirstOrDefault(m => m.Role == "Leader" && m.IsDeleted==false && m.StudentPk != null);
 
                                         if (leader != null)
@@ -106,7 +106,7 @@
                                             </li>
                                         }
 
-                                        var members = project.ProjectMembers?
+                                        var members = project.Project.ProjectMembers?
                                         .Where(m => m.Role == "Member" && m.IsDeleted==false && m.StudentPk != null)
                                         .ToList();
 
@@ -129,8 +129,8 @@
                                     <span style="color: @darkPurple; font-weight: 500;">
                                         <i class="bi bi-calendar me-1"></i>Submitted:
                                     </span>
-                                    @(project.ProjectSubmittedDate.HasValue
-                                        ? project.ProjectSubmittedDate.Value.ToString("dd MMM yyyy")
+                                    @(project.Project.ProjectSubmittedDate.HasValue
+                                        ? project.Project.ProjectSubmittedDate.Value.ToString("dd MMM yyyy")
                                         : "Not submitted")
                                 </p>
 
@@ -138,13 +138,20 @@
                                     <span style="color: @darkPurple; font-weight: 500;">
                                         <i class="bi bi-file-earmark me-1"></i>Files:
                                     </span>
-                                    @if (project.ProjectFiles != null && project.ProjectFiles.Any())
+                                    @if (project.Project.ProjectFiles != null && project.Project.ProjectFiles.Any())
                                     {
                                         <div class="mt-1">
-                                            @foreach (var file in project.ProjectFiles)
+                                            @foreach (var file in project.Project.ProjectFiles)
                                             {
-                                                <a href="@file.FilePath" target="_blank" class="d-block text-truncate" style="color: @primaryColor; text-decoration: none;">
-                                                    <i class="bi bi-paperclip me-1"></i> @System.IO.Path.GetFileName(file.FilePath)
+                                                var folder = file.FileType == "Cancel" ? "cancel" : "projects";
+
+                                                <a href="@Url.Content($"~/uploads/{folder}/" + System.IO.Path.GetFileName(file.FilePath))"
+                                                   target="_blank"
+                                                   class="d-block text-truncate"
+                                                   style="color:@primaryColor; text-decoration:none;">
+
+                                                    <i class="bi bi-paperclip me-1"></i>
+                                                    @System.IO.Path.GetFileName(file.FilePath)
                                                 </a>
                                             }
                                         </div>
@@ -159,7 +166,7 @@
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
                                     @{
-                                        var statusClass = project.Status switch
+                                        var statusClass = project.Project.Status switch
                                         {
                                             "Pending" => "bg-warning text-dark",
                                             "Approved" => "bg-success",
@@ -169,56 +176,76 @@
                                         };
                                     }
                                     <span class="badge @statusClass rounded-pill">
-                                        <i class="bi @(project.Status == "Approved" ? "bi-check-circle" :
-                                                     project.Status == "Rejected" ? "bi-x-circle" :
-                                                     project.Status == "Pending" ? "bi-hourglass" : "bi-pencil") me-1"></i>
-                                        @project.Status
+                                        <i class="bi @(project.Project.Status == "Approved" ? "bi-check-circle" :
+                                                     project.Project.Status == "Rejected" ? "bi-x-circle" :
+                                                     project.Project.Status == "Pending" ? "bi-hourglass" : "bi-pencil") me-1"></i>
+                                        @project.Project.Status
                                     </span>
                                 </div>
 
                                 <div class="dropdown">
-                                    <button class="btn btn-sm" type="button" id="dropdownMenuButton_@project.ProjectPkId"
+                                    <button class="btn btn-sm" type="button" id="dropdownMenuButton_@project.Project.ProjectPkId"
                                             data-bs-toggle="dropdown" aria-expanded="false"
                                             style="color: @primaryColor; background-color: @lightPurple;">
                                         <i class="bi bi-three-dots-vertical"></i>
                                     </button>
-                                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuButton_@project.ProjectPkId">
+                                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuButton_@project.Project.ProjectPkId">
+
+                                        <!-- Always show Detail -->
                                         <li>
-                                            <a class="dropdown-item" asp-action="Details" asp-route-id="@project.ProjectPkId">
+                                            <a class="dropdown-item" asp-action="Details" asp-route-id="@project.Project.ProjectPkId">
                                                 <i class="bi bi-info-circle me-2"></i>Details
                                             </a>
                                         </li>
-                                       @*  <li>
-                                            <a class="dropdown-item" asp-action="Edit" asp-route-id="@project.Project_pkId">
-                                                <i class="bi bi-pencil me-2"></i>Edit
-                                            </a>
-                                        </li> *@
-                                        @if (project.Status == "Draft")
+                                        @if (project.IsLeader)
                                         {
-                                            @*  <li>
-                                                <a class="dropdown-item" asp-action="Edit" asp-route-id="@project.Project_pkId">
-                                                    <i class="bi bi-pencil me-2"></i>Edit
-                                                </a>
-                                            </li> *@
-                                            <li>
-                                                <form asp-action="Upload" method="post" onsubmit="return confirm('Are you sure you want to upload the project?');">
-                                                    @Html.AntiForgeryToken()
-                                                    <input type="hidden" name="Project_pkId" value="@project.ProjectPkId" />
-                                                    <button type="submit" class="dropdown-item">
-                                                        <i class="bi bi-upload me-2"></i>Upload
-                                                    </button>
-                                                </form>
-                                            </li>
+
+                                        <!-- Draft & Cancelled → Edit -->
+                                            @if (project.Project.Status == "Draft" || project.Project.Status == "Cancelled")
+                                            {
+                                                <li>
+                                                    <a class="dropdown-item" asp-action="Edit" asp-route-id="@project.Project.ProjectPkId">
+                                                        <i class="bi bi-pencil me-2"></i>Edit
+                                                    </a>
+                                                </li>
+                                            }
+
+                                            <!-- Draft only → Upload -->
+                                            @if (project.Project.Status == "Draft" || project.Project.Status == "Cancelled")
+                                            {
+                                                <li>
+                                                    <a class="dropdown-item" asp-action="Upload" asp-controller="Project"
+                                                       asp-route-id="@project.Project.ProjectPkId">
+                                                        <i class="bi bi-upload me-2"></i>Submit Project
+                                                    </a>
+                                                </li>
+                                            }
+
+                                            <!-- Draft & Cancelled → Add Member -->
+                                            @if (project.Project.Status == "Draft" || project.Project.Status == "Cancelled")
+                                            {
+                                                <li>
+                                                    <a class="dropdown-item" asp-action="AddMember" asp-route-projectId="@project.Project.ProjectPkId">
+                                                        <i class="bi bi-people me-2"></i>Add Member
+                                                    </a>
+                                                </li>
+                                            }
+
+                                            <li><hr class="dropdown-divider"></li>
+
+                                            <!-- Always show Delete -->
+                                            @if (project.Project.Status == "Draft" || project.Project.Status == "Approved" || project.Project.Status == "Rejected" || project.Project.Status == "Cancelled" || project.Project.Status == "Pending")
+                                            {
+                                                <li>
+                                                    <form asp-action="Delete" asp-route-id="@project.Project.ProjectPkId" method="post"
+                                                          onsubmit="return confirm('Are you sure you want to delete this project?');">
+                                                        <button type="submit" class="dropdown-item text-danger">
+                                                            <i class="bi bi-trash me-2"></i>Delete
+                                                        </button>
+                                                    </form>
+                                                </li>
+                                            }
                                         }
-                                        <li><hr class="dropdown-divider"></li>
-                                        <li>
-                                            <form asp-action="Delete" asp-route-id="@project.ProjectPkId" method="post"
-                                                  onsubmit="return confirm('Are you sure you want to delete this project?');">
-                                                <button type="submit" class="dropdown-item text-danger">
-                                                    <i class="bi bi-trash me-2"></i>Delete
-                                                </button>
-                                            </form>
-                                        </li>
                                     </ul>
                                 </div>
                             </div>

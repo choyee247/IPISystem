@@ -327,7 +327,7 @@ else
                             else
                             {
                                 <a asp-action="RequestDownload"
-                                   asp-route-fileId="@project.ProjectPkId"
+                                   asp-route-fileId="@project.ProjectFiles.First().ProjectFilePkId"
                                    class="btn btn-warning btn-sm">
                                     Request Download
                                 </a>

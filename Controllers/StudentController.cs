@@ -292,7 +292,7 @@ namespace ProjectManagementSystem.Controllers
                     await ProfilePhoto.CopyToAsync(fileStream);
                 }
 
-                model.Student.ProfilePhotoUrl = "/uploads/students/" + uniqueFileName;
+                model.Student.ProfilePhotoUrl = uniqueFileName;
             }
             else
             {
@@ -488,9 +488,9 @@ namespace ProjectManagementSystem.Controllers
                     {
                         await model.ProfilePhoto.CopyToAsync(stream);
                     }
-
+                    studentInDb.ProfilePhotoUrl = uniqueFileName;
                     // Save relative path to DB
-                    studentInDb.ProfilePhotoUrl = $"/uploads/students/{uniqueFileName}";
+                   // studentInDb.ProfilePhotoUrl = $"/uploads/students/{uniqueFileName}";
                 }
 
                 _context.Students.Update(studentInDb);

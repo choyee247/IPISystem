@@ -369,12 +369,10 @@
 
                     if (members.Any())
                     {
-                        <ul class="mb-0" style="padding-left: 18px;">
                             @foreach (var member in members)
                             {
-                                <li>@member.StudentPk.StudentName</li>
+                                @member.StudentPk.StudentName
                             }
-                        </ul>
                     }
                     else
                     {
@@ -407,7 +405,7 @@
                 {
                     <li class="file-item">
                         <i class="fas fa-file-alt file-icon"></i>
-                        <a href="@Url.Action("Download", "Files", new { id = file.ProjectFilePkId })" target="_blank">
+                        <a href="@Url.Action("Download", "Files", new { id = file.ProjectFilePkId })">
                             @file.FilePath
                         </a>
                     </li>

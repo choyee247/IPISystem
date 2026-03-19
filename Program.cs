@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.FileProviders;
+
 //using ProjectManagementSystem.Data;
 using ProjectManagementSystem.DBModels;
 using ProjectManagementSystem.Models;
@@ -64,6 +66,12 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(
+        Path.Combine(builder.Environment.WebRootPath, "uploads")),
+    RequestPath = "/uploads"
+});
 app.UseRouting();
 app.UseSession(); // ? Enable Session Middleware
 
@@ -72,8 +80,8 @@ app.UseStatusCodePagesWithReExecute("/Home/Error/{0}");
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Welcome}/{action=Index}/{id?}");
-    //pattern: "{controller=Admin}/{action=Login}/{id?}");
+    pattern: "{controller=Welcome}/{action=Index}/{id?}"); //Release for public
+    //pattern: "{controller=Admin}/{action=Login}/{id?}"); //Release for admin
 
 
 app.Run();

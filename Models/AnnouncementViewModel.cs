@@ -14,7 +14,7 @@ namespace ProjectManagementSystem.DBModels
         public bool BlocksSubmissions { get; set; }
 
         public bool IsActive { get; set; } = false;
-        public string? FilePath { get; set; }
+        public string FilePath { get; set; }
         public int? AdminActivityLogId { get; set; }
 
         public bool IsCurrentlyActive =>

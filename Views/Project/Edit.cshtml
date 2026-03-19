@@ -125,22 +125,39 @@
             {
                 <div class="mb-3">
                     <label class="form-label">Previously Uploaded Files</label>
+
                     <ul class="list-group">
+
                         @foreach (var file in Model.ProjectFiles)
                         {
                             <li class="list-group-item d-flex justify-content-between align-items-center">
-                                <a href="@file.FilePath" target="_blank">@System.IO.Path.GetFileName(file.FilePath)</a>
+
+                                <a href="@Url.Content("~/uploads/projects/" + file.FilePath)"
+                                   target="_blank">
+
+                                    @System.IO.Path.GetFileName(file.FilePath)
+
+                                </a>
+
                                 <a href="@Url.Action("DeleteProjectFile", "Project", new { id = file.ProjectFilePkId})"
                                    class="btn btn-sm btn-outline-danger"
-                                   onclick="return confirm('Are you sure you want to delete this file?');">Delete</a>
+                                   onclick="return confirm('Are you sure you want to delete this file?');">
+
+                                    Delete
+
+                                </a>
+
                             </li>
                         }
+
                     </ul>
                 </div>
             }
             else
             {
-                <div class="alert alert-info small">No files have been uploaded for this project yet.</div>
+                <div class="alert alert-info small">
+                    No files have been uploaded for this project yet.
+                </div>
             }
 
             <div class="row mb-3">

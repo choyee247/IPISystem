@@ -81,8 +81,14 @@
 
             <div class="mb-3">
                 <label asp-for="Attachment" class="form-label"></label>
-                <input asp-for="Attachment" type="file" class="form-control input-field" accept=".pdf,.jpg,.png,.jpeg" />
-                <span asp-validation-for="Attachment" class="text-danger validation-message"></span>
+
+                <input asp-for="Attachment"
+                       type="file"
+                       class="form-control input-field"
+                       accept=".pdf,.jpg,.png,.jpeg" />
+
+                <span asp-validation-for="Attachment"
+                      class="text-danger validation-message"></span>
             </div>
 
             <div class="button-group">

@@ -68,23 +68,28 @@ namespace ProjectManagementSystem.Controllers
                 })
                 .ToListAsync();
             model.AssignedStudents = await _context.TeacherStudents
-                .Include(ts => ts.StudentPk)
-                .Include(ts => ts.AcademicYearPk)
-                .Include(ts => ts.StudentPk.ProjectStudentPks)
-                .Where(ts => ts.TeacherId == teacherId && ts.IsActive)
-                .Select(ts => new AssignedStudentVM
-                {
-                    Id = ts.StudentPk.StudentPkId,
-                    Name = ts.StudentPk.StudentName,
-                    Email = ts.StudentPk.EmailPk.EmailAddress,
-                    RollNumber =ts.StudentPk.EmailPk.RollNumber, 
-                    YearRange=ts.AcademicYearPk.YearRange,
-                    //ProjectTitle = ts.StudentPk.ProjectStudentPks.FirstOrDefault().ProjectName,
-                    CompanyName = ts.StudentPk.ProjectStudentPks.FirstOrDefault().CompanyPk.CompanyName
-                    //LastActive = ts.StudentPk.CreatedBy.ToString("dd MMM yyyy")
-                })
-                .Take(5)
-                .ToListAsync();
+                  .Include(ts => ts.StudentPk)
+                      .ThenInclude(s => s.EmailPk)
+                  .Include(ts => ts.AcademicYearPk)
+                  .Include(ts => ts.StudentPk.ProjectMembers)
+                      .ThenInclude(pm => pm.ProjectPk)
+                          .ThenInclude(p => p.CompanyPk)
+                  .Where(ts => ts.TeacherId == teacherId && ts.IsActive)
+                  .Select(ts => new AssignedStudentVM
+                  {
+                      Id = ts.StudentPk.StudentPkId,
+                      Name = ts.StudentPk.StudentName,
+                      Email = ts.StudentPk.EmailPk.EmailAddress,
+                      RollNumber = ts.StudentPk.EmailPk.RollNumber,
+                      YearRange = ts.AcademicYearPk.YearRange,
+
+                      CompanyName = ts.StudentPk.ProjectMembers
+                          .Where(pm => pm.IsDeleted == false)
+                          .Select(pm => pm.ProjectPk.CompanyPk.CompanyName)
+                          .FirstOrDefault()
+                  })
+                  .Take(5)
+                  .ToListAsync();
             model.Companies = await _context.TeacherCompanies
                 .Include(tc => tc.CompanyPk)
                     .ThenInclude(c => c.Projects)
@@ -424,54 +429,116 @@ namespace ProjectManagementSystem.Controllers
         // ---------------------- ASSIGN STUDENTS ----------------------
         // TeacherController.cs
         [HttpGet]
-        public async Task<IActionResult> AssignStudents(int teacherId)
+        public async Task<IActionResult> AssignStudents(int teacherId, int? academicYearId)
         {
             var teacher = await _context.Teachers
-                .Include(t => t.Students)
                 .FirstOrDefaultAsync(t => t.Id == teacherId);
 
             if (teacher == null)
                 return NotFound();
 
-            // Get all students (filter by department, academic year etc.)
-            var allStudents = await _context.Students
-                .Where(s => s.DepartmentPkId == teacher.DepartmentPkId)
+            // ✅ Load Academic Years
+            var academicYears = await _context.AcademicYears.ToListAsync();
+
+            // ✅ Get already assigned students (ACTIVE)
+            var assignedStudents = await _context.TeacherStudents
+                .Where(ts => ts.IsActive)
+                .ToListAsync();
+
+            // Students assigned to THIS teacher
+            var currentTeacherStudentIds = assignedStudents
+                .Where(ts => ts.TeacherId == teacherId)
+                .Select(ts => ts.StudentPkId)
+                .ToList();
+
+            // Students assigned to OTHER teachers
+            var otherTeacherStudentIds = assignedStudents
+                .Where(ts => ts.TeacherId != teacherId)
+                .Select(ts => ts.StudentPkId)
+                .ToList();
+
+            // ✅ Filter students
+            var studentsQuery = _context.Students
+                .Where(s => s.DepartmentPkId == teacher.DepartmentPkId);
+
+            // 👉 Filter by AcademicYear (if selected)
+            if (academicYearId.HasValue)
+            {
+                studentsQuery = studentsQuery.Where(s =>
+                    s.AcademicYearPkId == academicYearId.Value);
+            }
+
+            // 👉 Exclude students assigned to other teachers
+            var filteredStudents = await studentsQuery
+                .Where(s => !otherTeacherStudentIds.Contains(s.StudentPkId))
                 .ToListAsync();
 
             var viewModel = new AssignStudentsViewModel
             {
                 TeacherId = teacher.Id,
                 TeacherName = teacher.FullName,
-                Students = allStudents.Select(s => new SelectListItem
+
+                Students = filteredStudents.Select(s => new SelectListItem
                 {
                     Value = s.StudentPkId.ToString(),
                     Text = s.StudentName,
-                    Selected = teacher.Students.Any(ts => ts.StudentPkId == s.StudentPkId)
-                }).ToList()
+                    Selected = currentTeacherStudentIds.Contains(s.StudentPkId)
+                }).ToList(),
+
+                AcademicYears = academicYears.Select(a => new SelectListItem
+                {
+                    Value = a.AcademicYearPkId.ToString(),
+                    Text = a.YearRange
+                }).ToList(),
+
+                SelectedAcademicYearId = academicYearId ?? 0
             };
 
             return View(viewModel);
         }
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> AssignStudents(AssignStudentsViewModel model)
         {
-            if (ModelState.IsValid)
-                return View(model);
+            // ✅ Validation
+            if (model.SelectedStudentIds == null || !model.SelectedStudentIds.Any())
+            {
+                ModelState.AddModelError("", "Please select at least one student.");
+            }
 
-            // Remove old assignments for this teacher
+            if (model.SelectedAcademicYearId == 0)
+            {
+                ModelState.AddModelError("", "Please select an academic year.");
+            }
+
+            if (ModelState.IsValid)
+            {
+                // reload dropdowns again
+                model.AcademicYears = await _context.AcademicYears
+                    .Select(a => new SelectListItem
+                    {
+                        Value = a.AcademicYearPkId.ToString(),
+                        Text = a.YearRange
+                    }).ToListAsync();
+
+                return View(model);
+            }
+
+            // ✅ Remove old assignments
             var oldAssignments = _context.TeacherStudents
                 .Where(ts => ts.TeacherId == model.TeacherId);
+
             _context.TeacherStudents.RemoveRange(oldAssignments);
 
-            // Add new assignments
+            // ✅ Add new assignments
             foreach (var studentId in model.SelectedStudentIds)
             {
                 _context.TeacherStudents.Add(new TeacherStudent
                 {
                     TeacherId = model.TeacherId,
                     StudentPkId = studentId,
-                    AcademicYearPkId = 1, // TODO: set the correct AcademicYear
+                    AcademicYearPkId = model.SelectedAcademicYearId,
                     AssignedDate = DateTime.Now,
                     IsActive = true
                 });

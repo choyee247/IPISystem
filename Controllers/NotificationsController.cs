@@ -273,8 +273,11 @@ namespace ProjectManagementSystem.Controllers
                 AnnouncementExpiryDate = notification.NotificationType == "Announcement" && notification.Announcement != null
                 ? notification.Announcement.ExpiryDate
                 : null,
+                //AnnouncementFilePath = notification.NotificationType == "Announcement" && notification.Announcement != null
+                //? notification.Announcement.FilePath ?? ""
+                //: "",
                 AnnouncementFilePath = notification.NotificationType == "Announcement" && notification.Announcement != null
-                ? notification.Announcement.FilePath ?? ""
+                ? "/uploads/announcements/" + notification.Announcement.FilePath
                 : "",
                 AnnouncementBlocksSubmissions = notification.NotificationType == "Announcement" && notification.Announcement != null
                 ? notification.Announcement.BlocksSubmissions

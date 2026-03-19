@@ -89,9 +89,16 @@ namespace ProjectManagementSystem.Controllers
             if (string.IsNullOrEmpty(rollNumber))
                 return RedirectToAction("Login", "StudentLogin");
 
-            int pageSize = 3; // 5 projects per page
+            int pageSize = 3; // projects per page
 
-            var projects = _context.Projects
+            var student = await _context.Students
+                .Include(s => s.EmailPk)
+                .FirstOrDefaultAsync(s => s.EmailPk.RollNumber.ToLower() == rollNumber.ToLower());
+
+            if (student == null)
+                return RedirectToAction("Login", "StudentLogin");
+
+            var projects = await _context.Projects
                 .Include(p => p.ProjectTypePk)
                 .Include(p => p.LanguagePk)
                 .Include(p => p.FrameworkPk)
@@ -99,12 +106,21 @@ namespace ProjectManagementSystem.Controllers
                 .Include(p => p.ProjectFiles)
                 .Include(p => p.ProjectMembers)
                     .ThenInclude(pm => pm.StudentPk)
-                        .ThenInclude(s => s.EmailPk)
-                .Where(p => p.ProjectMembers
-                    .Any(pm => pm.StudentPk.EmailPk.RollNumber.ToLower() == rollNumber.ToLower()))
-                .OrderByDescending(p => p.ProjectSubmittedDate);
+                .OrderByDescending(p => p.ProjectSubmittedDate)
+                .ToListAsync();
 
-            var pagedProjects = await projects.ToPagedListAsync(page, pageSize);
+            // Build the ViewModel marking Leader vs Member
+            var projectViewModels = projects
+                .Where(p => p.ProjectMembers.Any(pm => pm.StudentPkId == student.StudentPkId && pm.IsDeleted==false))
+                .Select(p => new ProjectIndexViewModel
+                {
+                    Project = p,
+                    IsLeader = p.SubmittedByStudentPkId == student.StudentPkId
+                })
+                .ToList();
+
+            // Pagination
+            var pagedProjects = projectViewModels.ToPagedList(page, pageSize);
 
             return View(pagedProjects);
         }
@@ -898,13 +914,16 @@ Project Management System
             if (projectFiles != null && projectFiles.Any())
             {
                 var uploadsFolder = Path.Combine(_env.WebRootPath, "uploads", "projects");
-                Directory.CreateDirectory(uploadsFolder);
+
+                if (!Directory.Exists(uploadsFolder))
+                    Directory.CreateDirectory(uploadsFolder);
 
                 foreach (var file in projectFiles)
                 {
                     if (file.Length > 0)
                     {
                         var uniqueFileName = $"{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
+
                         var filePath = Path.Combine(uploadsFolder, uniqueFileName);
 
                         using var stream = new FileStream(filePath, FileMode.Create);
@@ -913,13 +932,17 @@ Project Management System
                         _context.ProjectFiles.Add(new DBModels.ProjectFile
                         {
                             ProjectPkId = project.ProjectPkId,
-                            FilePath = $"/uploads/projects/{uniqueFileName}",
+
+                            // ⭐ filename only
+                            FilePath = uniqueFileName,
+
                             FileType = Path.GetExtension(file.FileName),
-                            FileSize = file.Length,             
+                            FileSize = file.Length,
                             UploadedAt = DateTime.Now
                         });
                     }
                 }
+
                 await _context.SaveChangesAsync();
             }
 
@@ -1061,13 +1084,16 @@ Project Management System
                 if (projectFiles != null && projectFiles.Count > 0)
                 {
                     var uploadPath = Path.Combine(_env.WebRootPath, "uploads", "projects");
-                    Directory.CreateDirectory(uploadPath);
+
+                    if (!Directory.Exists(uploadPath))
+                        Directory.CreateDirectory(uploadPath);
 
                     foreach (var file in projectFiles)
                     {
                         if (file.Length > 0)
                         {
                             var uniqueFileName = $"{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
+
                             var filePath = Path.Combine(uploadPath, uniqueFileName);
 
                             using var stream = new FileStream(filePath, FileMode.Create);
@@ -1076,8 +1102,13 @@ Project Management System
                             var projectFile = new DBModels.ProjectFile
                             {
                                 ProjectPkId = projectInDb.ProjectPkId,
-                                FilePath = $"/uploads/projects/{uniqueFileName}",
-                                FileType = Path.GetExtension(file.FileName)
+
+                                // ⭐ filename only save
+                                FilePath = uniqueFileName,
+
+                                FileType = Path.GetExtension(file.FileName),
+                                FileSize = file.Length,
+                                UploadedAt = DateTime.Now
                             };
 
                             _context.ProjectFiles.Add(projectFile);

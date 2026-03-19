@@ -11,10 +11,12 @@
         <h2 class="edit-announcement-title">@ViewData["Title"]</h2>
         <div class="divider"></div>
 
-        <form asp-action="Edit" class="edit-announcement-form">
-            <div asp-validation-summary="ModelOnly" class="validation-summary"></div>
-            <input type="hidden" asp-for="AnnouncementId" />
+        <form asp-action="Edit" enctype="multipart/form-data">
 
+        @* <form asp-action="Edit" class="edit-announcement-form"> *@
+            <div asp-validation-summary="ModelOnly" class="validation-summary"></div>
+            <input type="hidden" asp-for="FilePath" />
+            <input type="hidden" asp-for="@Model.AnnouncementId"/>
             <div class="form-group">
                 <label asp-for="Title" class="control-label form-label"></label>
                 <input asp-for="Title" class="form-control input-field" placeholder="Announcement title" />
@@ -27,35 +29,54 @@
                 <span asp-validation-for="Message" class="validation-message"></span>
             </div>
 
-            <div class="form-group form-check">
+            <div class="col-md-6 mb-3 form-check mt-4">
                 <input class="form-check-input checkbox-input" asp-for="BlocksSubmissions" />
                 <label class="form-check-label checkbox-label" asp-for="BlocksSubmissions"></label>
             </div>
-            <div class="form-group form-check">
+            <div class="col-md-6 mb-3 form-check mt-4">
                 <input class="form-check-input checkbox-input" asp-for="IsActive" />
                 <label class="form-check-label checkbox-label" asp-for="IsActive"></label>
             </div>
 
-
             <div class="date-fields">
                 <div class="form-group">
                     <label asp-for="StartDate" class="control-label form-label"></label>
-                    <input asp-for="StartDate" class="form-control input-field" />
+                    <input asp-for="StartDate" type="date" class="form-control input-field" />
                     <span asp-validation-for="StartDate" class="validation-message"></span>
                 </div>
 
                 <div class="form-group">
                     <label asp-for="ExpiryDate" class="control-label form-label"></label>
-                    <input asp-for="ExpiryDate" class="form-control input-field" />
+                    <input asp-for="ExpiryDate" type="date" class="form-control input-field" />
                     <span asp-validation-for="ExpiryDate" class="validation-message"></span>
                 </div>
+            </div>
+
+            @if (!string.IsNullOrEmpty(Model.FilePath))
+            {
+                <div class="form-group">
+                    <label>Current Attachment</label><br />
+                    <a class="btn btn-sm btn-primary"
+                       href="@Url.Content("~/uploads/announcements/" + Model.FilePath)"
+                       target="_blank">
+                        Download File
+                    </a>
+                   @*  <a href="@Url.Content("~/uploads/announcements/" + Model.FilePath)" target="_blank">
+                        View File
+                    </a> *@
+                </div>
+            }
+
+            <div class="form-group">
+                <label>Upload New File</label>
+                <input type="file" asp-for="Attachment" class="form-control input-field" />
             </div>
 
             <div class="form-group button-group">
                 <button type="submit" class="btn save-button">
                     <i class="fas fa-save"></i> Save Changes
                 </button>
-                <a asp-action="Dashboard" asp-controller="Teacher" class="btn cancel-button">
+                <a asp-action="Index" asp-controller="Announcement" class="btn cancel-button">
                     <i class="fas fa-times"></i> Cancel
                 </a>
             </div>

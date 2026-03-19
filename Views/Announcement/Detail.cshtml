@@ -42,15 +42,34 @@
                 </p>
             }
 
-            @if (!string.IsNullOrEmpty(Model.FilePath))
+            @* @if (!string.IsNullOrEmpty(Model.FilePath))
             {
                 <div class="mt-3">
                     <a href="@Model.FilePath" target="_blank" class="btn btn-outline-primary">
                         <i class="bi bi-paperclip me-1"></i> View Attachment
                     </a>
                 </div>
+            } *@
+            @* @if (!string.IsNullOrEmpty(Model.FilePath))
+            {
+                <div class="mt-3">
+                    <a href="@Url.Content("~/uploads/announcements/" + Model.FilePath)"
+                       target="_blank"
+                       class="btn btn-outline-primary">
+                        <i class="bi bi-paperclip me-1"></i> View Attachment
+                    </a>
+                </div>
+            } *@
+            @if (!string.IsNullOrEmpty(Model.FilePath))
+            {
+                <div class="mt-3">
+                    <a href="@Url.Content("~/uploads/announcements/" + Model.FilePath)"
+                       class="btn btn-outline-primary"
+                       download>
+                        <i class="bi bi-paperclip me-1"></i> Download Attachment
+                    </a>
+                </div>
             }
-
             @if (Model.BlocksSubmissions==true)
             {
                 <div class="alert alert-danger mt-4 mb-0">
