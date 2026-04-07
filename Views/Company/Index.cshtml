@@ -1,518 +1,798 @@
 ﻿@model List<ProjectManagementSystem.DBModels.CompanyViewModel>
+
 @{
     ViewData["Title"] = "Companies";
     Layout = "~/Views/Shared/_TeacherLayout.cshtml";
 }
-@* @{
-    var role = ViewBag.Role?.ToString() ?? "Teacher";
-    Layout = role == "Admin"
-        ? "~/Views/Shared/_AdminLayout.cshtml"
-        : "~/Views/Shared/_TeacherLayout.cshtml";
-} *@
-
-
-<style>
-    body {
-        background: linear-gradient(135deg, #e4eefd);
-        min-height: 100vh;
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    }
-    .btn-primary {
-        background-color: #8c5dd1;
-        border-color: #8c5dd1;
-    }
-
-        .btn-primary:hover {
-            background-color: #7a4bc2;
-            border-color: #7a4bc2;
-        }
-
-    .company-table {
-        width: 100%;
-        border-collapse: collapse;
-        margin-top: 20px;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-    }
-
-        .company-table th {
-            background-color: #8c5dd1;
-            color: white;
-            padding: 12px;
-            text-align: left;
-        }
-
-        .company-table td {
-            padding: 12px;
-            border-bottom: 1px solid #eee;
-        }
-
-        .company-table tr:hover {
-            background-color: #f9f5ff;
-        }
-
-    .add-form {
-        background-color: #f9f5ff;
-        padding: 15px;
-        border-radius: 5px;
-        margin-bottom: 20px;
-    }
-
-        .add-form input {
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            margin-right: 10px;
-            width: 300px;
-        }
-
-    .alert-success {
-        background-color: #d4edda;
-        color: #155724;
-        padding: 10px;
-        border-radius: 4px;
-        margin-bottom: 15px;
-    }
-
-    .alert-danger {
-        background-color: #f8d7da;
-        color: #721c24;
-        padding: 10px;
-        border-radius: 4px;
-        margin-bottom: 15px;
-    }
-</style>
-
+<!DOCTYPE html>
+<html lang="en">
 <head>
-    <!-- SweetAlert2 -->
-    <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <!-- Font Awesome -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
-</head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Companies | Modern Management</title>
 
-<style>
-    :root {
-        --primary: #8C5DD1;
-        --primary-light: #E4EEFD;
-        --danger: #dc3545;
-        --success: #28a745;
-        --gray: #6c757d;
-        --light-gray: #f8f9fa;
-        --white: #ffffff;
-        --border-radius: 6px;
-        --box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        --transition: all 0.2s ease;
-    }
+    <!-- External Libraries (kept minimal but modern) -->
+@*     <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
+ *@
+    <link href="~/css/sweetalert2.min11.css" rel="stylesheet">
+    <script src="~/css/sweetalert2@1111.js"></script>
 
-    .company-management-container {
-        max-width: 1000px;
-        margin: 0 auto;
-        padding: 15px;
-    }
+    @* <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script> *@
 
-    .page-header {
-        background: linear-gradient(135deg, var(--primary) 0%, #6a3093 100%);
-        color: var(--white);
-        padding: 1rem;
-        border-radius: var(--border-radius);
-        margin-bottom: 1.5rem;
-        text-align: center;
-    }
+@*     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+ *@
+    <link href="~/lib/fontawesome/css/all.min600.css" rel="stylesheet">
+    <script src="~/lib/jquery/dist/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
 
-    .page-title {
-        font-size: 1.5rem;
-        font-weight: 600;
-        margin-bottom: 0.3rem;
-    }
-
-    .page-subtitle {
-        font-size: 0.9rem;
-        opacity: 0.9;
-    }
-
-    .add-form {
-        background-color: var(--white);
-        padding: 1rem;
-        border-radius: var(--border-radius);
-        margin-bottom: 1.5rem;
-        box-shadow: var(--box-shadow);
-        display: flex;
-        gap: 0.8rem;
-    }
-
-        .add-form input[type="text"] {
-            flex: 1;
-            padding: 0.6rem 0.8rem;
-            border: 1px solid #dee2e6;
-            border-radius: var(--border-radius);
-            font-size: 0.95rem;
-            transition: var(--transition);
+    <!-- jQuery (required for existing script patterns) -->
+@*     <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+ *@
+    <style>
+        /* ----- GLOBAL RESET & MODERN BASE ----- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
 
-            .add-form input[type="text"]:focus {
-                outline: none;
-                border-color: var(--primary);
-                box-shadow: 0 0 0 3px rgba(140, 93, 209, 0.2);
+        body {
+            background: #f6f9fc;
+            font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            line-height: 1.5;
+            color: #1e293b;
+        }
+
+        /* Import Google Fonts for cleaner look */
+        @@import url('https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap');
+        /* CSS Variables with primary #8c5dd1 */
+        :root {
+            --primary: #8c5dd1;
+            --primary-dark: #6e41b0;
+            --primary-soft: #f0eaff;
+            --primary-glow: rgba(140, 93, 209, 0.2);
+            --surface-white: #ffffff;
+            --gray-50: #f8fafc;
+            --gray-100: #f1f5f9;
+            --gray-200: #e2e8f0;
+            --gray-300: #cbd5e1;
+            --gray-600: #475569;
+            --gray-700: #334155;
+            --gray-800: #1e293b;
+            --danger: #ef4444;
+            --danger-dark: #dc2626;
+            --success: #10b981;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+            --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+            --radius-md: 0.75rem;
+            --radius-lg: 1rem;
+            --radius-xl: 1.5rem;
+            --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Layout container — modern centered card-like feel */
+        .modern-container {
+            max-width: 1280px;
+            margin: 2rem auto;
+            padding: 0 1.5rem;
+        }
+
+        /* Header card with gradient & modern style */
+        .hero-header {
+            background: linear-gradient(135deg, var(--primary) 0%, #5b3a8c 100%);
+            border-radius: var(--radius-xl);
+            padding: 2rem 2rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow-lg);
+            /* position: relative; */
+            overflow: hidden;
+        }
+
+            .hero-header::after {
+                content: '';
+                position: absolute;
+                top: 0;
+                right: 0;
+                width: 280px;
+                height: 280px;
+                background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 70%);
+                pointer-events: none;
             }
 
-    .btn {
-        padding: 0.6rem 1rem;
-        border-radius: var(--border-radius);
-        font-weight: 500;
-        font-size: 0.9rem;
-        transition: var(--transition);
-        border: none;
-        cursor: pointer;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 0.4rem;
-    }
-
-    .btn-primary {
-        background-color: var(--primary);
-        color: var(--white);
-    }
-
-        .btn-primary:hover {
-            background-color: #7a4bc3;
+        .page-title {
+            font-size: 1.9rem;
+            font-weight: 700;
+            letter-spacing: -0.01em;
+            color: white;
+            margin-bottom: 0.4rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
         }
 
-    .btn-danger {
-        background-color: var(--danger);
-        color: var(--white);
-    }
+            .page-title i {
+                font-size: 2rem;
+                filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+            }
 
-        .btn-danger:hover {
-            background-color: #c82333;
+        .page-subtitle {
+            font-size: 1rem;
+            color: rgba(255,255,255,0.85);
+            font-weight: 400;
+            margin-top: 0.25rem;
         }
 
-    .btn-secondary {
-        background-color: var(--gray);
-        color: var(--white);
-    }
-
-        .btn-secondary:hover {
-            background-color: #5a6268;
-        }
-
-    .btn-sm {
-        padding: 0.4rem 0.8rem;
-        font-size: 0.85rem;
-    }
-
-    .company-table {
-        width: 100%;
-        border-collapse: separate;
-        border-spacing: 0;
-        background-color: var(--white);
-        border-radius: var(--border-radius);
-        overflow: hidden;
-        box-shadow: var(--box-shadow);
-        font-size: 0.95rem;
-    }
-
-        .company-table th {
-            background-color: var(--primary);
-            color: var(--white);
-            padding: 0.8rem;
-            text-align: left;
-            font-weight: 600;
-            font-size: 0.95rem;
-        }
-
-        .company-table td {
-            padding: 0.8rem;
-            border-bottom: 1px solid #dee2e6;
-            vertical-align: middle;
-        }
-
-        .company-table tr:last-child td {
-            border-bottom: none;
-        }
-
-        .company-table tr:nth-child(even) {
-            background-color: var(--light-gray);
-        }
-
-        .company-table tr:hover {
-            background-color: rgba(140, 93, 209, 0.05);
-        }
-
-    .action-buttons {
-        display: flex;
-        gap: 0.4rem;
-    }
-
-    .edit-form {
-        display: flex;
-        gap: 0.4rem;
-        align-items: center;
-    }
-
-        .edit-form input[type="text"] {
-            padding: 0.4rem 0.8rem;
-            border: 1px solid #dee2e6;
-            border-radius: var(--border-radius);
-            font-size: 0.95rem;
+        /* Card / glassmorphism for add form and table area */
+        .form-card {
+            background: var(--surface-white);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md);
+            margin-bottom: 2rem;
+            padding: 0.25rem;
             transition: var(--transition);
+        }
+
+        .add-form-modern {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 1rem;
+            padding: 1.25rem 1.5rem;
+            background: var(--surface-white);
+            border-radius: var(--radius-lg);
+        }
+
+        .input-group {
+            flex: 2;
+            min-width: 240px;
+        }
+
+            .input-group label {
+                display: block;
+                font-size: 0.75rem;
+                font-weight: 600;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                color: var(--gray-600);
+                margin-bottom: 0.25rem;
+            }
+
+        .input-field {
             width: 100%;
-            max-width: 250px;
+            padding: 0.8rem 1rem;
+            border: 1.5px solid var(--gray-200);
+            border-radius: var(--radius-md);
+            font-size: 0.95rem;
+            font-weight: 500;
+            transition: var(--transition);
+            background-color: var(--gray-50);
         }
 
-            .edit-form input[type="text"]:focus {
+            .input-field:focus {
                 outline: none;
                 border-color: var(--primary);
-                box-shadow: 0 0 0 3px rgba(140, 93, 209, 0.2);
+                box-shadow: 0 0 0 4px var(--primary-glow);
+                background-color: white;
             }
 
-    /* Responsive adjustments */
-    @@media (max-width: 768px) {
-        .add-form {
-            flex-direction: column;
-            gap: 0.6rem;
+        /* Buttons modern design */
+        .btn {
+            /* display: inline-flex; */
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.7rem 1.4rem;
+            font-weight: 600;
+            font-size: 0.875rem;
+            border-radius: 2rem;
+            transition: var(--transition);
+            cursor: pointer;
+            border: none;
+            background: transparent;
+            font-family: inherit;
         }
 
-        .action-buttons {
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+            box-shadow: var(--shadow-sm);
+        }
+
+            .btn-primary:hover {
+                background: var(--primary-dark);
+                transform: translateY(-1px);
+                box-shadow: var(--shadow-md);
+            }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+
+            .btn-danger:hover {
+                background: var(--danger-dark);
+                transform: translateY(-1px);
+            }
+
+        .btn-secondary {
+            background: var(--gray-200);
+            color: var(--gray-700);
+        }
+
+            .btn-secondary:hover {
+                background: var(--gray-300);
+            }
+
+        .btn-sm {
+            padding: 0.45rem 1rem;
+            font-size: 0.8rem;
+            border-radius: 2rem;
+            font-weight: 500;
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1.5px solid var(--gray-300);
+            color: var(--gray-700);
+        }
+
+            .btn-outline:hover {
+                border-color: var(--primary);
+                background: var(--primary-soft);
+                color: var(--primary-dark);
+            }
+
+        /* Table modern: clean & spacious */
+        .table-wrapper {
+            background: var(--surface-white);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md);
+            overflow-x: auto;
+            /* backdrop-filter: blur(0px); */
+        }
+
+        .company-table-modern {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            font-size: 0.9rem;
+        }
+
+            .company-table-modern th {
+                text-align: left;
+                padding: 1rem 1.5rem;
+                background: var(--gray-50);
+                color: var(--gray-700);
+                font-weight: 600;
+                font-size: 0.85rem;
+                text-transform: uppercase;
+                letter-spacing: 0.03em;
+                border-bottom: 1px solid var(--gray-200);
+            }
+
+            .company-table-modern td {
+                padding: 1rem 1.5rem;
+                border-bottom: 1px solid var(--gray-100);
+                vertical-align: middle;
+                color: var(--gray-800);
+                font-weight: 500;
+            }
+
+            .company-table-modern tr:last-child td {
+                border-bottom: none;
+            }
+
+            .company-table-modern tr:hover td {
+                background-color: var(--primary-soft);
+                transition: background 0.2s;
+            }
+
+        /* Action buttons container */
+        .action-group {
+            display: flex;
+            gap: 0.6rem;
             flex-wrap: wrap;
         }
 
-        .edit-form {
+        /* Edit form inline modern */
+        .edit-inline-modern {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 0.75rem;
+            width: 100%;
+        }
+
+            .edit-inline-modern input {
+                flex: 1;
+                min-width: 180px;
+                padding: 0.5rem 1rem;
+                border: 1.5px solid var(--gray-200);
+                border-radius: 2rem;
+                font-size: 0.9rem;
+                background: white;
+            }
+
+                .edit-inline-modern input:focus {
+                    border-color: var(--primary);
+                    outline: none;
+                    box-shadow: 0 0 0 3px var(--primary-glow);
+                }
+
+        .company-name-text {
+            font-weight: 600;
+            color: var(--gray-800);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* empty state subtle */
+        .empty-row td {
+            text-align: center;
+            padding: 3rem;
+            color: var(--gray-600);
+            font-style: italic;
+        }
+
+        /* responsive */
+        @@media (max-width: 768px) {
+            .modern-container
+
+        {
+            padding: 0 1rem;
+            margin: 1rem auto;
+        }
+
+        .hero-header {
+            padding: 1.5rem;
+        }
+
+        .page-title {
+            font-size: 1.5rem;
+        }
+
+        .add-form-modern {
             flex-direction: column;
-            align-items: flex-start;
+            align-items: stretch;
+        }
+
+        .btn {
+            justify-content: center;
+        }
+
+        .company-table-modern th, .company-table-modern td {
+            padding: 0.9rem 1rem;
+        }
+
+        .action-group {
+            flex-direction: column;
             gap: 0.4rem;
         }
 
-            .edit-form input[type="text"] {
-                max-width: 100%;
+        }
+
+        /* subtle animations */
+        @@keyframes fadeSlideUp {
+            from
+
+        {
+            opacity: 0;
+            transform: translateY(8px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        }
+
+      /*   .company-table-modern tbody tr {
+            animation: fadeSlideUp 0.25s ease forwards;
+        } */
+
+        /* badge or icon alignment */
+        .company-icon {
+            background: var(--primary-soft);
+            width: 32px;
+            height: 32px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 32px;
+            color: var(--primary);
+            margin-right: 0.6rem;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="modern-container">
+        <!-- modern hero header -->
+        <div class="hero-header">
+            <div class="page-title">
+                <i class="fas fa-building"></i>
+                <span>Company Management</span>
+            </div>
+            <div class="page-subtitle">
+                Manage partner companies & organizations · elegant & effortless
+            </div>
+        </div>
+
+        <!-- Add company form - card style -->
+        <div class="form-card">
+            <form id="createCompanyForm" asp-action="Create" asp-controller="Company" method="post">
+                @Html.AntiForgeryToken()
+                <div class="add-form-modern">
+                    <div class="input-group">
+                        <label><i class="fas fa-plus-circle"></i> New company name</label>
+                        <input type="text" name="CompanyName" class="input-field" placeholder="e.g., TechVision Inc." required maxlength="100" autocomplete="off" />
+                    </div>
+                    <div style="display: flex; align-items: flex-end;">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-plus"></i> Add Company
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Companies table with modern UI -->
+        <div class="table-wrapper">
+            <table class="company-table-modern">
+                <thead>
+                    <tr>
+                        <th><i class="fas fa-industry"></i> Company Name</th>
+                        <th style="width: 220px;"><i class="fas fa-cog"></i> Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="companiesTableBody">
+                    @foreach (var item in Model)
+                    {
+                        <tr id="row-@item.Company_pkId">
+                            <td>
+                                <div class="company-name-text">
+                                    <span class="company-icon"><i class="fas fa-building"></i></span>
+                                    <span id="name-@item.Company_pkId">@item.CompanyName</span>
+                                </div>
+                                <div id="edit-form-@item.Company_pkId" style="display:none;">
+                                    <form class="edit-company-form edit-inline-modern"
+                                          data-id="@item.Company_pkId"
+                                          asp-action="Edit"
+                                          asp-controller="Company"
+                                          method="post">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="Company_pkId" value="@item.Company_pkId" />
+                                        <input type="text" name="CompanyName" value="@item.CompanyName" required maxlength="100" />
+                                        <div style="display: flex; gap: 0.5rem;">
+                                            <button type="submit" class="btn btn-primary btn-sm">
+                                                <i class="fas fa-check"></i> Save
+                                            </button>
+                                            <button type="button" class="btn btn-secondary btn-sm"
+                                                    onclick="hideEditForm(@item.Company_pkId)">
+                                                <i class="fas fa-times"></i> Cancel
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="action-group">
+                                    <button id="edit-btn-@item.Company_pkId" class="btn btn-primary btn-sm"
+                                            onclick="showEditForm(@item.Company_pkId)">
+                                        <i class="fas fa-pen-alt"></i> Edit
+                                    </button>
+                                    <button type="button" class="btn btn-danger btn-sm"
+                                            onclick="confirmDelete(@item.Company_pkId, '@item.CompanyName')">
+                                        <i class="fas fa-trash-can"></i> Delete
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                    @if (!Model.Any())
+                    {
+                        <tr class="empty-row">
+                            <td colspan="2" style="text-align: center; padding: 3rem;">
+                                <i class="fas fa-building-circle-check" style="font-size: 2rem; opacity: 0.5;"></i>
+                                <p style="margin-top: 0.5rem;">No companies yet. Add your first partner company ✨</p>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    @section Scripts {
+        <script>
+            // ------------------------------
+            // MODERN UI + FULL AJAX HANDLING
+            // ------------------------------
+            $(function() {
+                initCompanyForms();
+            });
+
+            function initCompanyForms() {
+                // Create company with modern feedback
+                $('#createCompanyForm').on('submit', function(e) {
+                    e.preventDefault();
+                    submitCreateForm($(this));
+                });
+
+                // Edit forms delegation (inline edit)
+                $(document).on('submit', '.edit-company-form', function(e) {
+                    e.preventDefault();
+                    submitEditForm($(this));
+                });
             }
-    }
-</style>
 
-<div class="company-management-container">
-    <!-- Page Header -->
-    <div class="page-header">
-        <h1 class="page-title">Company Management</h1>
-        <p class="page-subtitle">Manage partner companies</p>
-    </div>
+            // Helper: escapeHtml to prevent XSS
+            function escapeHtml(unsafe) {
+                if (!unsafe) return '';
+                return unsafe.toString().replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+            }
 
-    <!-- Add Company Form -->
-    <div class="add-form">
-        <form id="createCompanyForm" asp-action="Create" asp-controller="Company" method="post" class="w-100">
-            @Html.AntiForgeryToken()
-            <input type="text" name="CompanyName" placeholder="Enter company name" required maxlength="100" />
-            <button type="submit" class="btn btn-primary">
-                <i class="fas fa-plus"></i> Add
-            </button>
-        </form>
-    </div>
+            // Error handler with sweet styling
+            function handleAjaxError(xhr) {
+                let errorMsg = 'Something went wrong. Please try again.';
+                try {
+                    if (xhr.responseJSON) {
+                        errorMsg = xhr.responseJSON.message || errorMsg;
+                        if (xhr.responseJSON.errors) {
+                            const errorList = Object.values(xhr.responseJSON.errors).flat();
+                            errorMsg += ': ' + errorList.join(', ');
+                        }
+                    } else if (xhr.responseText) {
+                        errorMsg = xhr.responseText.substring(0, 200);
+                    }
+                } catch(e) {}
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Operation failed',
+                    text: errorMsg,
+                    confirmButtonColor: '#8c5dd1',
+                    background: '#fff',
+                    backdrop: true
+                });
+            }
 
-    <!-- Companies Table -->
-    <div class="table-responsive">
-        <table class="company-table">
-            <thead>
-                <tr>
-                    <th>Company Name</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody id="companiesTableBody">
-                @foreach (var item in Model)
-                {
-                    <tr id="row-@item.Company_pkId">
+            function showSuccess(message) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success!',
+                    text: message,
+                    confirmButtonColor: '#8c5dd1',
+                    timer: 2600,
+                    showConfirmButton: true,
+                    backdrop: true
+                });
+            }
+
+            function showError(message) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: message,
+                    confirmButtonColor: '#8c5dd1'
+                });
+            }
+
+            // CREATE company with modern row insertion
+            function submitCreateForm(form) {
+                const submitBtn = form.find('button[type="submit"]');
+                const originalText = submitBtn.html();
+                submitBtn.html('<i class="fas fa-spinner fa-pulse"></i> Adding...').prop('disabled', true);
+
+                $.ajax({
+                    url: form.attr('action'),
+                    type: 'POST',
+                    data: form.serialize(),
+                    success: function(response) {
+                        submitBtn.html(originalText).prop('disabled', false);
+                        if (response && response.success) {
+                            if (response.data) {
+                                addCompanyRowModern(response.data);
+                                form.find('input[name="CompanyName"]').val('');
+                                // remove empty row if exists
+                                if ($('#companiesTableBody .empty-row').length) {
+                                    $('#companiesTableBody .empty-row').remove();
+                                }
+                                showSuccess('Company created successfully');
+                            } else {
+                                showError('Invalid server response');
+                            }
+                        } else {
+                            showError(response?.message || 'Failed to create company');
+                        }
+                    },
+                    error: function(xhr) {
+                        submitBtn.html(originalText).prop('disabled', false);
+                        handleAjaxError(xhr);
+                    }
+                });
+            }
+
+            // EDIT company
+            function submitEditForm(form) {
+                const companyId = form.data('id');
+                const saveBtn = form.find('button[type="submit"]');
+                const originalBtnText = saveBtn.html();
+                saveBtn.html('<i class="fas fa-spinner fa-pulse"></i>').prop('disabled', true);
+
+                $.ajax({
+                    url: form.attr('action'),
+                    type: 'POST',
+                    data: form.serialize(),
+                    success: function(response) {
+                        saveBtn.html(originalBtnText).prop('disabled', false);
+                        if (response && response.success) {
+                            const newNameRaw = response.data?.companyName || form.find('input[name="CompanyName"]').val();
+                            const newName = newNameRaw;
+                            $('#name-' + companyId).text(newName);
+                            // Also update the hidden value inside edit form for consistency
+                            form.find('input[name="CompanyName"]').val(newName);
+                            hideEditForm(companyId);
+                            showSuccess('Company updated successfully');
+                        } else {
+                            showError(response?.message || 'Update failed');
+                        }
+                    },
+                    error: function(xhr) {
+                        saveBtn.html(originalBtnText).prop('disabled', false);
+                        handleAjaxError(xhr);
+                    }
+                });
+            }
+
+            // DELETE with modern confirmation
+            function confirmDelete(id, name) {
+                Swal.fire({
+                    title: 'Remove company?',
+                    html: `You are about to delete <strong>${escapeHtml(name)}</strong>. This action cannot be undone.`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#8c5dd1',
+                    cancelButtonColor: '#ef4444',
+                    confirmButtonText: 'Yes, delete',
+                    cancelButtonText: 'Cancel',
+                    reverseButtons: true
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        deleteCompany(id);
+                    }
+                });
+            }
+
+            function deleteCompany(id) {
+                Swal.fire({
+                    title: 'Processing',
+                    text: 'Deleting company...',
+                    allowOutsideClick: false,
+                    didOpen: () => Swal.showLoading()
+                });
+                const token = $('input[name="__RequestVerificationToken"]').val();
+                $.ajax({
+                    url: '@Url.Action("Delete", "Company")',
+                    type: 'POST',
+                    data: { id: id, __RequestVerificationToken: token },
+                    success: function(response) {
+                        Swal.close();
+                        if (response && response.success) {
+                            $('#row-' + id).fadeOut(300, function() {
+                                $(this).remove();
+                                // if no rows left, show empty state
+                                if ($('#companiesTableBody tr:visible').length === 0) {
+                                    $('#companiesTableBody').html(`
+                                        <tr class="empty-row">
+                                            <td colspan="2" style="text-align: center; padding: 3rem;">
+                                                <i class="fas fa-building-circle-check" style="font-size: 2rem; opacity: 0.5;"></i>
+                                                <p style="margin-top: 0.5rem;">No companies yet. Add your first partner company ✨</p>
+                                            </td>
+                                        </tr>
+                                    `);
+                                }
+                            });
+                            showSuccess('Company deleted successfully');
+                        } else {
+                            showError(response?.message || 'Delete operation failed');
+                        }
+                    },
+                    error: function(xhr) {
+                        Swal.close();
+                        handleAjaxError(xhr);
+                    }
+                });
+            }
+
+            // Dynamically add a new row with modern design & bind actions
+            function addCompanyRowModern(company) {
+                // company object should contain company_pkId & companyName (based on typical viewmodel)
+                const id = company.company_pkId || company.Company_pkId;
+                const name = company.companyName || company.CompanyName;
+                if (!id) return;
+                const escapedName = escapeHtml(name);
+                const safeNameForAttr = escapedName.replace(/'/g, "\\'");
+
+                const newRowHtml = `
+                    <tr id="row-${id}">
                         <td>
-                            <span id="name-@item.Company_pkId">@item.CompanyName</span>
-                            <div id="edit-form-@item.Company_pkId" style="display:none;">
-                                <form class="edit-form edit-company-form"
-                                      data-id="@item.Company_pkId"
-                                      asp-action="Edit"
-                                      asp-controller="Company"
+                            <div class="company-name-text">
+                                <span class="company-icon"><i class="fas fa-building"></i></span>
+                                <span id="name-${id}">${escapedName}</span>
+                            </div>
+                            <div id="edit-form-${id}" style="display:none;">
+                                <form class="edit-company-form edit-inline-modern"
+                                      data-id="${id}"
+                                      action="@Url.Action("Edit", "Company")"
                                       method="post">
-                                    @Html.AntiForgeryToken()
-                                    <input type="hidden" name="Company_pkId" value="@item.Company_pkId" />
-                                    <input type="text" name="CompanyName" value="@item.CompanyName" required maxlength="100" />
-                                    <div class="d-flex gap-2">
-                                        <button type="submit" class="btn btn-primary btn-sm">
-                                            <i class="fas fa-save"></i> Save
-                                        </button>
-                                        <button type="button" class="btn btn-secondary btn-sm"
-                                                onclick="hideEditForm(@item.Company_pkId)">
-                                            <i class="fas fa-times"></i> Cancel
-                                        </button>
+            @Html.AntiForgeryToken()
+                                    <input type="hidden" name="Company_pkId" value="${id}" />
+                                    <input type="text" name="CompanyName" value="${escapedName.replace(/&quot;/g, '"')}" required maxlength="100" />
+                                    <div style="display: flex; gap: 0.5rem;">
+                                        <button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-check"></i> Save</button>
+                                        <button type="button" class="btn btn-secondary btn-sm" onclick="hideEditForm(${id})"><i class="fas fa-times"></i> Cancel</button>
                                     </div>
                                 </form>
                             </div>
-                        </td>
+                         </td>
                         <td>
-                            <div class="action-buttons">
-                                <button id="edit-btn-@item.Company_pkId" class="btn btn-primary btn-sm"
-                                        onclick="showEditForm(@item.Company_pkId)">
-                                    <i class="fas fa-edit"></i> Edit
-                                </button>
-                                <button type="button" class="btn btn-danger btn-sm"
-                                        onclick="confirmDelete(@item.Company_pkId, '@item.CompanyName')">
-                                    <i class="fas fa-trash-alt"></i> Delete
-                                </button>
+                            <div class="action-group">
+                                <button id="edit-btn-${id}" class="btn btn-primary btn-sm" onclick="showEditForm(${id})"><i class="fas fa-pen-alt"></i> Edit</button>
+                                <button type="button" class="btn btn-danger btn-sm" onclick="confirmDelete(${id}, '${safeNameForAttr}')"><i class="fas fa-trash-can"></i> Delete</button>
                             </div>
-                        </td>
+                         </td>
                     </tr>
-                }
-            </tbody>
-        </table>
-    </div>
-</div>
+                `;
+                $('#companiesTableBody').append(newRowHtml);
+                // scroll to new row smoothly
+                document.getElementById(`row-${id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
 
-@section Scripts {
-    <script>
-        // Document ready handler
-        $(function() {
-            initCompanyForms();
-        });
+            // Helper functions for showing/hiding inline edit
+            function showEditForm(id) {
+                $(`#name-${id}`).closest('.company-name-text').hide();
+                $(`#edit-form-${id}`).show();
+                $(`#edit-btn-${id}`).hide();
+            }
 
-        function initCompanyForms() {
-            // Create
-            $('#createCompanyForm').on('submit', function(e) {
-                e.preventDefault();
-                submitCreateForm($(this));
-            });
+            function hideEditForm(id) {
+                $(`#name-${id}`).closest('.company-name-text').show();
+                $(`#edit-form-${id}`).hide();
+                $(`#edit-btn-${id}`).show();
+            }
+        </script>
+    }
 
-            // Edit (delegated)
-            $(document).on('submit', '.edit-company-form', function(e) {
-                e.preventDefault();
-                submitEditForm($(this));
-            });
+    <!-- For non-layout preview (ensuring background & styles are applied) -->
+    <style>
+        /* override some edge defaults */
+        .btn-primary, .btn-danger, .btn-secondary {
+            transition: all 0.2s ease;
         }
 
-        // AJAX error
-        function handleAjaxError(xhr) {
-            let errorMsg = 'An unexpected error occurred';
-            try {
-                if (xhr.responseJSON) {
-                    errorMsg = xhr.responseJSON.message || errorMsg;
-                    if (xhr.responseJSON.errors) {
-                        const errorList = Object.values(xhr.responseJSON.errors).flat();
-                        errorMsg += ': ' + errorList.join(', ');
-                    }
-                } else if (xhr.responseText) {
-                    errorMsg = xhr.responseText;
-                }
-            } catch (e) {}
-            Swal.fire({ icon: 'error', title: 'Error', text: errorMsg, confirmButtonColor: '#8C5DD1' });
+        input, button {
+            font-family: inherit;
         }
 
-        // Create
-        function submitCreateForm(form) {
-            Swal.fire({ title: 'Creating Company', text: 'Please wait...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-            $.ajax({
-                url: form.attr('action'),
-                type: 'POST',
-                data: form.serialize(),
-                success: function(response) {
-                    Swal.close();
-                    if (response && response.success) {
-                        if (response.data) addCompanyRow(response.data);
-                        form.trigger('reset');
-                        showSuccess('Company created successfully');
-                    } else {
-                        showError(response?.message || 'Failed to create company');
-                    }
-                },
-                error: function(xhr) { Swal.close(); handleAjaxError(xhr); }
-            });
+        .table-wrapper::-webkit-scrollbar {
+            height: 6px;
+            width: 6px;
         }
 
-        // Edit
-        function submitEditForm(form) {
-            const companyId = form.data('id');
-            Swal.fire({ title: 'Updating Company', text: 'Please wait...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-            $.ajax({
-                url: form.attr('action'),
-                type: 'POST',
-                data: form.serialize(),
-                success: function(response) {
-                    Swal.close();
-                    if (response && response.success) {
-                        const newName = response.data?.companyName || form.find('input[name="CompanyName"]').val();
-                        $('#name-' + companyId).text(newName);
-                        hideEditForm(companyId);
-                        showSuccess('Company updated successfully');
-                    } else {
-                        showError(response?.message || 'Failed to update company');
-                    }
-                },
-                error: function(xhr) { Swal.close(); handleAjaxError(xhr); }
-            });
+        .table-wrapper::-webkit-scrollbar-track {
+            background: var(--gray-100);
+            border-radius: 10px;
         }
 
-        // Delete
-        function confirmDelete(id, name) {
-            Swal.fire({
-                title: 'Confirm Delete',
-                html: `Are you sure you want to delete <strong>${escapeHtml(name)}</strong>?`,
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#8C5DD1',
-                cancelButtonColor: '#dc3545',
-                confirmButtonText: 'Delete'
-            }).then((result) => { if (result.isConfirmed) deleteCompany(id); });
+        .table-wrapper::-webkit-scrollbar-thumb {
+            background: var(--primary);
+            border-radius: 10px;
         }
+    </style>
 
-        function deleteCompany(id) {
-            Swal.fire({ title: 'Deleting Company', text: 'Please wait...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-            $.ajax({
-                url: '@Url.Action("Delete", "Company")',
-                type: 'POST',
-                data: { id: id, __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val() },
-                success: function(response) {
-                    Swal.close();
-                    if (response && response.success) {
-                        $('#row-' + id).fadeOut(300, function() { $(this).remove(); });
-                        showSuccess('Company deleted successfully');
-                    } else {
-                        showError(response?.message || 'Failed to delete company');
-                    }
-                },
-                error: function(xhr) { Swal.close(); handleAjaxError(xhr); }
-            });
-        }
-
-        // Add new row dynamically
-        function addCompanyRow(company) {
-            const newRow = `
-                <tr id="row-${company.company_pkId}">
-                    <td>
-                        <span id="name-${company.company_pkId}">${escapeHtml(company.companyName)}</span>
-                        <div id="edit-form-${company.company_pkId}" style="display:none;">
-                            <form class="edit-form edit-company-form"
-                                  data-id="${company.company_pkId}"
-                                  action="@Url.Action("Edit", "Company")"
-                                  method="post">
-                                @Html.AntiForgeryToken()
-                                <input type="hidden" name="Company_pkId" value="${company.company_pkId}" />
-                                <input type="text" name="CompanyName" value="${escapeHtml(company.companyName)}" required maxlength="100" />
-                                <div class="d-flex gap-2">
-                                    <button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-save"></i> Save</button>
-                                    <button type="button" class="btn btn-secondary btn-sm" onclick="hideEditForm(${company.company_pkId})"><i class="fas fa-times"></i> Cancel</button>
-                                </div>
-                            </form>
-                        </div>
-                    </td>
-                    <td>
-                        <div class="action-buttons">
-                            <button id="edit-btn-${company.company_pkId}" class="btn btn-primary btn-sm" onclick="showEditForm(${company.company_pkId})"><i class="fas fa-edit"></i> Edit</button>
-                            <button type="button" class="btn btn-danger btn-sm" onclick="confirmDelete(${company.company_pkId}, '${escapeHtml(company.companyName).replace(/'/g, "\\'")}')"><i class="fas fa-trash-alt"></i> Delete</button>
-                        </div>
-                    </td>
-                </tr>
-            `;
-            $('#companiesTableBody').append(newRow);
-        }
-
-        // Helpers
-        function showEditForm(id) { $(`#name-${id}`).hide(); $(`#edit-form-${id}`).show(); $(`#edit-btn-${id}`).hide(); }
-        function hideEditForm(id) { $(`#name-${id}`).show(); $(`#edit-form-${id}`).hide(); $(`#edit-btn-${id}`).show(); }
-        function showSuccess(message) { Swal.fire({ icon: 'success', title: 'Success', text: message, confirmButtonColor: '#8C5DD1', timer: 3000 }); }
-        function showError(message) { Swal.fire({ icon: 'error', title: 'Error', text: message, confirmButtonColor: '#8C5DD1' }); }
-        function escapeHtml(unsafe) { return unsafe?.toString().replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#039;") || ''; }
-    </script>
-}
+</body>
+</html>

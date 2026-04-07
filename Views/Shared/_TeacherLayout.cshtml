@@ -3,13 +3,13 @@
     Layout = null;
     // var fullName = ViewBag.FullName ?? "Teacher";
     // var userRole = HttpContextAccessor.HttpContext.Session.GetString("UserRole");
-    //var userRole = HttpContextAccessor.HttpContext.Session.GetString("UserRole") ?? "Teacher";
+    var userRole = HttpContextAccessor.HttpContext.Session.GetString("UserRole") ?? "Teacher";
     var fullName = HttpContextAccessor.HttpContext.Session.GetString("UserName") ?? "Teacher";
-
+    //var title = userRole.Equals("Admin", StringComparison.OrdinalIgnoreCase) ? "Admin Notifications" : "My Notifications";
 }
 
 @{
-    var userRole = Context.Session.GetString("UserRole") ?? "Guest";
+    //var userRole = Context.Session.GetString("UserRole") ?? "Guest";
     var currentController = ViewContext.RouteData.Values["Controller"]?.ToString();
     var currentAction = ViewContext.RouteData.Values["Action"]?.ToString();
 }
@@ -177,22 +177,18 @@
                                 <path fill="#8C5DD1" d="M12,22A2,2 0 0,0 14,20H10A2,2 0 0,0 12,22M18,16V11C18,7.93 16.36,5.36 13.5,4.68V4A1.5,1.5 0 0,0 12,2.5A1.5,1.5 0 0,0 10.5,4V4.68C7.63,5.36 6,7.92 6,11V16L4,18V19H20V18L18,16Z" />
                                 <circle class="pulse" fill="#FF6B6B" cx="18" cy="5" r="3.2" />
                             </svg>
-                           @*  <span class="cute-badge" id="notificationBadge">
+
+                            <!-- ✅ Dynamic Count -->
+                            <span class="cute-badge">
                                 @await Component.InvokeAsync(typeof(ProjectManagementSystem.ViewComponents.NotificationCountViewComponent))
-                            </span> *@
-                            <span class="cute-badge" id="notificationBadge" style="display:none;">0</span>
+                            </span>
                         </a>
-                       @*  <a asp-area="" asp-controller="Notifications" asp-action="IndexTeacher">
-                            <i class="bx bx-bell"></i>
-                            <span class="menu-text">Notifications</span>
-                            <span class="cute-badge" id="notificationBadge" style="display:none;">0</span>
-                        </a> *@
-                        <!-- Notification Dropdown -->
+
+                        <!-- Dropdown -->
                         <div class="cute-notification-box">
                             <div class="notification-header">
                                 <div class="header-left">
                                     <h6 class="cute-title">My Notifications</h6>
-
                                 </div>
                                 <button class="mark-all-read" id="markAllRead"></button>
                             </div>
@@ -200,63 +196,9 @@
                             <div class="notification-list">
                                 @await Component.InvokeAsync("Notification")
                             </div>
-
                         </div>
                     </div>
-                    @*  <!-- Notification Bell -->
-                    <div class="cute-notifications">
-                        <a class="cute-bell" href="#" id="notificationDropdown">
-                            <svg class="bell-icon" viewBox="0 0 24 24">
-                                <path fill="#8C5DD1" d="M12,22A2,2 0 0,0 14,20H10A2,2 0 0,0 12,22M18,16V11C18,7.93 16.36,5.36 13.5,4.68V4A1.5,1.5 0 0,0 12,2.5A1.5,1.5 0 0,0 10.5,4V4.68C7.63,5.36 6,7.92 6,11V16L4,18V19H20V18L18,16Z" />
-                                <circle class="pulse" fill="#FF6B6B" cx="18" cy="5" r="3.2" />
-                            </svg>
-                            <span class="cute-badge" id="notificationBadge">
-                                @{
-                                    //await _viewComponentHelper.InvokeAsync(typeof(ProjectManagementSystem.ViewComponents.NotificationCountViewComponent));
-                                }
-                            </span>
-                        </a>
-
-                        <!-- Notification Dropdown -->
-                        <div class="cute-notification-box">
-                            <div class="notification-header">
-                                <div class="header-left">
-                                    <h6 class="cute-title">My Notifications</h6>
-
-                                </div>
-                                 <button class="mark-all-read" id="markAllRead"></button> 
-                            </div>
-
-                            <div class="notification-list">
-                                @await Component.InvokeAsync("Notification")
-                            </div>
-
-                        </div>
-                    </div> *@
-                    @*    <div class="cute-notifications">
-                        <a class="cute-bell" href="@Url.Action("IndexTeacher","Notifications")" id="notificationDropdown">
-                            <svg class="bell-icon" viewBox="0 0 24 24">
-                                <path fill="#8C5DD1" d="M12,22A2,2 0 0,0 14,20H10A2,2 0 0,0 12,22M18,16V11C18,7.93 16.36,5.36 13.5,4.68V4A1.5,1.5 0 0,0 12,2.5A1.5,1.5 0 0,0 10.5,4V4.68C7.63,5.36 6,7.92 6,11V16L4,18V19H20V18L18,16Z" />
-                                <circle class="pulse" fill="#FF6B6B" cx="18" cy="5" r="3.2" />
-                            </svg>
-                            <span class="cute-badge" id="notificationBadge">
-                                @await Component.InvokeAsync("Notification", new { role = "Teacher" })
-                            </span>
-                        </a>
-                        <!-- Notification Dropdown -->
-                        <div class="cute-notification-box">
-                            <div class="notification-header">
-                                <div class="header-left">
-                                    <h6 class="cute-title">My Notifications</h6>
-                                </div>
-                                <button class="mark-all-read btn btn-sm btn-outline-primary" id="markAllRead">Mark All Read</button>
-                            </div>
-
-                            <div class="notification-list">
-                                @await Component.InvokeAsync("Notification", new { role = "Teacher" })
-                            </div>
-                        </div>
-                        </div> *@
+                    
                     <div class="profile-container">
                         <span class="avatar" style="background-color:#8c5dd1; color:white; padding:5px 10px; border-radius:50%;">
                             @HttpContextAccessor.HttpContext.Session.GetString("UserInitial")
@@ -266,10 +208,6 @@
                         </span>
                     </div>
 
-                  @*   <div class="profile-container">
-                        <span class="avatar">@User.FindFirst("Initial")?.Value</span>
-                        <span class="profile-name">@User.FindFirst("FullName")?.Value</span>
-                    </div> *@
                 </div>
             </header>
 
@@ -286,285 +224,7 @@
     <script src="~/Resources/bootstrap538/js/bootstrap.bundle.min.js"></script>
     <script src="~/Resources/bootstrap538/js/bootstrap.min.js"></script>
     <script src="~/Resources/chart/chart.umd.min.js"></script>
-    @* <script>
-                function confirmLogout() {
-            if(confirm("Do you really want to log out?")) {
-                document.getElementById('logoutForm').submit();
-            }
-            return false; // prevent default link
-        }
-        //Noti
-                $(document).ready(function() {
-
-            // Mark all as read
-            $('#markAllRead').click(function() {
-                $.post('@Url.Action("MarkAllAsRead", "Notifications")')
-                .done(function(data){
-                    if(data.success){
-                        $('.notification-list .list-group-item').removeClass('unread');
-                        $('#notificationBadge').text('0');
-                    }
-                });
-            });
-
-            // Update badge count periodically
-            function updateNotificationCount(){
-                $.get('@Url.Action("GetUnreadCount", "Notifications")')
-                .done(function(count){
-                    $('#notificationBadge').text(count);
-                });
-            }
-
-            setInterval(updateNotificationCount, 30000);
-        });
-        //Noti
-
-                $(document).ready(function () {
-                    // --- SIDEBAR AND MENU LOGIC ---
-
-                    // Sidebar toggle for both desktop and mobile
-                    $("#collapseBtn, #menuBtn").click(() => {
-                        $("#sidebar").toggleClass("collapsed");
-                    });
-
-                    // Submenu toggle logic
-                    $(".submenu-header").click(function () {
-                        const parentItem = $(this).parent();
-                        // On non-collapsed sidebar, close other submenus
-                        if (!$("#sidebar").hasClass("collapsed")) {
-                            $(".has-submenu.open").not(parentItem).removeClass("open");
-                        }
-                        parentItem.toggleClass("open");
-                    });
-
-                    // Set active class on menu item click
-                    $(".menu-item a").on("click", function (e) {
-                        // Don't prevent default for submenu headers
-                        if (!$(this).closest(".has-submenu").length) {
-
-                        }
-                        $(".menu-item").removeClass("active");
-                        $(this).closest(".menu-item").addClass("active");
-                    });
-                            $(document).ready(function () {
-                    $(document).ready(function() {
-          // Toggle notification dropdown
-          $(document).on('click', '#notificationDropdown', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            $('.cute-notifications').toggleClass('active');
-          });
-
-          // Close dropdown when clicking outside
-          $(document).on('click', function(e) {
-            if (!$(e.target).closest('.cute-notifications').length) {
-              $('.cute-notifications').removeClass('active');
-            }
-          });
-
-          // Notification item click handler
-          $(document).on('click', '.notification-item', function(e) {
-            e.preventDefault();
-            var $this = $(this);
-            var notificationId = $this.data('notification-id');
-            var redirectUrl = $this.attr('href');
-
-            $.post('/Notification/MarkAsRead', { id: notificationId }, function(res) {
-              if (res.success) {
-                $('#notificationBadge').text(res.unreadCount);
-                $this.removeClass('new-notification');
-                window.location.href = redirectUrl;
-              }
-            });
-          });
-
-          // Mark all as read
-          $('#markAllRead').on('click', function(e) {
-            e.stopPropagation();
-            fetch('/Notification/MarkAllAsRead', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
-              }
-            })
-            .then(response => {
-              if (response.ok) {
-                $('.notification-item').removeClass('new-notification');
-                $('#notificationBadge').text('0');
-              }
-            })
-            .catch(error => console.error('Error:', error));
-          });
-
-          // Refresh notification count periodically
-          setInterval(function() {
-            $.get('/Notification/GetNotificationCount', function(count) {
-              $('#notificationBadge').text(count);
-            });
-          }, 60000);
-        });
-
-            // Existing notification handling code
-            $(document).on('click', '.notification-item', function (e) {
-                e.preventDefault();
-                var $this = $(this);
-                var notificationId = $this.data('notification-id');
-                var redirectUrl = $this.attr('href');
-
-                $.post('/Notification/MarkAsRead', { id: notificationId }, function (res) {
-                    if (res.success) {
-                        $('#notificationBadge').text(res.unreadCount);
-                        $this.removeClass('unread');
-                        window.location.href = redirectUrl;
-                    }
-                });
-            });
-
-            // Existing mark all as read functionality
-            document.getElementById('markAllRead')?.addEventListener('click', function() {
-                fetch('/Notification/MarkAllAsRead', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
-                    }
-                })
-                .then(response => {
-                    if (response.ok) {
-                        document.querySelectorAll('.notification-item').forEach(item => {
-                            item.classList.remove('new-notification');
-                        });
-                        document.getElementById('notificationBadge').textContent = '0';
-                    }
-                })
-                .catch(error => console.error('Error:', error));
-            });
-
-            // Existing notification count refresh
-            setInterval(function() {
-                $.get('/Notification/GetNotificationCount', function(count) {
-                    $('#notificationBadge').text(count);
-                });
-            }, 60000);
-        });
-               $(document).ready(function () {
-            // Mark as read when clicked
-            $(document).on('click', '.notification-item', function (e) {
-                e.preventDefault(); // Stop immediate navigation
-
-                var notificationId = $(this).data('notification-id');
-                var redirectUrl = $(this).attr('href'); // Save the destination URL
-
-                if (!notificationId) {
-                    window.location.href = redirectUrl;
-                    return;
-                }
-
-                $.post('/Notification/MarkAsRead', { id: notificationId }, function (res) {
-                    if (res.success) {
-                        $('#notificationBadge').text(res.unreadCount);
-                    }
-
-                    // Redirect after marking as read
-                    window.location.href = redirectUrl;
-                });
-            });
-
-            // Refresh notifications every 60 seconds
-            setInterval(function () {
-                $.get('/Notification/GetNotificationCount', function (count) {
-                    $('#notificationBadge').text(count);
-                });
-            }, 60000);
-        });
-                $(document).on('click', '.notification-item', function (e) {
-            e.preventDefault();
-            var $this = $(this);
-            var notificationId = $this.data('notification-id');
-            var redirectUrl = $this.attr('href');
-
-            $.post('/Notification/MarkAsRead', { id: notificationId }, function (res) {
-                if (res.success) {
-                    $('#notificationBadge').text(res.unreadCount);
-                    $this.removeClass('unread'); // Remove visual highlight
-                    window.location.href = redirectUrl;
-                }
-            });
-        });
-                document.getElementById('markAllRead').addEventListener('click', function() {
-            // Make an AJAX call to your backend endpoint that marks all notifications as read
-            fetch('/Notification/MarkAllAsRead', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
-                }
-            })
-            .then(response => {
-                if (response.ok) {
-                    // Update the UI
-                    document.querySelectorAll('.notification-item').forEach(item => {
-                        item.classList.remove('new-notification');
-                    });
-                    document.getElementById('notificationBadge').textContent = '0';
-                }
-            })
-            .catch(error => console.error('Error:', error));
-        });
-        $(document).ready(function () {
-            $.get('/Notification/GetNotificationCount', function (count) {
-                $('#notificationBadge').text(count);
-            });
-        });
-                // Add this to your existing JavaScript
-        $(document).ready(function() {
-            // Pulse animation when new notifications arrive
-            function pulseBell() {
-                $('.bell-icon').addClass('pulse-once');
-                setTimeout(() => {
-                    $('.bell-icon').removeClass('pulse-once');
-                }, 1000);
-            }
-
-            // Example of how to trigger when new notification comes
-            // You would call this from your notification update logic
-            window.triggerNewNotification = function() {
-                pulseBell();
-            };
-        });
-
-
-                    // Time display
-                    function updateTime() {
-                        const now = new Date();
-                        const options = {
-                            weekday: "short",
-                            year: "numeric",
-                            month: "short",
-                            day: "numeric",
-                            hour: "2-digit",
-                            minute: "2-digit",
-                        };
-                        document.getElementById('dateTimeDisplay').textContent = now.toLocaleString("en-US", options);
-                    }
-
-                    updateTime();
-                    setInterval(updateTime, 1000);
-                });
-                        // Handle logout form submission
-        $(document).on('submit', '#logoutForm', function(e) {
-            e.preventDefault();
-            $.post({
-                url: $(this).attr('action'),
-                data: $(this).serialize(),
-                success: function() {
-                    window.location.href = '/Admin/Login'; // Redirect to login page after logout
-                }
-            });
-        });
-
-    </script> *@
+  
     <script>
                 function loadTeacherUnreadCount() {
             fetch('/Notifications/GetTeacherUnreadCount')
@@ -745,13 +405,13 @@
             }
 
             // Refresh notification count
-            setInterval(() => {
-                if (!notificationBadge) return;
-                fetch('/Notifications/GetNotificationCount')
-                    .then(r => r.json())
-                    .then(count => notificationBadge.textContent = count)
-                    .catch(console.error);
-            }, 60000);
+            // setInterval(() => {
+            //     if (!notificationBadge) return;
+            //     fetch('/Notifications/GetNotificationCount')
+            //         .then(r => r.json())
+            //         .then(count => notificationBadge.textContent = count)
+            //         .catch(console.error);
+            // }, 60000);
 
 
             /* ---------- TIME DISPLAY ---------- */

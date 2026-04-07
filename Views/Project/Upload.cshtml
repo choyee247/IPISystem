@@ -103,16 +103,25 @@
 
                 <div class="mb-3">
                     <label class="form-label fw-bold">Existing Files</label>
+
                     @if (Model.ProjectFiles != null && Model.ProjectFiles.Any())
                     {
                         <ul class="list-group">
                             @foreach (var file in Model.ProjectFiles)
                             {
+                                var folder = file.FileType?.ToLower() == "cancel" ? "cancel" : "projects";
+                                var fileName = System.IO.Path.GetFileName(file.FilePath);
+
                                 <li class="list-group-item d-flex justify-content-between align-items-center">
-                                    <a href="@file.FilePath" target="_blank">
-                                        @System.IO.Path.GetFileName(file.FilePath)
+
+                                    <a href="@Url.Content($"~/uploads/{folder}/{fileName}")" target="_blank">
+                                        @fileName
                                     </a>
-                                    <span class="text-muted small">@((file.FileSize ?? 0) / 1024) KB</span>
+
+                                    <span class="text-muted small">
+                                        @((file.FileSize ?? 0) / 1024) KB
+                                    </span>
+
                                 </li>
                             }
                         </ul>

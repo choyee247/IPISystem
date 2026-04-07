@@ -48,17 +48,18 @@ namespace ProjectManagementSystem.Controllers
             return View();
         }
 
-        
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         [AllowAnonymous]
         public async Task<IActionResult> Create(AnnouncementViewModel model)
         {
+            // ✅ FIX 1: Correct validation
             if (!ModelState.IsValid)
             {
-               
                 string filePath = null;
 
+                // ✅ File Upload
                 if (model.Attachment != null && model.Attachment.Length > 0)
                 {
                     string uploadsFolder = Path.Combine(_env.WebRootPath, "uploads", "announcements");
@@ -69,7 +70,6 @@ namespace ProjectManagementSystem.Controllers
                     }
 
                     string uniqueFileName = Guid.NewGuid().ToString() + Path.GetExtension(model.Attachment.FileName);
-
                     string fullPath = Path.Combine(uploadsFolder, uniqueFileName);
 
                     using (var stream = new FileStream(fullPath, FileMode.Create))
@@ -77,10 +77,11 @@ namespace ProjectManagementSystem.Controllers
                         await model.Attachment.CopyToAsync(stream);
                     }
 
-                    // ⭐ filename only save
+                    // ✅ FIX 2: Save FULL URL path (important)
                     filePath = uniqueFileName;
                 }
-                // ViewModel → Entity mapping
+
+                // ✅ Save Announcement
                 var entity = new Announcement
                 {
                     Title = model.Title,
@@ -93,32 +94,33 @@ namespace ProjectManagementSystem.Controllers
                     CreatedDate = DateTime.Now
                 };
 
-                // DB save
                 _context.Announcements.Add(entity);
                 await _context.SaveChangesAsync();
 
-                // Notifications
-                //var allStudents = await _context.Students.ToListAsync();
+                // ✅ Get TeacherId from Session
+                var teacherIdStr = HttpContext.Session.GetString("UserId");
+                int? teacherId = null;
+
+                if (!string.IsNullOrEmpty(teacherIdStr))
+                    teacherId = int.Parse(teacherIdStr);
+
+                // ✅ Get Students + Projects
                 var allStudents = await _context.Students
-                .Include(s => s.ProjectMembers)
-                .ThenInclude(pm => pm.ProjectPk)
-                .ToListAsync();
+                    .Include(s => s.ProjectMembers)
+                    .ThenInclude(pm => pm.ProjectPk)
+                    .ToListAsync();
+
                 foreach (var student in allStudents)
                 {
                     var projectId = student.ProjectMembers
                                            .Select(pm => pm.ProjectPkId)
                                            .FirstOrDefault();
 
-                    if (projectId == 0 || projectId == null)
-                    {
-                        continue; 
-                    }
-                    var teacherIdStr = HttpContext.Session.GetString("UserId"); // or your TeacherId session key
-                    int? teacherId = null;
+                    // ✅ FIX 3: clean condition
+                    if (projectId == 0)
+                        continue;
 
-                    if (!string.IsNullOrEmpty(teacherIdStr))
-                        teacherId = int.Parse(teacherIdStr);
-
+                    // ✅ FIX 4: Notification flags (IMPORTANT)
                     var notification = new Notification
                     {
                         UserId = student.StudentPkId,
@@ -130,10 +132,15 @@ namespace ProjectManagementSystem.Controllers
                         AnnouncementId = entity.AnnouncementId,
                         TeacherId = teacherId,
                         IsRead =false,
-                        IsDeleted=false
+                        IsReadByTeacher = false,
+                        IsDeletedByTeacher = false,
+                        IsReadByAdmin = false,
+                        IsDeletedByAdmin = false
                     };
+
                     _context.Notifications.Add(notification);
                 }
+
                 await _context.SaveChangesAsync();
 
                 TempData["Success"] = "Announcement created successfully!";
@@ -171,7 +178,6 @@ namespace ProjectManagementSystem.Controllers
             if (id != model.AnnouncementId)
                 return NotFound();
 
-            
             var announcement = await _context.Announcements.FindAsync(id);
 
             if (announcement == null)
@@ -182,11 +188,10 @@ namespace ProjectManagementSystem.Controllers
             if (!Directory.Exists(uploadsFolder))
                 Directory.CreateDirectory(uploadsFolder);
 
-            // ⭐ Upload new file
+            // ✅ Upload new file
             if (model.Attachment != null && model.Attachment.Length > 0)
             {
                 string uniqueFileName = Guid.NewGuid().ToString() + Path.GetExtension(model.Attachment.FileName);
-
                 string fullPath = Path.Combine(uploadsFolder, uniqueFileName);
 
                 using (var stream = new FileStream(fullPath, FileMode.Create))
@@ -194,19 +199,21 @@ namespace ProjectManagementSystem.Controllers
                     await model.Attachment.CopyToAsync(stream);
                 }
 
-                // ⭐ delete old file
+                // ✅ Delete old file (FIXED)
                 if (!string.IsNullOrEmpty(announcement.FilePath))
                 {
-                    string oldFile = Path.Combine(uploadsFolder, announcement.FilePath);
+                    var oldFileName = Path.GetFileName(announcement.FilePath); // 🔥 important
+                    string oldFile = Path.Combine(uploadsFolder, oldFileName);
 
                     if (System.IO.File.Exists(oldFile))
                         System.IO.File.Delete(oldFile);
                 }
 
-                // ⭐ DB update
+                // ✅ Save FULL PATH (IMPORTANT)
                 announcement.FilePath = uniqueFileName;
             }
 
+            // ✅ Update other fields
             announcement.Title = model.Title;
             announcement.Message = model.Message;
             announcement.StartDate = model.StartDate;

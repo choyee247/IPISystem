@@ -284,6 +284,11 @@ namespace ProjectManagementSystem.Controllers
                     Title = "Project Submitted",
                     Message = $"Leader {leaderName} submitted the project '{existingProject.ProjectName}'.",
                     CreatedAt = DateTime.Now,
+                    IsReadByTeacher = false,
+                    IsDeletedByTeacher = false,
+
+                    IsReadByAdmin = false,      
+                    IsDeletedByAdmin = false,
                     IsRead = false,
                     NotificationType = "ProjectSubmitted",
                     ProjectPkId = existingProject.ProjectPkId

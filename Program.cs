@@ -80,8 +80,8 @@ app.UseStatusCodePagesWithReExecute("/Home/Error/{0}");
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Welcome}/{action=Index}/{id?}"); //Release for public
-    //pattern: "{controller=Admin}/{action=Login}/{id?}"); //Release for admin
+    //pattern: "{controller=Welcome}/{action=Index}/{id?}"); //Release for public
+    pattern: "{controller=Admin}/{action=Login}/{id?}"); //Release for admin
 
 
 app.Run();

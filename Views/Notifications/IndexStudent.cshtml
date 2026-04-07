@@ -10,11 +10,14 @@
 <div class="d-flex justify-content-between align-items-center mb-3">
     <div>
         <span class="fw-bold">Unread:</span>
-        <span id="
+       @*  <span id="
 ">@Model.Count(n => n.IsRead==false)</span>
 
         <span class="ms-3 fw-bold">Read:</span>
-        <span id="readCount">@Model.Count(n => n.IsRead==true)</span>
+        <span id="readCount">@Model.Count(n => n.IsRead==true)</span> *@
+        <span id="unreadCount">@Model.Count(n => n.IsRead == false)</span>
+        <span class="ms-3 fw-bold">Read:</span>
+        <span id="readCount">@Model.Count(n => n.IsRead == true)</span>
     </div>
 
     <button class="btn btn-sm btn-primary" id="markAllReadBtn">Mark All as Read</button>
@@ -199,38 +202,60 @@
 
 @section Scripts {
     <script>
-        // Open notification detail & mark as read
+        // ✅ URLs from Razor (IMPORTANT)
+        const markReadUrl = '@Url.Action("MarkAsRead", "Notifications")';
+        const detailUrl = '@Url.Action("Details", "Notifications")';
+        const unreadUrl = '@Url.Action("GetUnreadCount", "Notifications")';
+        const readUrl = '@Url.Action("GetReadCount", "Notifications")';
+        const markAllUrl = '@Url.Action("MarkAllRead", "Notifications")';
+
+        // ✅ Open detail + mark as read
         function openDetail(id) {
-            fetch('/Notifications/MarkAsRead?id=' + id, { method: "POST" })
-                .then(() => window.location.href = '/Notifications/Details/' + id);
+            fetch(markReadUrl + '?id=' + id, { method: "POST" })
+                .then(() => {
+                    window.location.href = detailUrl + '/' + id;
+                });
         }
 
-        // Update unread/read counters
+        // ✅ Update unread/read counters (NO reload)
         function loadCounts() {
-            fetch('/Notifications/GetUnreadCount')
+            fetch(unreadUrl)
                 .then(r => r.json())
-                .then(count => document.getElementById("unreadCount").innerText = count);
+                .then(count => {
+                    document.getElementById("unreadCount").innerText = count;
+                });
 
-            fetch('/Notifications/GetReadCount')
+            fetch(readUrl)
                 .then(r => r.json())
-                .then(count => document.getElementById("readCount").innerText = count);
+                .then(count => {
+                    document.getElementById("readCount").innerText = count;
+                });
         }
 
-        // Mark all as read
+        // ✅ Mark all as read (NO full reload)
         document.getElementById("markAllReadBtn").addEventListener("click", function () {
-            fetch('@Url.Action("MarkAllRead", "Notifications")', { method: "POST" })
-                .then(() => { loadCounts(); location.reload(); });
+            fetch(markAllUrl, { method: "POST" })
+                .then(() => {
+                    // UI update without reload
+                    document.querySelectorAll(".noti-panel li").forEach(li => {
+                        li.classList.remove("unread");
+                        li.classList.add("read");
+                    });
+
+                    loadCounts();
+                });
         });
 
-        // Tab switch
+        // ✅ Tabs
         function showTab(type) {
             document.querySelectorAll(".noti-panel").forEach(p => p.style.display = "none");
             document.querySelectorAll(".noti-tab").forEach(t => t.classList.remove("active"));
+
             document.getElementById("panel-" + type).style.display = "block";
             document.getElementById("tab-" + type).classList.add("active");
         }
 
-        // Show first tab by default
+        // ✅ Default first tab
         let firstTab = document.querySelector(".noti-tab");
         if (firstTab) {
             showTab(firstTab.id.replace("tab-", ""));

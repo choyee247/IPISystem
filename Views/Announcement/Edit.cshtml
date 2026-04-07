@@ -54,19 +54,19 @@
 
             @if (!string.IsNullOrEmpty(Model.FilePath))
             {
+                var fileName = System.IO.Path.GetFileName(Model.FilePath);
+                var fullPath = "/uploads/announcements/" + Model.FilePath;
+
                 <div class="form-group">
                     <label>Current Attachment</label><br />
+
                     <a class="btn btn-sm btn-primary"
-                       href="@Url.Content("~/uploads/announcements/" + Model.FilePath)"
+                       href="@fullPath"
                        target="_blank">
-                        Download File
+                        Download (@fileName)
                     </a>
-                   @*  <a href="@Url.Content("~/uploads/announcements/" + Model.FilePath)" target="_blank">
-                        View File
-                    </a> *@
                 </div>
             }
-
             <div class="form-group">
                 <label>Upload New File</label>
                 <input type="file" asp-for="Attachment" class="form-control input-field" />

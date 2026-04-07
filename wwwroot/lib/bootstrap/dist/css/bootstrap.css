@@ -2669,7 +2669,7 @@ textarea.form-control-lg {
 }
 
 .input-group {
-  position: relative;
+ /* position: relative;*/
   display: flex;
   flex-wrap: wrap;
   align-items: stretch;
@@ -2677,7 +2677,7 @@ textarea.form-control-lg {
 }
 .input-group > .form-control,
 .input-group > .form-select {
-  position: relative;
+  /*position: relative;*/
   flex: 1 1 auto;
   width: 1%;
   min-width: 0;
@@ -2687,7 +2687,7 @@ textarea.form-control-lg {
   z-index: 3;
 }
 .input-group .btn {
-  position: relative;
+  /*position: relative;*/
   z-index: 2;
 }
 .input-group .btn:focus {

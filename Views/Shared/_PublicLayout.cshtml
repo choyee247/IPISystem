@@ -30,6 +30,8 @@
         .navbar {
             background-color: #8c5dd1 !important;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            position: relative;
+            z-index: 1000;
         }
 
         .navbar-brand {
@@ -124,11 +126,10 @@
 
 
                     <li class="nav-item mx-2">
-                        <a class="nav-link" href="/Welcome/Index">
+                        <a class="nav-link" href="@Url.Action("Index","Welcome")">
                             Back To Home
                         </a>
                     </li>
-
 
                 </ul>
 

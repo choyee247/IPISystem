@@ -280,7 +280,7 @@
                             <i class="far fa-calendar-check me-2"></i>Target Completion Date
                         </label>
 
-                        <div class="date-input-group">
+                       @*  <div class="date-input-group">
                             <input asp-for="ProjectSubmittedDate"
                                    class="form-control date-picker-input"
                                    type="date"
@@ -291,8 +291,20 @@
                                 <i class="far fa-calendar-alt"></i>
                                 <span>Select Date</span>
                             </button>
-                        </div>
+                        </div> *@
+                        <div class="date-input-group">
+                            <input id="projectDate"
+                                   asp-for="ProjectSubmittedDate"
+                                   class="form-control date-picker-input"
+                                   type="date"
+                                   min="@DateTime.Now.ToString("yyyy-MM-dd")"
+                                   onfocus="this.showPicker()" />
 
+                            <button type="button" class="date-picker-button" onclick="openDatePicker()">
+                                <i class="far fa-calendar-alt"></i>
+                                <span>Select Date</span>
+                            </button>
+                        </div>
                         <div class="date-meta-info">
                             <small class="text-muted">
                                 <i class="far fa-lightbulb me-1"></i>Select your estimated project completion date
@@ -530,6 +542,13 @@
     @* <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script> *@
     <script src="~/lib/sweetalert2/sweetalert2.min.js"></script>
     <script>
+            function openDatePicker() {
+            const input = document.getElementById("projectDate");
+            if (input) {
+                input.showPicker(); // modern browsers
+                input.focus();      // fallback
+            }
+        }
 
                 document.getElementById("fileInput").addEventListener("change", function () {
 

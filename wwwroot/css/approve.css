@@ -1,13 +1,17 @@
-﻿/* ========== NOTIFICATION STYLES ========== */
+﻿/* ========== NOTIFICATION STYLES UPDATED ========== */
+
+/* Parent Container */
 .nav-icons-container {
     display: flex;
     align-items: center;
     gap: 20px;
+    position: relative; /* ensure absolute children are positioned correctly */
 }
 
 /* Bell Icon Container */
 .cute-notifications {
-    position: relative;
+    position: relative; /* parent for dropdown */
+    z-index: 10000; /* make sure it's above other header elements */
 }
 
 /* Bell Icon Styling */
@@ -20,8 +24,8 @@
     height: 40px;
     background: #E4EEFD;
     border-radius: 50%;
-    transition: all 0.3s ease;
     cursor: pointer;
+    transition: all 0.3s ease;
 }
 
     .cute-bell:hover {
@@ -48,7 +52,7 @@
     font-size: 10px;
     min-width: 18px;
     height: 18px;
-    border-radius: 9px;
+    border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -60,18 +64,17 @@
 /* Dropdown Box */
 .cute-notification-box {
     width: 350px;
-    border: none;
+    max-width: 90vw; /* mobile friendly */
     border-radius: 0.5rem;
     box-shadow: 0 5px 20px rgba(140, 93, 209, 0.15);
-    padding: 0;
     overflow: hidden;
-    margin-top: 10px;
-    border: 1px solid #E4EEFD;
     position: absolute;
+    top: calc(100% + 10px); /* gap below bell */
     right: 0;
-    top: 100%;
-    z-index: 9999;
-    display: none; /* Hidden by default */
+    z-index: 10001; /* above everything */
+    display: none;
+    background: white;
+    border: 1px solid #E4EEFD;
     animation: fadeInDropdown 0.2s ease-out;
 }
 
@@ -79,6 +82,7 @@
     display: block;
 }
 
+/* Dropdown Animation */
 @keyframes fadeInDropdown {
     from {
         opacity: 0;
@@ -102,7 +106,7 @@
     border-bottom: 1px solid rgba(255,255,255,0.1);
     position: sticky;
     top: 0;
-    z-index: 1;
+    z-index: 2;
 }
 
 .header-left {
@@ -114,7 +118,6 @@
     margin: 0;
     font-weight: 600;
     font-size: 15px;
-    letter-spacing: 0.5px;
 }
 
 .cute-time {
@@ -249,7 +252,7 @@
         color: #E4EEFD;
     }
 
-/* New Notification Animation */
+/* Animations for new notifications */
 .notification-item.new-notification {
     animation: fadeIn 0.3s ease-out;
     background: rgba(140, 93, 209, 0.05);
@@ -267,7 +270,7 @@
     }
 }
 
-/* Pulse Animation */
+/* Pulse Animation for Bell */
 .pulse {
     animation: pulse 1.5s infinite;
 }
@@ -333,4 +336,12 @@
     color: #333;
     font-weight: 500;
     white-space: nowrap;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .cute-notification-box {
+        width: 90vw;
+        right: 5%;
+    }
 }

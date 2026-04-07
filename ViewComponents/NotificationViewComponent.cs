@@ -19,38 +19,47 @@ namespace ProjectManagementSystem.ViewComponents
         public async Task<IViewComponentResult> InvokeAsync()
         {
             var userIdStr = HttpContext.Session.GetString("UserId");
+            var role = HttpContext.Session.GetString("UserRole");
+
             if (string.IsNullOrEmpty(userIdStr))
                 return View(new List<NotificationViewModel>());
 
-            int teacherId = int.Parse(userIdStr);
+            int userId = int.Parse(userIdStr);
 
-            // Fetch notifications for teacher's projects
-            var notificationsQuery = await _context.Notifications
+            IQueryable<Notification> query = _context.Notifications
                 .Include(n => n.ProjectPk)
-                .Where(n => n.NotificationType == "ProjectSubmitted"
-                            && (n.IsReadByTeacher == false || n.IsReadByTeacher == null)
-                            && n.ProjectPk.TeacherId == teacherId)
-                .OrderByDescending(n => n.CreatedAt)
-                .ToListAsync(); // bring to memory
+                .Where(n => n.NotificationType == "ProjectSubmitted");
 
-            // Group by ProjectId to avoid duplicates per project
-            var notifications = notificationsQuery
+            if (role == "Teacher")
+            {
+                query = query.Where(n => n.ProjectPk.TeacherId == userId);
+            }
+
+            // Filter out deleted notifications per role
+            var notifications = await query
                 .GroupBy(n => n.ProjectPkId)
-                .Select(g => g.OrderByDescending(n => n.CreatedAt).First())
-                .Take(4)
+                .Select(g => g.OrderByDescending(n => n.CreatedAt).FirstOrDefault())
+                .ToListAsync();
+
+            var viewModel = notifications
                 .Select(n => new NotificationViewModel
                 {
                     Id = n.NotificationPkId,
                     Message = n.Message ?? "",
-                    CreatedAt = n.CreatedAt ?? System.DateTime.Now,
+                    CreatedAt = n.CreatedAt ?? DateTime.Now,
                     ProjectId = n.ProjectPkId ?? 0,
-                    ProjectName = n.ProjectPk != null ? n.ProjectPk.ProjectName : "No Project",
+                    ProjectName = n.ProjectPk?.ProjectName ?? "No Project",
                     IsReadByTeacher = n.IsReadByTeacher ?? false,
-                    IsDeletedByTeacher = n.IsDeletedByTeacher ?? false
+                    IsDeletedByTeacher = n.IsDeletedByTeacher ?? false,
+                    IsReadByAdmin = n.IsReadByAdmin ?? false,
+                    IsDeletedByAdmin = n.IsDeletedByAdmin ?? false
                 })
+                .Where(n => role == "Teacher" ? !n.IsDeletedByTeacher : !n.IsDeletedByAdmin)
+                .OrderByDescending(n => n.CreatedAt)
+                .Take(4) // Limit for notification panel
                 .ToList();
 
-            return View(notifications);
+            return View(viewModel);
         }
     }
 }

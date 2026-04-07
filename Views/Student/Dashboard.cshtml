@@ -233,7 +233,9 @@
                         } *@
                         @if (!string.IsNullOrEmpty(a.FilePath))
                         {
-                            <a href="@Url.Content("~/uploads/announcements/" + System.IO.Path.GetFileName(a.FilePath))"
+                            var fullPath = "/uploads/announcements/" + a.FilePath;
+
+                            <a href="@fullPath"
                                target="_blank"
                                class="btn btn-sm"
                                style="border:1px solid #8c5dd1; color:#8c5dd1; font-size:12px;">
@@ -375,7 +377,7 @@
                         <div class="avatar-profile text-center mb-3">
                             <img src="@(string.IsNullOrEmpty(Model.Student.ProfilePhotoUrl)
            ? Url.Content("~/uploads/students/default-avatar.png")
-           : Url.Content("/uploads/students/" + Model.Student.ProfilePhotoUrl))"
+           : Url.Content("~/uploads/students/" + Model.Student.ProfilePhotoUrl))"
                                  alt="Profile"
                                  class="rounded-circle shadow"
                                  style="width:120px; height:120px; object-fit:cover;" />
@@ -669,7 +671,7 @@
                                                 <div class="member-avatar me-3">
                                                     <img src="@Url.Content(
                                                             !string.IsNullOrEmpty(member.StudentPk?.ProfilePhotoUrl)
-                                                                ? "/uploads/students/" + member.StudentPk.ProfilePhotoUrl
+                                                                ? "~/uploads/students/" + member.StudentPk.ProfilePhotoUrl
                                                                 : "~/uploads/students/default-avatar.png"
                                                         )"
                                                          alt="@member.StudentPk?.StudentName"
